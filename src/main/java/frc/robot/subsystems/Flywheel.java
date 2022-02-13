@@ -32,10 +32,7 @@ public class Flywheel extends SubsystemBase {
       flywheelkV, 
       flywheelkA
     );
-    configureMotors();
-  }
 
-  private void configureMotors() {
     flywheelRight.restoreFactoryDefaults(true);
     flywheelLeft.restoreFactoryDefaults(true);
     // invert follower because it is pointing the opposite direction
@@ -46,7 +43,7 @@ public class Flywheel extends SubsystemBase {
     flywheelRight.setOpenLoopRampRate(flywheelVelocityRampRate);
     flywheelLeft.setOpenLoopRampRate(flywheelVelocityRampRate);
   }
-
+  
   /**
    * 
    * @param velocity Desired velocity in rpm
