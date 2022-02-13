@@ -12,4 +12,17 @@ package frc.robot;
  * <p>It is advised to statically import this class (or one of its inner classes) wherever the
  * constants are needed, to reduce verbosity.
  */
-public final class Constants {}
+public final class Constants {
+    public static final class FlywheelConstants {
+        //TODO: look up CAN IDs, perform SysId
+        public static final int leftFlywheelCANId = 0;
+        public static final int rightFlywheelCANId = 0;
+        public static final double flywheelkP = 0;
+        public static final double flywheelkD = 0;
+        public static final double flywheelkS = 0;
+        public static final double flywheelkV = 0;
+        public static final double flywheelkA = 0;
+        public static final double flywheelVelocityRampRate = 0;
+
+    }
+}
