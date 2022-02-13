@@ -12,9 +12,12 @@ import com.revrobotics.RelativeEncoder;
 import edu.wpi.first.math.controller.BangBangController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Log;
+
 import static frc.robot.Constants.FlywheelConstants.*;
 
-public class Flywheel extends SubsystemBase {
+public class Flywheel extends SubsystemBase implements Loggable {
   // Hardware
   CANSparkMax flywheelLeft;
   CANSparkMax flywheelRight;
@@ -43,13 +46,18 @@ public class Flywheel extends SubsystemBase {
     flywheelRight.setOpenLoopRampRate(flywheelVelocityRampRate);
     flywheelLeft.setOpenLoopRampRate(flywheelVelocityRampRate);
   }
-  
+
   /**
    * 
    * @param velocity Desired velocity in rpm
    */
   public void setFlywheelSpeed(double velocity) {
-    flywheelRight.set(flywheelBangBang.calculate(rightEncoder.getVelocity(), velocity) * flywheelFeedforward.calculate(velocity));
+    flywheelRight.set(flywheelBangBang.calculate(rightEncoder.getVelocity(), velocity) + 0.9 * flywheelFeedforward.calculate(velocity));
+  }
+
+  @Log(name = "Flywheel Velocity (RPM)")
+  public double getFlywheelSpeed() {
+    return rightEncoder.getVelocity();
   }
 
   public void setFlywheelIdle() {
