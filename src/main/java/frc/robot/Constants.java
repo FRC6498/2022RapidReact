@@ -13,7 +13,7 @@ package frc.robot;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-    public static final class FlywheelConstants {
+    public static final class ShooterConstants {
         //TODO: look up CAN IDs, perform SysId
         public static final int leftFlywheelCANId = 0;
         public static final int rightFlywheelCANId = 0;
@@ -23,6 +23,13 @@ public final class Constants {
         public static final double flywheelkV = 0;
         public static final double flywheelkA = 0;
         public static final double flywheelVelocityRampRate = 0;
+
+    }
+
+    public static final class ConveyorConstants {
+
+        public static final int rearDriverCANId = 0;
+        public static final int frontDriverCANId = 0;
 
     }
 }
