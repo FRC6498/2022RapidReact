@@ -36,7 +36,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     flywheelLeft = new CANSparkMax(leftFlywheelCANId, MotorType.kBrushless);
     flywheelRight = new CANSparkMax(rightFlywheelCANId, MotorType.kBrushless);
     rightEncoder = flywheelRight.getEncoder();
-    flywheelBangBang = new BangBangController(Constants.ShooterConstants.flywheelSetpointTolerance);
+    flywheelBangBang = new BangBangController(Constants.ShooterConstants.flywheelSetpointToleranceRPM);
     flywheelFeedforward = new SimpleMotorFeedforward(
       flywheelkS, 
       flywheelkV, 
@@ -50,8 +50,8 @@ public class Flywheel extends SubsystemBase implements Loggable {
     // coast flywheel motors so BangBang doesnt go wild
     flywheelLeft.setIdleMode(IdleMode.kCoast);
     flywheelRight.setIdleMode(IdleMode.kCoast);
-    flywheelRight.setOpenLoopRampRate(flywheelVelocityRampRate);
-    flywheelLeft.setOpenLoopRampRate(flywheelVelocityRampRate);
+    flywheelRight.setOpenLoopRampRate(flywheelVelocityRampRateSeconds);
+    flywheelLeft.setOpenLoopRampRate(flywheelVelocityRampRateSeconds);
 
     flywheelActive = false;
     flywheelSpeedSetpoint = 0.0;

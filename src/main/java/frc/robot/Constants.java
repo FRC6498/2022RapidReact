@@ -22,7 +22,8 @@ public final class Constants {
         public static final double flywheelkS = 0;
         public static final double flywheelkV = 0;
         public static final double flywheelkA = 0;
-        public static final double flywheelVelocityRampRate = 0;
+        public static final double flywheelVelocityRampRateSeconds = 0;
+        public static final double flywheelSetpointToleranceRPM = 10;
 
     }
 
