@@ -12,11 +12,12 @@ import com.revrobotics.RelativeEncoder;
 import edu.wpi.first.math.controller.BangBangController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
-import static frc.robot.Constants.FlywheelConstants.*;
+import static frc.robot.Constants.ShooterConstants.*;
 
 public class Flywheel extends SubsystemBase implements Loggable {
   // Hardware
@@ -28,11 +29,14 @@ public class Flywheel extends SubsystemBase implements Loggable {
   SimpleMotorFeedforward flywheelFeedforward;
   boolean flywheelActive;
   double flywheelSpeedSetpoint;
+  double bangBangOutput;
+  double feedforwardOutput;
+  double controllerOutput;
   public Flywheel() {
     flywheelLeft = new CANSparkMax(leftFlywheelCANId, MotorType.kBrushless);
     flywheelRight = new CANSparkMax(rightFlywheelCANId, MotorType.kBrushless);
     rightEncoder = flywheelRight.getEncoder();
-    flywheelBangBang = new BangBangController(10);
+    flywheelBangBang = new BangBangController(Constants.ShooterConstants.flywheelSetpointTolerance);
     flywheelFeedforward = new SimpleMotorFeedforward(
       flywheelkS, 
       flywheelkV, 
@@ -78,7 +82,10 @@ public class Flywheel extends SubsystemBase implements Loggable {
   @Override
   public void periodic() {
     if (flywheelActive) {
-      flywheelRight.set(flywheelBangBang.calculate(rightEncoder.getVelocity(), flywheelSpeedSetpoint) + 0.9 * flywheelFeedforward.calculate(flywheelSpeedSetpoint));
+      bangBangOutput = flywheelBangBang.calculate(rightEncoder.getVelocity(), flywheelSpeedSetpoint);
+      feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);
+      controllerOutput = bangBangOutput + 0.9 * feedforwardOutput;
+      flywheelRight.set(controllerOutput);
     } else {
       setFlywheelIdle();
     }
