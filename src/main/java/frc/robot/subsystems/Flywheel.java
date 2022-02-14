@@ -21,17 +21,17 @@ import static frc.robot.Constants.ShooterConstants.*;
 
 public class Flywheel extends SubsystemBase implements Loggable {
   // Hardware
-  CANSparkMax flywheelLeft;
-  CANSparkMax flywheelRight;
-  RelativeEncoder rightEncoder;
+  private final CANSparkMax flywheelLeft;
+  private final CANSparkMax flywheelRight;
+  private final RelativeEncoder rightEncoder;
   // Software
-  BangBangController flywheelBangBang;
-  SimpleMotorFeedforward flywheelFeedforward;
-  boolean flywheelActive;
-  double flywheelSpeedSetpoint;
-  double bangBangOutput;
-  double feedforwardOutput;
-  double controllerOutput;
+  private final BangBangController flywheelBangBang;
+  private final SimpleMotorFeedforward flywheelFeedforward;
+  private boolean flywheelActive;
+  private double flywheelSpeedSetpoint;
+  private double bangBangOutput;
+  private double feedforwardOutput;
+  private double controllerOutput;
   public Flywheel() {
     flywheelLeft = new CANSparkMax(leftFlywheelCANId, MotorType.kBrushless);
     flywheelRight = new CANSparkMax(rightFlywheelCANId, MotorType.kBrushless);

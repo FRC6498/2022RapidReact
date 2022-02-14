@@ -12,13 +12,13 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class Conveyor extends SubsystemBase {
-  WPI_TalonFX rearDriver;
-  WPI_TalonFX frontDriver;
-  TalonFXConfiguration driverConfig;
+  private final WPI_TalonFX rearDriver;
+  private final WPI_TalonFX frontDriver;
+  private final TalonFXConfiguration driverConfig;
 
-  Color frontCargo;
-  Color rearCargo;
-  Color preFeederCargo;
+  private final Color frontCargo;
+  private final Color rearCargo;
+  private final Color preFeederCargo;
 
   //TODO: What is the ticktock?
   //TODO: What is the ready to shoot sensor type?
@@ -48,6 +48,10 @@ public class Conveyor extends SubsystemBase {
     frontDriver.configAllSettings(driverConfig);
     rearDriver.enableVoltageCompensation(true);
     frontDriver.enableVoltageCompensation(true);
+
+    frontCargo = Color.kGray;
+    rearCargo = Color.kGray;
+    preFeederCargo = Color.kGray;
   }
 
   public void startRear() {
