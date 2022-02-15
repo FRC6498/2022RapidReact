@@ -7,20 +7,26 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import static frc.robot.Constants.ConveyorConstants.*;
 
 public class Conveyor extends SubsystemBase {
+
   private final WPI_TalonFX rearDriver;
   private final WPI_TalonFX frontDriver;
+  private final DoubleSolenoid seeSaw;
   private final TalonFXConfiguration driverConfig;
 
   private final Color frontCargo;
   private final Color rearCargo;
   private final Color preFeederCargo;
 
-  //TODO: What is the ticktock?
+  private final boolean seesawPosition;
+
   //TODO: What is the ready to shoot sensor type?
   //TODO: How do we use the pico color data?
   //TODO: What LEDs if any?
@@ -35,8 +41,8 @@ public class Conveyor extends SubsystemBase {
 
   /** Creates a new Conveyor. */
   public Conveyor() {
-    rearDriver = new WPI_TalonFX(Constants.ConveyorConstants.rearDriverCANId);
-    frontDriver = new WPI_TalonFX(Constants.ConveyorConstants.frontDriverCANId);
+    rearDriver = new WPI_TalonFX(rearDriverCANId);
+    frontDriver = new WPI_TalonFX(frontDriverCANId);
 
     driverConfig = new TalonFXConfiguration();
     driverConfig.openloopRamp = 0.5;
@@ -49,9 +55,13 @@ public class Conveyor extends SubsystemBase {
     rearDriver.enableVoltageCompensation(true);
     frontDriver.enableVoltageCompensation(true);
 
+    seeSaw = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, seesawForwardPCMId, seesawReversePCMId);
+
     frontCargo = Color.kGray;
     rearCargo = Color.kGray;
     preFeederCargo = Color.kGray;
+    seesawPosition = false;
+
   }
 
   public void startRear() {
@@ -73,6 +83,19 @@ public class Conveyor extends SubsystemBase {
   public void stopConveyor() {
     stopFront();
     stopRear();
+  }
+
+  public boolean getSeesawPosition() {
+    return seesawPosition;
+  }
+
+  public void setSeesawPosition(boolean left) {
+    if (left) {
+      // TODO: Which way is forward?
+      seeSaw.set(Value.kForward);
+    } else {
+      seeSaw.set(Value.kReverse);
+    }
   }
 
   @Override
