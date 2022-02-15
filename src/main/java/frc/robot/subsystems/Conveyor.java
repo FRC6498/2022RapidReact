@@ -16,18 +16,12 @@ import static frc.robot.Constants.ConveyorConstants.*;
 
 public class Conveyor extends SubsystemBase {
 
-  private final WPI_TalonFX rearDriver;
-  private final WPI_TalonFX frontDriver;
-  private final DoubleSolenoid seeSaw;
+  private final WPI_TalonFX driver;
   private final TalonFXConfiguration driverConfig;
 
-  private final Color frontCargo;
-  private final Color rearCargo;
-  private final Color preFeederCargo;
+  private final Color cargoColor;
+  public boolean running;
 
-  private final boolean seesawPosition;
-
-  //TODO: What is the ready to shoot sensor type?
   //TODO: How do we use the pico color data?
   //TODO: What LEDs if any?
 
@@ -40,9 +34,8 @@ public class Conveyor extends SubsystemBase {
    */
 
   /** Creates a new Conveyor. */
-  public Conveyor() {
-    rearDriver = new WPI_TalonFX(rearDriverCANId);
-    frontDriver = new WPI_TalonFX(frontDriverCANId);
+  public Conveyor(int driverCANId) {
+    driver = new WPI_TalonFX(driverCANId);
 
     driverConfig = new TalonFXConfiguration();
     driverConfig.openloopRamp = 0.5;
@@ -50,56 +43,32 @@ public class Conveyor extends SubsystemBase {
     driverConfig.peakOutputReverse = 0.1;
     driverConfig.voltageCompSaturation = 12;
 
-    rearDriver.configAllSettings(driverConfig);
-    frontDriver.configAllSettings(driverConfig);
-    rearDriver.enableVoltageCompensation(true);
-    frontDriver.enableVoltageCompensation(true);
+    driver.configAllSettings(driverConfig);
+    driver.enableVoltageCompensation(true);
 
-    seeSaw = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, seesawForwardPCMId, seesawReversePCMId);
-
-    frontCargo = Color.kGray;
-    rearCargo = Color.kGray;
-    preFeederCargo = Color.kGray;
-    seesawPosition = false;
-
+    cargoColor = Color.kGray;
+    running = false;
   }
 
-  public void startRear() {
-    rearDriver.set(0.1);
+  public void start() {
+    start(1);
   }
 
-  public void stopRear() {
-    rearDriver.stopMotor();
+  public void start(double dutyCycle) {
+    driver.set(0.1 * dutyCycle);
   }
 
-  public void startFront() {
-    frontDriver.set(0.1);
-  }
-
-  public void stopFront() {
-    frontDriver.stopMotor();
-  }
-
-  public void stopConveyor() {
-    stopFront();
-    stopRear();
-  }
-
-  public boolean getSeesawPosition() {
-    return seesawPosition;
-  }
-
-  public void setSeesawPosition(boolean left) {
-    if (left) {
-      // TODO: Which way is forward?
-      seeSaw.set(Value.kForward);
-    } else {
-      seeSaw.set(Value.kReverse);
-    }
+  public void stop() {
+    driver.stopMotor();
   }
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    if (driver.get() > 0) {
+      // we are moving
+      running = true;
+    } else {
+      running = false;
+    }
   }
 }

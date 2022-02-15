@@ -32,6 +32,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   private double bangBangOutput;
   private double feedforwardOutput;
   private double controllerOutput;
+  
   public Flywheel() {
     flywheelLeft = new CANSparkMax(leftFlywheelCANId, MotorType.kBrushless);
     flywheelRight = new CANSparkMax(rightFlywheelCANId, MotorType.kBrushless);

@@ -7,6 +7,7 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Conveyor;
+//import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
 
 public class RunConveyor extends CommandBase {
@@ -16,6 +17,7 @@ public class RunConveyor extends CommandBase {
   boolean conveyorFull;
   Color ballColor;
   int conveyorID;
+  Color allianceColor;
 
   /** Creates a new RunConveyor. */
   public RunConveyor(Conveyor conveyor, Superstructure superstructure, int conveyorID) {
@@ -28,7 +30,9 @@ public class RunConveyor extends CommandBase {
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {}
+  public void initialize() {
+    allianceColor = manager.getAllianceColor();
+  }
 
   // Perform Clearance Checks
   // is intake full?
@@ -45,10 +49,38 @@ public class RunConveyor extends CommandBase {
 
   @Override
   public void execute() {
-    // can we accept a ball
-    //conveyorFull = manager.getBallPresent(conveyorID);
+    // is the conveyor empty
+    conveyorFull = manager.isBallPresent(conveyorID);
     if (conveyorFull) {
+      // what ball is in the conveyor
+      ballColor = manager.getBallColor(conveyorID);
       
+      if (manager.getShooterActive()) {
+        // shooter is active, can we shoot this ball
+        if (ballColor == allianceColor) {
+          // its the correct color
+          if (manager.getShooterReady()) {
+            conveyor.start();
+          }
+        }
+      }
+    } else {
+      // we are empty
+      // is the intake empty
+      /*if (!intake.isBallPresent()) {
+        // intake has a ball
+        // run conveyor
+        conveyor.start();
+        // run intake
+        intake.startHandoff();
+
+      } else {
+        // intake is free
+        // stop intake
+        intake.stop();
+        // conveyor now full or there is no ball, let that bit of execute() take over
+        conveyor.stop();
+      }*/
     }
 
   }
