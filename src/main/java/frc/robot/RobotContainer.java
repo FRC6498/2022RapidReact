@@ -8,6 +8,8 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import frc.robot.commands.DriveArcadeOpenLoop;
+import frc.robot.subsystems.Drivetrain;
 import io.github.oblarg.oblog.Logger;
 
 /**
@@ -17,11 +19,21 @@ import io.github.oblarg.oblog.Logger;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+  Drivetrain drivetrain = new Drivetrain();
+  XboxController driver = new XboxController(0);
   // The robot's subsystems and commands are defined here...
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     Logger.configureLoggingAndConfig(this, false);
+    drivetrain.setDefaultCommand(
+      new DriveArcadeOpenLoop(
+        driver::getRightTriggerAxis, 
+        driver::getLeftX, 
+        driver::getLeftTriggerAxis, 
+        drivetrain
+      )
+    );
     // Configure the button bindings
     configureButtonBindings();
   }
