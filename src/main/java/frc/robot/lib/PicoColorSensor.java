@@ -7,7 +7,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.hal.SerialPortJNI;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.util.Color;
 
 public class PicoColorSensor implements AutoCloseable {
   public static class RawColor {
@@ -283,5 +285,16 @@ public class PicoColorSensor implements AutoCloseable {
   public void close() throws Exception {
     threadRunning.set(false);
     readThread.join();
+  }
+
+  public Color getColor(int sensorId) {
+    MathUtil.clamp(sensorId, 0, 1);
+    RawColor result;
+    if (sensorId == 0) {
+      result = getRawColor0();
+    } else {
+      result = getRawColor1();
+    }
+    return new Color(result.red, result.green, result.blue);
   }
 }

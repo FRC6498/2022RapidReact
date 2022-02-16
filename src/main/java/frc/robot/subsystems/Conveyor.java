@@ -6,35 +6,40 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import com.revrobotics.ColorMatch;
+import com.revrobotics.ColorMatchResult;
 
-import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Log;
+
 import static frc.robot.Constants.ConveyorConstants.*;
 
-public class Conveyor extends SubsystemBase {
+public class Conveyor extends SubsystemBase implements Loggable {
 
   private final WPI_TalonFX driver;
   private final TalonFXConfiguration driverConfig;
 
-  private final Color cargoColor;
+  private Color cargoColor;
   public boolean running;
-
-  //TODO: How do we use the pico color data?
+  public boolean empty;
+  @Log.BooleanBox(name = "Ball Present (Color)")
+  boolean colorEmpty;
+  @Log.BooleanBox(name = "Ball Present (Current)")
+  boolean currentEmpty;
+  public int colorSensorId;
+  private ColorMatch colorMatch;
+  
   //TODO: What LEDs if any?
 
   /** Commands
    * Start/Stop Front
    * Start/Stop Back
-   * Switch ticktock
-   * 
-   * forward/back/ready ball color
    */
 
   /** Creates a new Conveyor. */
-  public Conveyor(int driverCANId) {
+  public Conveyor(int driverCANId, int sensorId) {
     driver = new WPI_TalonFX(driverCANId);
 
     driverConfig = new TalonFXConfiguration();
@@ -48,6 +53,11 @@ public class Conveyor extends SubsystemBase {
 
     cargoColor = Color.kGray;
     running = false;
+    colorSensorId = sensorId;
+    colorMatch = new ColorMatch();
+    colorMatch.setConfidenceThreshold(0.95);
+    colorMatch.addColorMatch(Color.kRed);
+    colorMatch.addColorMatch(Color.kBlue);
   }
 
   public void start() {
@@ -62,13 +72,43 @@ public class Conveyor extends SubsystemBase {
     driver.stopMotor();
   }
 
+  public Color getCargoColor() {
+    return cargoColor;
+  }
+
+  public void setCargoColor(Color color) {
+    cargoColor = color;
+  }
+
+  public boolean isBallPresent() {
+    // get color match
+    ColorMatchResult match = colorMatch.matchClosestColor(cargoColor);
+    if (match.color == Color.kRed || match.color == Color.kBlue) {
+      colorEmpty = true;
+    } else colorEmpty = false;
+
+    // get current match
+    if (driver.getStatorCurrent() > ballPresentCurrentThreshold) {
+      currentEmpty = true;
+    } else currentEmpty = false;
+    
+    return colorEmpty || currentEmpty;
+  }
+
   @Override
   public void periodic() {
-    if (driver.get() > 0) {
-      // we are moving
-      running = true;
-    } else {
-      running = false;
-    }
+    // if the motor is running, set running to true
+    running = driver.get() > 0;
+    // are we empty
+    empty = isBallPresent();
   }
 }
+
+// flow:
+// check if conveyor is empty
+// check ball color if conveyor is full
+// check if shooter is ready
+// if the shooter is ready and the conveyor is full and the ball is the correct color
+//    run the conveyor until the feeder takes the ball
+// if the intake is full and the conveyor is empty
+//    run the intake slowly and the conveyor until the conveyor is full

@@ -51,5 +51,6 @@ public final class Constants {
         public static final int seesawReversePCMId = 0;
         public static final int rearColorSensorId = 0;
         public static final int frontColorSensorId = 1;
+        public static final double ballPresentCurrentThreshold = 0;
     }
 }
