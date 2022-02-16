@@ -49,6 +49,7 @@ public final class Constants {
         public static final int frontDriverCANId = 8;
         public static final int seesawForwardPCMId = 0;
         public static final int seesawReversePCMId = 0;
-
+        public static final int rearColorSensorId = 0;
+        public static final int frontColorSensorId = 1;
     }
 }
