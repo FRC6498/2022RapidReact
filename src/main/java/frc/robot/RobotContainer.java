@@ -4,16 +4,10 @@
 
 package frc.robot;
 
-import javax.xml.transform.stream.StreamResult;
-
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveArcadeOpenLoop;
 import frc.robot.commands.HaltConveyor;
 import frc.robot.subsystems.Conveyor;
@@ -50,7 +44,6 @@ public class RobotContainer {
     backConveyor.setDefaultCommand(new HaltConveyor(backConveyor));
     // Configure the button bindings
     configureButtonBindings();
-    setupConveyorCommands();
   }
 
   /**
