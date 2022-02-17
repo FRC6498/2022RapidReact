@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.util.Units;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -67,5 +69,30 @@ public final class Constants {
         public static final int rearColorSensorId = 0;
         public static final int frontColorSensorId = 1;
         public static final double ballPresentCurrentThreshold = 0;
+    }
+
+    public static final class VisionConstants {
+        // Heights are in METERS
+        // Pitches are in DEGREES (convert to radians)
+        public static final double upperHubTargetHeight = Units.inchesToMeters(65);
+        public static final double upperHubTargetPitch = Units.degreesToRadians(90);
+
+        // limelight  
+        public static final String limelightCameraName = "limelight";
+        public static final double limelightHeightFromField = Units.inchesToMeters(27);
+        public static final int upperHubPipelineID = 0;
+        public static final double limelightPitch = Units.degreesToRadians(33);
+        public static final double[] comparisonConstants = new double[] {
+            limelightHeightFromField,
+            upperHubTargetHeight,
+            limelightPitch
+        };
+
+        // lifecam
+        public static final String lifecamCameraName = "lifecam";
+        public static final double lifecamHeightFromField = Units.inchesToMeters(26);
+        public static final int redBallPipelineID = 1;
+        public static final int blueBallPipelineID = 2;
+        public static final double lifecamPitch = Units.degreesToRadians(limelightPitch+180);
     }
 }
