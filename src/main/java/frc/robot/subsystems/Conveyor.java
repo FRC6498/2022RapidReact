@@ -10,6 +10,7 @@ import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorMatchResult;
 
 import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
@@ -30,7 +31,9 @@ public class Conveyor extends SubsystemBase implements Loggable {
   boolean currentEmpty;
   public int colorSensorId;
   private ColorMatch colorMatch;
+  private double driverOutput;
   
+
   //TODO: What LEDs if any?
 
   /** Commands
@@ -50,6 +53,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
 
     driver.configAllSettings(driverConfig);
     driver.enableVoltageCompensation(true);
+    driverOutput = 0.0;
 
     cargoColor = Color.kGray;
     running = false;
@@ -65,11 +69,11 @@ public class Conveyor extends SubsystemBase implements Loggable {
   }
 
   public void start(double dutyCycle) {
-    driver.set(0.1 * dutyCycle);
+    driverOutput = 0.1 * dutyCycle;
   }
 
   public void stop() {
-    driver.stopMotor();
+    driver.set(0);
   }
 
   public Color getCargoColor() {
@@ -101,6 +105,8 @@ public class Conveyor extends SubsystemBase implements Loggable {
     running = driver.get() > 0;
     // are we empty
     empty = isBallPresent();
+
+    driver.set(driverOutput);
   }
 }
 
@@ -108,6 +114,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
 // check if conveyor is empty
 // check ball color if conveyor is full
 // check if shooter is ready
+
 // if the shooter is ready and the conveyor is full and the ball is the correct color
 //    run the conveyor until the feeder takes the ball
 // if the intake is full and the conveyor is empty

@@ -4,11 +4,18 @@
 
 package frc.robot;
 
+import javax.xml.transform.stream.StreamResult;
+
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveArcadeOpenLoop;
+import frc.robot.commands.HaltConveyor;
 import frc.robot.subsystems.Conveyor;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Flywheel;
@@ -28,8 +35,6 @@ public class RobotContainer {
   Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.rearDriverCANId, Constants.ConveyorConstants.rearColorSensorId);
   Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor);
   XboxController driver = new XboxController(0);
-  // The robot's subsystems and commands are defined here...
-
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     Logger.configureLoggingAndConfig(this, false);
@@ -41,8 +46,11 @@ public class RobotContainer {
         drivetrain
       )
     );
+    frontConveyor.setDefaultCommand(new HaltConveyor(frontConveyor));
+    backConveyor.setDefaultCommand(new HaltConveyor(backConveyor));
     // Configure the button bindings
     configureButtonBindings();
+    setupConveyorCommands();
   }
 
   /**
