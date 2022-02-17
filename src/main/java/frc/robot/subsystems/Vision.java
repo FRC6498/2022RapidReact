@@ -23,7 +23,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.surpriselib.SortByDistance;
+import frc.robot.lib.SortByDistance;
 import io.github.oblarg.oblog.Loggable;
 
 public class Vision extends SubsystemBase implements Loggable {
