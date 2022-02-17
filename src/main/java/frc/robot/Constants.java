@@ -15,10 +15,13 @@ import edu.wpi.first.math.util.Units;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-    public static final int intakeACANId = 7;
-    public static final int intakeBCANId = 8; //?
     public static final double degreesToTurretTicks = 35.04;
     
+    public static final class IntakeConstants {
+        public static final int intakeACANId = 7;
+        public static final int intakeBCANId = 8;
+    }
+
     public static final class DriveConstants {
         public static final int leftLeaderCANId = 1;
         public static final int leftFollowerCANId = 2;
@@ -31,7 +34,7 @@ public final class Constants {
     }
 
     public static final class ShooterConstants {
-        //TODO: look up CAN IDs, perform SysId
+        //TODO: perform SysId
         public static final int leftFlywheelCANId = 13;
         public static final int rightFlywheelCANId = 14;
         public static final int feederACANId = 10;
