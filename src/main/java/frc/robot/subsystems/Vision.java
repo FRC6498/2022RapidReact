@@ -4,10 +4,8 @@
 
 package frc.robot.subsystems;
 
-import static frc.robot.Constants.Vision.comparisonConstants;
-import static frc.robot.Constants.Vision.lifecamCameraName;
-import static frc.robot.Constants.Vision.limelightCameraName;
-import static frc.robot.Constants.Vision.upperHubPipelineID;
+import static frc.robot.Constants.VisionConstants.*;
+
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,7 +30,7 @@ public class Vision extends SubsystemBase implements Loggable {
   boolean active = true;
   NetworkTable NT_photonvision, NT_limelight, NT_lifecam;
   /** Creates a new VisionSystem. */
-  public VisionSystem() {
+  public Vision() {
     CAM_limelight = new PhotonCamera(limelightCameraName);
     CAM_limelight.setDriverMode(false);
     CAM_limelight.setPipelineIndex(upperHubPipelineID);
