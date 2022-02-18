@@ -14,6 +14,7 @@ import frc.robot.subsystems.Conveyor;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Flywheel;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.Turret;
 import io.github.oblarg.oblog.Logger;
 
 /**
@@ -25,9 +26,10 @@ import io.github.oblarg.oblog.Logger;
 public class RobotContainer {
   Drivetrain drivetrain = new Drivetrain();
   Flywheel flywheel = new Flywheel();
+  Turret turret = new Turret();
   Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, Constants.ConveyorConstants.frontColorSensorId);
   Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.rearDriverCANId, Constants.ConveyorConstants.rearColorSensorId);
-  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor);
+  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, turret);
   XboxController driver = new XboxController(0);
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {

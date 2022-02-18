@@ -7,22 +7,11 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.lib.PicoColorSensor;
-import frc.robot.lib.PicoColorSensor.RawColor;
-
-import static frc.robot.Constants.ConveyorConstants.*;
-
-import java.util.ArrayList;
-import java.util.Map;
-
-import com.revrobotics.ColorSensorV3;
 
 /**
  * Coordinates all subsystems involving cargo
@@ -52,8 +41,8 @@ public class Superstructure extends SubsystemBase {
   Trigger backConveyorFull;
   Trigger backConveyorBallColorCorrect;
   // Intakes
-  Trigger frontIntakeFull;
-  Trigger backIntakeFull;
+  Trigger frontIntakeDeployed;
+  Trigger backIntakeDeployed;
 
   public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Turret turret) {
     this.flywheel = flywheel;
@@ -62,14 +51,16 @@ public class Superstructure extends SubsystemBase {
     this.turret = turret;
     colorSensor = new PicoColorSensor();
 
+    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelIdle(), flywheel));
+
     shooterReady = new Trigger(this::getShooterReady);
     seesawReady = new Trigger();
     frontConveyorFull = new Trigger(frontConveyor::isBallPresent);
     frontConveyorBallColorCorrect = new Trigger(() -> {return frontConveyor.getCargoColor() == this.getAllianceColor(); });
     backConveyorFull = new Trigger(backConveyor::isBallPresent);
     backConveyorBallColorCorrect = new Trigger(() -> {return backConveyor.getCargoColor() == this.getAllianceColor(); });
-    frontIntakeFull = new Trigger();
-    backIntakeFull = new Trigger();
+    frontIntakeDeployed = new Trigger();
+    backIntakeDeployed = new Trigger();
 
     setupConveyorCommands();
   }
@@ -88,20 +79,6 @@ public class Superstructure extends SubsystemBase {
         backConveyor::start, 
         backConveyor::stop, 
         backConveyor
-      )
-    );
-
-    // grab from intake
-    frontIntakeFull.and(frontConveyorFull.negate()).whileActiveOnce(
-      new ParallelCommandGroup(
-        new StartEndCommand(frontIntake::startHandoff, frontIntake::stop, frontConveyor, frontIntake),
-        new StartEndCommand(frontConveyor::start, frontConveyor::stop, frontConveyor)
-      )
-    );
-    backIntakeFull.and(backConveyorFull.negate()).whileActiveOnce(
-      new ParallelCommandGroup(
-        new StartEndCommand(backIntake::startHandoff, backIntake::stop, backConveyor, backIntake),
-        new StartEndCommand(backConveyor::start, backConveyor::stop, backConveyor)
       )
     );
   }
