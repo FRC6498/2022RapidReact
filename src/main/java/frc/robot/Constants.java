@@ -38,8 +38,7 @@ public final class Constants {
         public static final int leftFlywheelCANId = 13;
         public static final int rightFlywheelCANId = 14;
         public static final int feederACANId = 10;
-        public static final int feederBCANId = 11;
-        public static final int turretBearingCANId = 12;
+        public static final int feederBCANId = 11;     
         public static final double flywheelkP = 0;
         public static final double flywheelkD = 0;
         public static final double flywheelkS = 0;

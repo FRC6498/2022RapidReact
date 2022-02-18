@@ -3,7 +3,6 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems;
-
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
@@ -64,6 +63,10 @@ public class Superstructure extends SubsystemBase {
     backConveyorBallColorCorrect = new Trigger(() -> {return backConveyor.getCargoColor() == this.getAllianceColor(); });
 
     setupConveyorCommands();
+  }
+
+  public void turnTurret() {
+    turret.setDefaultCommand(new RunCommand(()-> turret.turretTurn(), turret));
   }
 
   private void setupConveyorCommands() {

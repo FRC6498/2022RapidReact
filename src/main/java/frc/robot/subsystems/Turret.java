@@ -94,7 +94,7 @@ public static double degreesToEncoderTicks(double degrees) {
     //System.out.println("Desired Ticks: " + absolutePositionTicks);
     //System.out.println("Position Error: " + yawMotor.getClosedLoopError());
     //System.out.println("Angle Goal is " + angleGoal.getDegrees() + ", current angle is " + getAngle().getDegrees());
-    yawMotor.set(ControlMode.Position, absolutePositionTicks);
+    
   }
 
   public void setRelativeAngleGoal(Rotation2d angle) {
