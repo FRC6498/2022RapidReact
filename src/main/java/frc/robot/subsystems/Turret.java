@@ -62,7 +62,11 @@ public static double degreesToEncoderTicks(double degrees) {
 
   @Log
   public double getPositionError() {
-    return rotationError;
+    return yawMotor.getClosedLoopError();
+  }
+
+  public boolean atSetpoint() {
+    return getPositionError() < turretPositionOffsetThreshold;
   }
 
   public double getYawVelocityDegreesPerSecond() {

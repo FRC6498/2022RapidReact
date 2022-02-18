@@ -80,6 +80,10 @@ public class Flywheel extends SubsystemBase implements Loggable {
     flywheelActive = active;
   }
 
+  public boolean atSetpoint() {
+    return Math.abs(rightEncoder.getVelocity() - flywheelSpeedSetpoint) < flywheelSetpointToleranceRPM;
+  }
+
   @Override
   public void periodic() {
     if (flywheelActive) {

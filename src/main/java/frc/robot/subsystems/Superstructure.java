@@ -39,6 +39,7 @@ public class Superstructure extends SubsystemBase {
   // Flywheel
   private final Flywheel flywheel;
   // Turret
+  private final Turret turret;
   // Feeder
   boolean shooterAutoEnabled;
   // Triggers
@@ -54,10 +55,11 @@ public class Superstructure extends SubsystemBase {
   Trigger frontIntakeFull;
   Trigger backIntakeFull;
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Turret turret) {
     this.flywheel = flywheel;
     this.frontConveyor = frontConveyor;
     this.backConveyor = backConveyor;
+    this.turret = turret;
     colorSensor = new PicoColorSensor();
 
     shooterReady = new Trigger(this::getShooterReady);
@@ -127,12 +129,8 @@ public class Superstructure extends SubsystemBase {
     return false;
   }
 
-  public boolean feederIsOccupied() {
-    return false;
-  }
-
   public boolean getShooterReady() {
-    return false;
+    return flywheel.atSetpoint() && turret.atSetpoint();
   }
 
   // Methods should be high level actions and command subsystems to achieve the goal
