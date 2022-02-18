@@ -8,8 +8,8 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.commands.DriveArcadeOpenLoop;
-import frc.robot.commands.HaltConveyor;
 import frc.robot.subsystems.Conveyor;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Flywheel;
@@ -44,8 +44,8 @@ public class RobotContainer {
         drivetrain
       )
     );
-    frontConveyor.setDefaultCommand(new HaltConveyor(frontConveyor));
-    backConveyor.setDefaultCommand(new HaltConveyor(backConveyor));
+    frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
+    backConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
     // Configure the button bindings
     configureButtonBindings();
   }
