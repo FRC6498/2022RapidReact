@@ -22,6 +22,7 @@ import frc.robot.lib.PicoColorSensor;
 public class Superstructure extends SubsystemBase {
   // Intake
   // Vision
+  private final Vision vision;
   // Conveyor
   private final Conveyor frontConveyor, backConveyor;
   private final PicoColorSensor colorSensor;
@@ -31,6 +32,7 @@ public class Superstructure extends SubsystemBase {
   private final Turret turret;
   // Feeder
   boolean shooterAutoEnabled;
+
   // Triggers
   // Superstructure
   Trigger shooterReady;
@@ -41,17 +43,18 @@ public class Superstructure extends SubsystemBase {
   Trigger backConveyorFull;
   Trigger backConveyorBallColorCorrect;
   // Intakes
-  Trigger frontIntakeDeployed;
-  Trigger backIntakeDeployed;
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Turret turret) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Turret turret, Vision vision) {
     this.flywheel = flywheel;
     this.frontConveyor = frontConveyor;
     this.backConveyor = backConveyor;
     this.turret = turret;
+    this.vision = vision;
     colorSensor = new PicoColorSensor();
 
     flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelIdle(), flywheel));
+    frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
+    backConveyor.setDefaultCommand(new RunCommand(() -> backConveyor.stop(), backConveyor));
 
     shooterReady = new Trigger(this::getShooterReady);
     seesawReady = new Trigger();
@@ -59,8 +62,6 @@ public class Superstructure extends SubsystemBase {
     frontConveyorBallColorCorrect = new Trigger(() -> {return frontConveyor.getCargoColor() == this.getAllianceColor(); });
     backConveyorFull = new Trigger(backConveyor::isBallPresent);
     backConveyorBallColorCorrect = new Trigger(() -> {return backConveyor.getCargoColor() == this.getAllianceColor(); });
-    frontIntakeDeployed = new Trigger();
-    backIntakeDeployed = new Trigger();
 
     setupConveyorCommands();
   }
@@ -103,7 +104,11 @@ public class Superstructure extends SubsystemBase {
 
 
   public boolean getShooterActive() {
-    return false;
+    return shooterAutoEnabled;
+  }
+
+  public void setShooterActive(boolean active) {
+    shooterAutoEnabled = active;
   }
 
   public boolean getShooterReady() {
