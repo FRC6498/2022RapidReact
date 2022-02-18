@@ -10,7 +10,6 @@ import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorMatchResult;
 
 import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
