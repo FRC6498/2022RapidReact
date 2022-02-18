@@ -15,12 +15,14 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.lib.PicoColorSensor;
 import frc.robot.lib.PicoColorSensor.RawColor;
 
 import static frc.robot.Constants.ConveyorConstants.*;
+import frc.robot.subsystems.Intake.*;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -38,6 +40,7 @@ public class Superstructure extends SubsystemBase {
   // Vision
   // Conveyor
   private final Conveyor frontConveyor, backConveyor;
+  private final Intake frontIntake, backIntake;
   private final PicoColorSensor colorSensor;
   // Flywheel
   private final Flywheel flywheel;
@@ -57,7 +60,7 @@ public class Superstructure extends SubsystemBase {
   Trigger frontIntakeFull;
   Trigger backIntakeFull;
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake front, Intake backIntake) {
     this.flywheel = flywheel;
     this.frontConveyor = frontConveyor;
     this.backConveyor = backConveyor;

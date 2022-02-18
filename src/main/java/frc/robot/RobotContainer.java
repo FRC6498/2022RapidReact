@@ -27,7 +27,8 @@ public class RobotContainer {
   Flywheel flywheel = new Flywheel();
   Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, Constants.ConveyorConstants.frontColorSensorId);
   Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.rearDriverCANId, Constants.ConveyorConstants.rearColorSensorId);
-  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor);
+  Intake frontIntake = new Intake(Constants.IntakeConstants.intakeACANId)
+  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake);
   XboxController driver = new XboxController(0);
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
