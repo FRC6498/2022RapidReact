@@ -14,9 +14,10 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
-public class Turret extends SubsystemBase {
+public class Turret extends SubsystemBase implements Loggable {
 
   TalonFX yawMotor = new TalonFX(yawMotorCANId);
   Rotation2d angleGoal = Rotation2d.fromDegrees(135);
@@ -25,6 +26,7 @@ public class Turret extends SubsystemBase {
   public boolean centered = false;
   double openLoopDemand;
   public boolean enabled = true;
+  double setAbsolutePositionTicks;
   /** Creates a new Turret. */
   public Turret() {
     yawMotor.configFactoryDefault();
@@ -120,6 +122,13 @@ public static double degreesToEncoderTicks(double degrees) {
     }
   }
 
+  public void turretTurn() {
+    yawMotor.set(ControlMode.Position, setAbsolutePositionTicks);
+}
+//I might need this later
+ //public double checkTheNumbers() {
+  // return setAbsolutePositionTicks;
+ //}
   public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
   public boolean getEnabled() { return enabled; }
@@ -133,5 +142,6 @@ public static double degreesToEncoderTicks(double degrees) {
     return getAngle().getDegrees();
   }
 }
+
 
  
