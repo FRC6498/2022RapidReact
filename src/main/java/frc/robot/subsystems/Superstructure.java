@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.lib.PicoColorSensor;
+import frc.robot.lib.ShotMap;
 
 /**
  * Coordinates all subsystems involving cargo
@@ -31,7 +32,6 @@ public class Superstructure extends SubsystemBase {
   // Turret
   private final Turret turret;
   // Feeder
-  boolean shooterAutoEnabled;
 
   // Triggers
   // Superstructure
@@ -43,6 +43,10 @@ public class Superstructure extends SubsystemBase {
   Trigger backConveyorFull;
   Trigger backConveyorBallColorCorrect;
   // Intakes
+  // Flywheel
+  Trigger shooterAutoEnabled;
+
+  ShotMap flywheelTable = new ShotMap();
 
   public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Turret turret, Vision vision) {
     this.flywheel = flywheel;
@@ -51,6 +55,8 @@ public class Superstructure extends SubsystemBase {
     this.turret = turret;
     this.vision = vision;
     colorSensor = new PicoColorSensor();
+
+    setupFlywheelTable();
 
     flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelIdle(), flywheel));
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
@@ -62,11 +68,15 @@ public class Superstructure extends SubsystemBase {
     frontConveyorBallColorCorrect = new Trigger(() -> {return frontConveyor.getCargoColor() == this.getAllianceColor(); });
     backConveyorFull = new Trigger(backConveyor::isBallPresent);
     backConveyorBallColorCorrect = new Trigger(() -> {return backConveyor.getCargoColor() == this.getAllianceColor(); });
+    shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
 
     setupConveyorCommands();
+    setupFlywheelCommands();
   }
 
-  private void setupConveyorCommands() {
+  private void setupFlywheelTable() {
+}
+private void setupConveyorCommands() {
     // move to seesaw
     shooterReady.and(frontConveyorFull).and(frontConveyorBallColorCorrect).and(seesawReady).whileActiveOnce(
       new StartEndCommand(
@@ -82,6 +92,11 @@ public class Superstructure extends SubsystemBase {
         backConveyor
       )
     );
+  }
+
+  private void setupFlywheelCommands() {
+    // set speed
+    shooterAutoEnabled.whileActiveContinuous(new RunCommand(() -> { flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getBestTargetDistance())); }, flywheel));
   }
 
   public Color getAllianceColor() {
@@ -104,11 +119,11 @@ public class Superstructure extends SubsystemBase {
 
 
   public boolean getShooterActive() {
-    return shooterAutoEnabled;
+    return shooterAutoEnabled.get();
   }
 
   public void setShooterActive(boolean active) {
-    shooterAutoEnabled = active;
+    //shooterAutoEnabled = active;
   }
 
   public boolean getShooterReady() {
