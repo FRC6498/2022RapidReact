@@ -57,7 +57,7 @@ public class Superstructure extends SubsystemBase {
   Trigger frontIntakeFull;
   Trigger backIntakeFull;
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake front, Intake backIntake) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake, Intake backIntake) {
     this.flywheel = flywheel;
     this.frontConveyor = frontConveyor;
     this.backConveyor = backConveyor;
@@ -95,7 +95,7 @@ public class Superstructure extends SubsystemBase {
     // grab from intake
     frontIntakeFull.and(frontConveyorFull.negate()).whileActiveOnce(
       new ParallelCommandGroup(
-        new StartEndCommand(frontIntake::startHandoff, frontIntake::stop, frontConveyor, frontIntake),
+        new StartEndCommand(frontIntake::start, frontIntake::stop, frontConveyor, frontIntake),
         new StartEndCommand(frontConveyor::start, frontConveyor::stop, frontConveyor)
       )
     );
