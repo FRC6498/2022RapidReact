@@ -8,23 +8,10 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.lib.PicoColorSensor;
-<<<<<<< HEAD
-import frc.robot.lib.PicoColorSensor.RawColor;
-
-import static frc.robot.Constants.ConveyorConstants.*;
-import frc.robot.subsystems.Intake.*;
-
-import java.util.ArrayList;
-import java.util.Map;
-
-import com.revrobotics.ColorSensorV3;
-=======
 import frc.robot.lib.ShotMap;
->>>>>>> 62fe14d30356c1ac520e9863e1558fb7e73d9835
 
 /**
  * Coordinates all subsystems involving cargo
@@ -34,11 +21,12 @@ import frc.robot.lib.ShotMap;
  */
 public class Superstructure extends SubsystemBase {
   // Intake
+  private final Intake frontIntake, backIntake;
   // Vision
   private final Vision vision;
   // Conveyor
   private final Conveyor frontConveyor, backConveyor;
-  private final Intake frontIntake, backIntake;
+  
   private final PicoColorSensor colorSensor;
   // Flywheel
   private final Flywheel flywheel;
@@ -58,17 +46,14 @@ public class Superstructure extends SubsystemBase {
   // Intakes
   // Flywheel
   Trigger shooterAutoEnabled;
-
-<<<<<<< HEAD
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake, Intake backIntake) {
-=======
   ShotMap flywheelTable = new ShotMap();
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Turret turret, Vision vision) {
->>>>>>> 62fe14d30356c1ac520e9863e1558fb7e73d9835
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake, Intake backIntake, Vision vision, Turret turret) {
     this.flywheel = flywheel;
     this.frontConveyor = frontConveyor;
     this.backConveyor = backConveyor;
+    this.frontIntake = frontIntake;
+    this.backIntake = backIntake;
     this.turret = turret;
     this.vision = vision;
     colorSensor = new PicoColorSensor();
@@ -114,26 +99,9 @@ public class Superstructure extends SubsystemBase {
   public void turnTurret() {
     turret.setDefaultCommand(new RunCommand(()-> turret.turretTurn(), turret));
   }
-
-<<<<<<< HEAD
-    // grab from intake
-    frontIntakeFull.and(frontConveyorFull.negate()).whileActiveOnce(
-      new ParallelCommandGroup(
-        new StartEndCommand(frontIntake::start, frontIntake::stop, frontConveyor, frontIntake),
-        new StartEndCommand(frontConveyor::start, frontConveyor::stop, frontConveyor)
-      )
-    );
-    backIntakeFull.and(backConveyorFull.negate()).whileActiveOnce(
-      new ParallelCommandGroup(
-        new StartEndCommand(backIntake::startHandoff, backIntake::stop, backConveyor, backIntake),
-        new StartEndCommand(backConveyor::start, backConveyor::stop, backConveyor)
-      )
-    );
-=======
   private void setupFlywheelCommands() {
     // set speed
     shooterAutoEnabled.whileActiveContinuous(new RunCommand(() -> { flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getBestTargetDistance())); }, flywheel));
->>>>>>> 62fe14d30356c1ac520e9863e1558fb7e73d9835
   }
 
   public Color getAllianceColor() {

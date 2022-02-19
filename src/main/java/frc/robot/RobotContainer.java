@@ -33,13 +33,10 @@ public class RobotContainer {
   Vision vision = new Vision();
   Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, Constants.ConveyorConstants.frontColorSensorId);
   Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.rearDriverCANId, Constants.ConveyorConstants.rearColorSensorId);
-<<<<<<< HEAD
   Intake frontIntake = new Intake();
   Intake backIntake = new Intake();
-  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake);
-=======
-  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, turret, vision);
->>>>>>> 62fe14d30356c1ac520e9863e1558fb7e73d9835
+  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret);
+
   XboxController driver = new XboxController(0);
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
