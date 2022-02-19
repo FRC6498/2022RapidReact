@@ -30,7 +30,7 @@ public class Superstructure extends SubsystemBase {
   // Flywheel
   private final Flywheel flywheel;
   // Turret
-  private final WPITurret turret;
+  private final Turret turret;
   // Feeder
 
   // Triggers
@@ -48,7 +48,7 @@ public class Superstructure extends SubsystemBase {
 
   ShotMap flywheelTable = new ShotMap();
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, WPITurret turret, Vision vision) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Turret turret, Vision vision) {
     this.flywheel = flywheel;
     this.frontConveyor = frontConveyor;
     this.backConveyor = backConveyor;

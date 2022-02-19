@@ -4,123 +4,57 @@
 
 package frc.robot.subsystems;
 
-import static frc.robot.Constants.TurretConstants.*;
-import frc.robot.Constants;
-
-import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log;
+import static frc.robot.Constants.TurretConstants.*;
+/**
+ * THIS SUBSYSTEM IS WIP AND CURRENTLY UNUSED BY THE MAIN ROBOT CODE. IT WILL REMAIN SO UNTIL IT IS FINISHED.<p>
+ * Turret subsystem using WPILib controls instead of Phoenix (because its less of a black box and the units are better).
+ * Position is measured in Degrees, which is obtained from encoder ticks as soon as position is read off.
+ */
+public class Turret extends SubsystemBase {
+  WPI_TalonFX bearing;
+  TalonFXConfiguration bearingConfig;
+  PIDController pid;
+  boolean homed;
+  double visionDegrees;
 
-public class Turret extends SubsystemBase implements Loggable {
-
-  TalonFX yawMotor = new TalonFX(yawMotorCANId);
-  Rotation2d angleGoal = Rotation2d.fromDegrees(135);
-  double openLoopDemand;
-  public boolean enabled = true;
-  double setAbsolutePositionTicks;
-  Timer velocityTimer;
-  /** Creates a new Turret. */
   public Turret() {
-    yawMotor.configFactoryDefault();
-    yawMotor.configPeakOutputForward(0.2);
-    yawMotor.configPeakOutputReverse(-0.2);
-    yawMotor.config_kP(0, turretYaw_kP);
-    yawMotor.config_kI(0, 0);
-    yawMotor.config_kD(0, turretYaw_kD);
-    //yawMotor.configIntegratedSensorAbsoluteRange(AbsoluteSensorRange.Unsigned_0_to_360);
-    yawMotor.setNeutralMode(NeutralMode.Coast);
-
-    velocityTimer = new Timer();
+    visionDegrees = 0.0;
+    homed = false;
+    bearingConfig = new TalonFXConfiguration();
+    bearingConfig.peakOutputForward = 0.2;
+    bearingConfig.peakOutputReverse = -0.2;
+    bearing = new WPI_TalonFX(yawMotorCANId);
+    bearing.configAllSettings(bearingConfig);
+    bearing.setNeutralMode(NeutralMode.Brake);
+    pid = new PIDController(turretYaw_kP, 0, turretYaw_kD);
+    // set position tolerance to 1 degree
+    pid.setTolerance(turretPositionToleranceDegrees);
   }
 
-  public void resetSensors(double position) {
-    yawMotor.setSelectedSensorPosition(position);
-  }
-
-  @Log
-  public double getYawMotorOutputCurrent() {
-    return yawMotor.getStatorCurrent();
-  }
-
-  @Log
-  public double getPositionError() {
-    return yawMotor.getClosedLoopError();
+  public void setSetpointDegrees(double setpoint) {
+    visionDegrees = setpoint;
   }
 
   public boolean atSetpoint() {
-    return getPositionError() < turretPositionOffsetThreshold;
+    return pid.atSetpoint();
   }
 
-  public double getYawVelocityDegreesPerSecond() {
-    return encoderTicksToDegrees(yawMotor.getSelectedSensorVelocity());
+  private void useOutput() {
+    bearing.set(pid.calculate(visionDegrees, 0));
   }
 
-  @Log(name = "Open Loop Demand")
-  public double getOpenLoopDemand() {
-    return openLoopDemand;
+  public void stop() {
+    bearing.set(0);
   }
 
-  public void openLoop(double demand) {
-    openLoopDemand = demand;
-    yawMotor.set(ControlMode.PercentOutput, demand);
-    //DriverStation.reportWarning(yawMotor.getLastError().toString(), false);
-  }
-
-  public void setAbsoluteAngleGoal(Rotation2d angle) {
-    double absolutePositionDegrees = angle.getDegrees();
-    double absolutePositionTicks = degreesToEncoderTicks(absolutePositionDegrees);
-    yawMotor.set(ControlMode.Position, absolutePositionTicks);
-  }
-
-  public void setRelativeAngleGoal(Rotation2d angle) {
-    // convert to absolute
-    double absAngleDegrees = getAngle().getDegrees() + angle.getDegrees();
-    setAbsoluteAngleGoal(Rotation2d.fromDegrees(absAngleDegrees));
-    
-  }
-
-  public void reset(Rotation2d angle) {
-    yawMotor.setSelectedSensorPosition((angle.getRadians() / 2 * Math.PI) * turretTicksPerRotation);
-  }
-
-  public Rotation2d getAngle() {
-    return Rotation2d.fromDegrees(Units.radiansToDegrees(yawMotor.getSelectedSensorPosition() / turretTicksPerRotation * 2 * Math.PI));
-  }
-
-  public void setSoftLimitsEnable(boolean enable) {
-    enable = false;
-    if (enable) {
-      yawMotor.configForwardSoftLimitThreshold(turretMaxPosition - turretSoftLimitOffset);
-      yawMotor.configReverseSoftLimitThreshold(turretMinPosition + turretSoftLimitOffset);
-    } else {
-      yawMotor.configSoftLimitDisableNeutralOnLOS(true, 50);
-    }
-  }
-
-  public void turretTurn() {
-    yawMotor.set(ControlMode.Position, setAbsolutePositionTicks);
-}
-//I might need this later
- //public double checkTheNumbers() {
-  // return setAbsolutePositionTicks;
- //}
-  public void setEnabled(boolean enabled) { this.enabled = enabled; }
-
-  public boolean getEnabled() { return enabled; }
-
-  @Log(name = "Angle Goal (deg)")
-  public double getAngleGoalDegrees() {
-    return angleGoal.getDegrees();
-  }
-  @Log(name = "Current Angle (deg)")
-  public double getCurrentAngleDegrees() {
-    return getAngle().getDegrees();
+  @Override
+  public void periodic() {
+    useOutput();
   }
 }
