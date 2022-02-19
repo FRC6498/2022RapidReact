@@ -13,6 +13,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
@@ -21,12 +22,10 @@ public class Turret extends SubsystemBase implements Loggable {
 
   TalonFX yawMotor = new TalonFX(yawMotorCANId);
   Rotation2d angleGoal = Rotation2d.fromDegrees(135);
-  double rotationError = 0.0;
-  public boolean homed = false;
-  public boolean centered = false;
   double openLoopDemand;
   public boolean enabled = true;
   double setAbsolutePositionTicks;
+  Timer velocityTimer;
   /** Creates a new Turret. */
   public Turret() {
     yawMotor.configFactoryDefault();
@@ -37,25 +36,13 @@ public class Turret extends SubsystemBase implements Loggable {
     yawMotor.config_kD(0, turretYaw_kD);
     //yawMotor.configIntegratedSensorAbsoluteRange(AbsoluteSensorRange.Unsigned_0_to_360);
     yawMotor.setNeutralMode(NeutralMode.Coast);
+
+    velocityTimer = new Timer();
   }
 
   public void resetSensors(double position) {
     yawMotor.setSelectedSensorPosition(position);
   }
-
-  public static double encoderTicksToDegrees(Double ticks) {
-    return ticks / (1 / Constants.degreesToTurretTicks);
-}
-
-public static double degreesToEncoderTicks(double degrees) {
-  // 1 rot = 360 degrees
-  // 1 rot = 2048 ticks
-  // 1 degree = 1/360 rotation
-  // 1 degree = 2048 ticks / 360
-  // 1 degree = 5.689 ticks
-  return degrees * Constants.degreesToTurretTicks;
-
-}
 
   @Log
   public double getYawMotorOutputCurrent() {
@@ -89,11 +76,6 @@ public static double degreesToEncoderTicks(double degrees) {
   public void setAbsoluteAngleGoal(Rotation2d angle) {
     double absolutePositionDegrees = angle.getDegrees();
     double absolutePositionTicks = degreesToEncoderTicks(absolutePositionDegrees);
-    //rotationError = angleGoal.getDegrees() - getAngle().getDegrees();
-    //System.out.println("Absolute Yaw: " + absolutePositionDegrees);
-    //System.out.println("Desired Ticks: " + absolutePositionTicks);
-    //System.out.println("Position Error: " + yawMotor.getClosedLoopError());
-    //System.out.println("Angle Goal is " + angleGoal.getDegrees() + ", current angle is " + getAngle().getDegrees());
     yawMotor.set(ControlMode.Position, absolutePositionTicks);
   }
 
@@ -142,6 +124,3 @@ public static double degreesToEncoderTicks(double degrees) {
     return getAngle().getDegrees();
   }
 }
-
-
- 
