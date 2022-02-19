@@ -50,17 +50,28 @@ public final class Constants {
     }
 
     public static final class TurretConstants {
-        
-            public static final int yawMotorCANId = 12;
-            public static final double turretPositionOffsetThreshold = 30;
-            public static final double turretYaw_kP = 0.8;
-            public static final double turretYaw_kD = 0.5;
-            public static final double turretTicksPerRotation = 2048.0*(40.0/10.0)*(40.0/20.0)*(314.0/40.0);
-            public static final double turretTicksRange = turretTicksPerRotation * 0.75;
-            public static final double turretMaxPosition = 135+13.25;
-            public static final double turretMinPosition = -135-13.25;
-            public static final double turretSoftLimitOffset = 20;
-            public static final double turretHomingVelocityStopThreshold = 0.1;
+        public static final int yawMotorCANId = 12;
+        public static final double turretPositionOffsetThreshold = 30;
+        public static final double turretYaw_kP = 0.8;
+        public static final double turretYaw_kD = 0.5;
+        public static final double turretTicksPerRotation = 2048.0*(40.0/10.0)*(40.0/20.0)*(314.0/40.0);
+        public static final double turretTicksRange = turretTicksPerRotation * 0.75;
+        public static final double turretMaxPosition = 135+13.25;
+        public static final double turretMinPosition = -135-13.25;
+        public static final double turretSoftLimitOffset = 20;
+        public static final double turretHomingVelocityStopThreshold = 0.1;
+    }
+
+    public static final class WPITurretConstants {
+        public static final int yawMotorCANId = 12;
+        public static final double turretPositionToleranceDegrees = 1;
+        public static final double turretYaw_kP = 0.8;
+        public static final double turretYaw_kD = 0.5;
+        public static final double turretTicksPerRotation = 2048.0*(40.0/10.0)*(40.0/20.0)*(314.0/40.0);
+        public static final double turretMaxPosition = 135+13.25;
+        public static final double turretMinPosition = -135-13.25;
+        public static final double turretSoftLimitOffset = 20;
+        public static final double turretHomingVelocityStopThreshold = 0.1;
     }
 
     public static final class ConveyorConstants {

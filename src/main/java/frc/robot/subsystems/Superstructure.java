@@ -30,7 +30,7 @@ public class Superstructure extends SubsystemBase {
   // Flywheel
   private final Flywheel flywheel;
   // Turret
-  private final Turret turret;
+  private final WPITurret turret;
   // Feeder
 
   // Triggers
@@ -48,7 +48,7 @@ public class Superstructure extends SubsystemBase {
 
   ShotMap flywheelTable = new ShotMap();
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Turret turret, Vision vision) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, WPITurret turret, Vision vision) {
     this.flywheel = flywheel;
     this.frontConveyor = frontConveyor;
     this.backConveyor = backConveyor;
@@ -61,7 +61,7 @@ public class Superstructure extends SubsystemBase {
     flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelIdle(), flywheel));
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
     backConveyor.setDefaultCommand(new RunCommand(() -> backConveyor.stop(), backConveyor));
-    turret.setDefaultCommand(new RunCommand(()-> turret.turretTurn(), turret));
+    turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
 
     shooterReady = new Trigger(this::getShooterReady);
     seesawReady = new Trigger();
@@ -72,7 +72,7 @@ public class Superstructure extends SubsystemBase {
     shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
 
     setupConveyorCommands();
-    setupFlywheelCommands();
+    setupShooterCommands();
   }
 
   private void setupFlywheelTable() {
@@ -95,9 +95,10 @@ private void setupConveyorCommands() {
     );
   }
 
-  private void setupFlywheelCommands() {
+  private void setupShooterCommands() {
     // set speed
-    shooterAutoEnabled.whileActiveContinuous(new RunCommand(() -> { flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getBestTargetDistance())); }, flywheel));
+    shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> { flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getBestTargetDistance())); }, flywheel));
+    shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> turret.setSetpointDegrees(vision.getClosestTarget().getYaw()), turret));
   }
 
   public Color getAllianceColor() {
