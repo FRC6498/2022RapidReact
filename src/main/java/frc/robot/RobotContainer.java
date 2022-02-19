@@ -8,13 +8,15 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.commands.DriveArcadeOpenLoop;
-import frc.robot.commands.HaltConveyor;
 import frc.robot.subsystems.Conveyor;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Flywheel;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.Vision;
 import io.github.oblarg.oblog.Logger;
 import static frc.robot.Constants.IntakeConstants.*;
 
@@ -27,11 +29,17 @@ import static frc.robot.Constants.IntakeConstants.*;
 public class RobotContainer {
   Drivetrain drivetrain = new Drivetrain();
   Flywheel flywheel = new Flywheel();
+  Turret turret = new Turret();
+  Vision vision = new Vision();
   Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, Constants.ConveyorConstants.frontColorSensorId);
   Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.rearDriverCANId, Constants.ConveyorConstants.rearColorSensorId);
+<<<<<<< HEAD
   Intake frontIntake = new Intake();
   Intake backIntake = new Intake();
   Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake);
+=======
+  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, turret, vision);
+>>>>>>> 62fe14d30356c1ac520e9863e1558fb7e73d9835
   XboxController driver = new XboxController(0);
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -44,8 +52,8 @@ public class RobotContainer {
         drivetrain
       )
     );
-    frontConveyor.setDefaultCommand(new HaltConveyor(frontConveyor));
-    backConveyor.setDefaultCommand(new HaltConveyor(backConveyor));
+    frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
+    backConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
     // Configure the button bindings
     configureButtonBindings();
   }

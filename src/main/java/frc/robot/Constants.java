@@ -42,8 +42,7 @@ public final class Constants {
         public static final int leftFlywheelCANId = 13;
         public static final int rightFlywheelCANId = 14;
         public static final int feederACANId = 10;
-        public static final int feederBCANId = 11;
-        public static final int turretBearingCANId = 12;
+        public static final int feederBCANId = 11;     
         public static final double flywheelkP = 0;
         public static final double flywheelkD = 0;
         public static final double flywheelkS = 0;
@@ -58,7 +57,7 @@ public final class Constants {
             public static final int yawMotorCANId = 12;
             public static final double turretPositionOffsetThreshold = 30;
             public static final double turretYaw_kP = 0.8;
-            public static final double turretYaw_kD = 0;
+            public static final double turretYaw_kD = 0.5;
             public static final double turretTicksPerRotation = 2048.0*(40.0/10.0)*(40.0/20.0)*(314.0/40.0);
             public static final double turretTicksRange = turretTicksPerRotation * 0.75;
             public static final double turretMaxPosition = 135+13.25;
