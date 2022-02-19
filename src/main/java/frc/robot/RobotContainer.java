@@ -13,10 +13,12 @@ import frc.robot.commands.DriveArcadeOpenLoop;
 import frc.robot.subsystems.Conveyor;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Flywheel;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision;
 import io.github.oblarg.oblog.Logger;
+import static frc.robot.Constants.IntakeConstants.*;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -31,7 +33,10 @@ public class RobotContainer {
   Vision vision = new Vision();
   Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, Constants.ConveyorConstants.frontColorSensorId);
   Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.rearDriverCANId, Constants.ConveyorConstants.rearColorSensorId);
-  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, turret, vision);
+  Intake frontIntake = new Intake();
+  Intake backIntake = new Intake();
+  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret);
+
   XboxController driver = new XboxController(0);
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {

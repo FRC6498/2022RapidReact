@@ -3,7 +3,6 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems;
-
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
@@ -22,10 +21,12 @@ import frc.robot.lib.ShotMap;
  */
 public class Superstructure extends SubsystemBase {
   // Intake
+  private final Intake frontIntake, backIntake;
   // Vision
   private final Vision vision;
   // Conveyor
   private final Conveyor frontConveyor, backConveyor;
+  
   private final PicoColorSensor colorSensor;
   // Flywheel
   private final Flywheel flywheel;
@@ -45,18 +46,19 @@ public class Superstructure extends SubsystemBase {
   // Intakes
   // Flywheel
   Trigger shooterAutoEnabled;
-
   ShotMap flywheelTable = new ShotMap();
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Turret turret, Vision vision) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake, Intake backIntake, Vision vision, Turret turret) {
     this.flywheel = flywheel;
     this.frontConveyor = frontConveyor;
     this.backConveyor = backConveyor;
+    this.frontIntake = frontIntake;
+    this.backIntake = backIntake;
     this.turret = turret;
     this.vision = vision;
     colorSensor = new PicoColorSensor();
 
-    setupFlywheelTable();
+
 
     flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelIdle(), flywheel));
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
@@ -75,9 +77,9 @@ public class Superstructure extends SubsystemBase {
     setupShooterCommands();
   }
 
-  private void setupFlywheelTable() {
-}
-private void setupConveyorCommands() {
+  
+
+  private void setupConveyorCommands() {
     // move to seesaw
     shooterReady.and(frontConveyorFull).and(frontConveyorBallColorCorrect).and(seesawReady).whileActiveOnce(
       new StartEndCommand(
