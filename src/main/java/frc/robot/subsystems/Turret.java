@@ -10,21 +10,28 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Log;
+
 import static frc.robot.Constants.TurretConstants.*;
 /**
  * THIS SUBSYSTEM IS WIP AND CURRENTLY UNUSED BY THE MAIN ROBOT CODE. IT WILL REMAIN SO UNTIL IT IS FINISHED.<p>
  * Turret subsystem using WPILib controls instead of Phoenix (because its less of a black box and the units are better).
  * Position is measured in Degrees, which is obtained from encoder ticks as soon as position is read off.
  */
-public class Turret extends SubsystemBase {
+public class Turret extends SubsystemBase implements Loggable {
   WPI_TalonFX bearing;
   TalonFXConfiguration bearingConfig;
   PIDController pid;
   boolean homed;
+  @Log
   double visionDegrees;
+  @Log
+  double pidOutput;
 
   public Turret() {
     visionDegrees = 0.0;
+    pidOutput = 0.0;
     homed = false;
     bearingConfig = new TalonFXConfiguration();
     bearingConfig.peakOutputForward = 0.2;
@@ -46,7 +53,8 @@ public class Turret extends SubsystemBase {
   }
 
   private void useOutput() {
-    bearing.set(pid.calculate(visionDegrees, 0));
+    pidOutput = pid.calculate(visionDegrees, 0);
+    bearing.set(pidOutput);
   }
 
   public void stop() {
