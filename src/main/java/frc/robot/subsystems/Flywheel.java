@@ -90,6 +90,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
 
   @Override
   public void periodic() {
+
     if (flywheelActive) {
       bangBangOutput = flywheelBangBang.calculate(rightEncoder.getVelocity(), flywheelSpeedSetpoint);
       feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);

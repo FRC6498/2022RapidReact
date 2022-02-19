@@ -56,7 +56,7 @@ public class RobotContainer {
       )
     );
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
-    backConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
+    backConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), backConveyor));
     frontIntake.setDefaultCommand(new RunCommand(() -> frontIntake.setMotorSetpoint(0.0), frontIntake));
     backIntake.setDefaultCommand(new RunCommand(() -> backIntake.setMotorSetpoint(0.0), backIntake));
     // Configure the button bindings
@@ -70,6 +70,7 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    new JoystickButton(driver, Button.kRightBumper.value).whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
     new POVButton(driver, 0).and(superstructure.frontConveyorFull.negate()).whenActive(new ConditionalCommand(new InstantCommand(frontIntake::raiseIntake, frontIntake), new InstantCommand(frontIntake::lowerIntake, frontIntake), frontIntake::isExtended));
     //new POVButton(driver, 90).whenActive(() -> )
     new POVButton(driver, 180).and(superstructure.backConveyorFull.negate()).whenActive(new ConditionalCommand(new InstantCommand(backIntake::raiseIntake, backIntake), new InstantCommand(backIntake::lowerIntake, backIntake), backIntake::isExtended));

@@ -15,24 +15,25 @@ import io.github.oblarg.oblog.annotations.Config;
 public class Intake extends SubsystemBase implements Loggable {
   WPI_TalonFX motor;
   Double motorSetpoint;
-  DoubleSolenoid leftPiston;
+  DoubleSolenoid piston;
 
   public Intake(int intakeMotorId, int pistonForwardId, int pistonReverseId) {
     motor = new WPI_TalonFX(intakeMotorId);
-    leftPiston = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, pistonForwardId, pistonReverseId);
+    piston = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, pistonForwardId, pistonReverseId);
+    piston.set(Value.kForward);
   }
 
   public void lowerIntake() {
     setMotorSetpoint(0.67);
-    leftPiston.set(Value.kReverse);
+    piston.set(Value.kReverse);
   }
 
   public void raiseIntake() {
     setMotorSetpoint(0.0);
-    leftPiston.set(Value.kForward);
+    piston.set(Value.kForward);
   }
 
-  @Config
+  //@Config
   public void setMotorSetpoint(double percent) {
     motorSetpoint = percent;
   }

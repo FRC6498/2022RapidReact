@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.lib.PicoColorSensor;
 import frc.robot.lib.ShotMap;
+import io.github.oblarg.oblog.annotations.Config;
 
 /**
  * Coordinates all subsystems involving cargo
@@ -27,7 +28,7 @@ public class Superstructure extends SubsystemBase {
   // Conveyor
   private final Conveyor frontConveyor, backConveyor;
   
-  private final PicoColorSensor colorSensor;
+  //private final PicoColorSensor colorSensor;
   // Flywheel
   private final Flywheel flywheel;
   // Turret
@@ -47,6 +48,8 @@ public class Superstructure extends SubsystemBase {
   // Flywheel
   public Trigger shooterAutoEnabled;
   ShotMap flywheelTable = new ShotMap();
+  @Config
+  double flywheelRPM = 0.0;
 
   public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake, Intake backIntake, Vision vision, Turret turret) {
     this.flywheel = flywheel;
@@ -56,7 +59,7 @@ public class Superstructure extends SubsystemBase {
     this.backIntake = backIntake;
     this.turret = turret;
     this.vision = vision;
-    colorSensor = new PicoColorSensor();
+    //colorSensor = new PicoColorSensor();
 
 
 
@@ -71,7 +74,7 @@ public class Superstructure extends SubsystemBase {
     frontConveyorBallColorCorrect = new Trigger(() -> {return frontConveyor.getCargoColor() == this.getAllianceColor(); });
     backConveyorFull = new Trigger(backConveyor::isBallPresent);
     backConveyorBallColorCorrect = new Trigger(() -> {return backConveyor.getCargoColor() == this.getAllianceColor(); });
-    shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
+    ///shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
 
     setupConveyorCommands();
     setupShooterCommands();
@@ -99,8 +102,8 @@ public class Superstructure extends SubsystemBase {
 
   private void setupShooterCommands() {
     // set speed
-    shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> { flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getBestTargetDistance())); }, flywheel));
-    shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> turret.setSetpointDegrees(vision.getClosestTarget().getYaw()), turret));
+    //shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> { flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getBestTargetDistance())); }, flywheel));
+    //shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> turret.setSetpointDegrees(vision.getClosestTarget().getYaw()), turret));
   }
 
   public Color getAllianceColor() {
@@ -117,8 +120,8 @@ public class Superstructure extends SubsystemBase {
   }
 
   public void getBallColors() {
-    backConveyor.setCargoColor(colorSensor.getColor(backConveyor.colorSensorId));
-    frontConveyor.setCargoColor(colorSensor.getColor(frontConveyor.colorSensorId));
+    //backConveyor.setCargoColor(colorSensor.getColor(backConveyor.colorSensorId));
+    //frontConveyor.setCargoColor(colorSensor.getColor(frontConveyor.colorSensorId));
   }
 
 
@@ -131,7 +134,7 @@ public class Superstructure extends SubsystemBase {
   }
 
   public boolean getShooterReady() {
-    return flywheel.atSetpoint() && turret.atSetpoint();
+    return false;//flywheel.atSetpoint() && turret.atSetpoint();
   }
 
   // Methods should be high level actions and command subsystems to achieve the goal

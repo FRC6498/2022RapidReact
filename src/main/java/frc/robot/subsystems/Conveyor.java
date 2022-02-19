@@ -24,9 +24,9 @@ public class Conveyor extends SubsystemBase implements Loggable {
   private Color cargoColor;
   public boolean running;
   public boolean empty;
-  @Log.BooleanBox(name = "Ball Present (Color)")
+  //@Log.BooleanBox(name = "Ball Present (Color)")
   boolean colorEmpty;
-  @Log.BooleanBox(name = "Ball Present (Current)")
+  //@Log.BooleanBox(name = "Ball Present (Current)")
   boolean currentEmpty;
   public int colorSensorId;
   private ColorMatch colorMatch;

@@ -67,7 +67,8 @@ public class Drivetrain extends SubsystemBase implements Loggable {
 
     leftMotors = new MotorControllerGroup(leftLeader, leftFollower);
     rightMotors = new MotorControllerGroup(rightLeader, rightFollower);
-    rightMotors.setInverted(true);
+    rightMotors.setInverted(false);
+    leftMotors.setInverted(true);
     diffDrive = new DifferentialDrive(leftMotors, rightMotors);
     diffDrive.setSafetyEnabled(false);
 
