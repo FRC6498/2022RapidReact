@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -14,59 +12,33 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 
-import static frc.robot.Constants.IntakeConstants.*;
-
 public class Intake extends SubsystemBase implements Loggable {
-  WPI_TalonFX frontMotor;
-  
-  WPI_TalonFX backMotor;
-  Double frontMotorSetpoint;
-  Double backMotorSetpoint;
-  DoubleSolenoid frontIntake;
-  DoubleSolenoid backIntake;
-  /** Creates a new Intake. */
-  public void frontIntake() {
-    frontMotor = new WPI_TalonFX (intakeACANId);
-    frontMotor.configOpenloopRamp(1);
-    frontMotorSetpoint = 0.0;
-    frontIntake = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, frontIntakeForwardChannel, frontIntakeReverseChannel);
-    
-  }
-  public void backIntake() {
-    backMotor = new WPI_TalonFX (intakeBCANId);
-    backMotor.configOpenloopRamp(1);
-    backMotorSetpoint = 0.0;
-    backIntake = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, backIntakeForwardChannel, backIntakeReverseChannel);
+  WPI_TalonFX motor;
+  Double motorSetpoint;
+  DoubleSolenoid leftPiston;
 
+  public Intake(int intakeMotorId, int pistonForwardId, int pistonReverseId) {
+    motor = new WPI_TalonFX(intakeMotorId);
+    leftPiston = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, pistonForwardId, pistonReverseId);
   }
 
-  public void lowerFrontIntake() {
-    frontMotorSetpoint = 0.67;
-    frontIntake.set(Value.kReverse);
+  public void lowerIntake() {
+    setMotorSetpoint(0.67);
+    leftPiston.set(Value.kReverse);
   }
 
-  public void raiseFrontIntake() {
-    frontMotorSetpoint = 0.0;
-    frontIntake.set(Value.kForward);
+  public void raiseIntake() {
+    setMotorSetpoint(0.0);
+    leftPiston.set(Value.kForward);
   }
-
-  public void lowerBackIntake() {
-    backMotorSetpoint = 0.67;
-    backIntake.set(Value.kReverse);
-  }
-
-  public void raiseBackIntake() {
-    backMotorSetpoint = 0.0; 
-    backIntake.set(Value.kForward);
-  }
-
 
   @Config
-  public void setfrontMotorSetpoint(double percent) {
-    frontMotorSetpoint = percent;
+  public void setMotorSetpoint(double percent) {
+    motorSetpoint = percent;
   }
-  public void setbackMotorSetpoint(double percent) {
-    backMotorSetpoint = percent;
+
+  public boolean isExtended() {
+    return motorSetpoint > 0.05;
   }
 
   @Override

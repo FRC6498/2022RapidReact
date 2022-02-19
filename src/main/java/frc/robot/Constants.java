@@ -20,10 +20,10 @@ public final class Constants {
     public static final class IntakeConstants {
         public static final int intakeACANId = 7;
         public static final int intakeBCANId = 8;
-        public static final int frontIntakeForwardChannel = 1;
-        public static final int frontIntakeReverseChannel = 0;
-        public static final int backIntakeForwardChannel = 1;
-        public static final int backIntakeReverseChannel = 0;
+        public static final int frontIntakeForwardChannel = 3;
+        public static final int frontIntakeReverseChannel = 2;
+        public static final int backIntakeForwardChannel = 4;
+        public static final int backIntakeReverseChannel = 5;
     }
 
     public static final class DriveConstants {

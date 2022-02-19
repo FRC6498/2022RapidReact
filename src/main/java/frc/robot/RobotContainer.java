@@ -6,9 +6,15 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.robot.commands.DriveArcadeOpenLoop;
 import frc.robot.subsystems.Conveyor;
 import frc.robot.subsystems.Drivetrain;
@@ -33,8 +39,8 @@ public class RobotContainer {
   Vision vision = new Vision();
   Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, Constants.ConveyorConstants.frontColorSensorId);
   Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.rearDriverCANId, Constants.ConveyorConstants.rearColorSensorId);
-  Intake frontIntake = new Intake();
-  Intake backIntake = new Intake();
+  Intake frontIntake = new Intake(intakeACANId, frontIntakeForwardChannel, frontIntakeReverseChannel);
+  Intake backIntake = new Intake(intakeBCANId, backIntakeForwardChannel, backIntakeReverseChannel);
   Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret);
 
   XboxController driver = new XboxController(0);
@@ -51,6 +57,8 @@ public class RobotContainer {
     );
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
     backConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
+    frontIntake.setDefaultCommand(new RunCommand(() -> frontIntake.setMotorSetpoint(0.0), frontIntake));
+    backIntake.setDefaultCommand(new RunCommand(() -> backIntake.setMotorSetpoint(0.0), backIntake));
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -61,7 +69,11 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
-  private void configureButtonBindings() {}
+  private void configureButtonBindings() {
+    new POVButton(driver, 0).and(superstructure.frontConveyorFull.negate()).whenActive(new ConditionalCommand(new InstantCommand(frontIntake::raiseIntake, frontIntake), new InstantCommand(frontIntake::lowerIntake, frontIntake), frontIntake::isExtended));
+    //new POVButton(driver, 90).whenActive(() -> )
+    new POVButton(driver, 180).and(superstructure.backConveyorFull.negate()).whenActive(new ConditionalCommand(new InstantCommand(backIntake::raiseIntake, backIntake), new InstantCommand(backIntake::lowerIntake, backIntake), backIntake::isExtended));
+  }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

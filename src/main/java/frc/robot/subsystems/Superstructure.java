@@ -36,16 +36,16 @@ public class Superstructure extends SubsystemBase {
 
   // Triggers
   // Superstructure
-  Trigger shooterReady;
-  Trigger seesawReady;
+  public Trigger shooterReady;
+  public Trigger seesawReady;
   // Conveyors
-  Trigger frontConveyorFull;
-  Trigger frontConveyorBallColorCorrect;
-  Trigger backConveyorFull;
-  Trigger backConveyorBallColorCorrect;
+  public Trigger frontConveyorFull;
+  public Trigger frontConveyorBallColorCorrect;
+  public Trigger backConveyorFull;
+  public Trigger backConveyorBallColorCorrect;
   // Intakes
   // Flywheel
-  Trigger shooterAutoEnabled;
+  public Trigger shooterAutoEnabled;
   ShotMap flywheelTable = new ShotMap();
 
   public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake, Intake backIntake, Vision vision, Turret turret) {
