@@ -43,6 +43,7 @@ public class RobotContainer {
   Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret);
 
   XboxController driver = new XboxController(0);
+  XboxController operator = new XboxController(1);
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     Logger.configureLoggingAndConfig(this, false);
@@ -54,6 +55,7 @@ public class RobotContainer {
         drivetrain
       )
     );
+    drivetrain.setInverted(true);
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
     backConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), backConveyor));
     frontIntake.setDefaultCommand(new RunCommand(() -> frontIntake.setMotorSetpoint(0.0), frontIntake));

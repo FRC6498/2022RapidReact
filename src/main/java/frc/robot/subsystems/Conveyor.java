@@ -12,6 +12,7 @@ import com.revrobotics.ColorMatchResult;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import io.github.oblarg.oblog.Loggable;
 //import io.github.oblarg.oblog.annotations.Log;
 
@@ -72,7 +73,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
   }
 
   public void start(double dutyCycle) {
-    driverOutput = 0.1 * dutyCycle;
+    driverOutput = Constants.ConveyorConstants.conveyorNominalSpeed * dutyCycle;
   }
 
   public void stop() {
