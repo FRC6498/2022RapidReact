@@ -32,6 +32,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   private double bangBangOutput;
   private double feedforwardOutput;
   private double controllerOutput;
+  private double lastLoopPosition;
   
   public Flywheel() {
     flywheelLeft = new CANSparkMax(leftFlywheelCANId, MotorType.kBrushless);
@@ -92,7 +93,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   public void periodic() {
 
     if (flywheelActive) {
-      bangBangOutput = flywheelBangBang.calculate(rightEncoder.getVelocity(), flywheelSpeedSetpoint);
+      bangBangOutput = flywheelBangBang.calculate((rightEncoder.getPosition() - lastLoopPosition) / 0.02, flywheelSpeedSetpoint);
       feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);
       controllerOutput = bangBangOutput + 0.9 * feedforwardOutput;
       flywheelRight.set(controllerOutput);
