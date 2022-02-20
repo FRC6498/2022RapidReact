@@ -9,16 +9,18 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorMatchResult;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log;
+//import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.ConveyorConstants.*;
 
 public class Conveyor extends SubsystemBase implements Loggable {
 
   private final WPI_TalonFX driver;
+  private final DigitalInput ballSensor;
   private final TalonFXConfiguration driverConfig;
 
   private Color cargoColor;
@@ -41,7 +43,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
    */
 
   /** Creates a new Conveyor. */
-  public Conveyor(int driverCANId, int sensorId) {
+  public Conveyor(int driverCANId, int colorSensorId, int beambreakId) {
     driver = new WPI_TalonFX(driverCANId);
 
     driverConfig = new TalonFXConfiguration();
@@ -56,7 +58,9 @@ public class Conveyor extends SubsystemBase implements Loggable {
 
     cargoColor = Color.kGray;
     running = false;
-    colorSensorId = sensorId;
+    ballSensor = new DigitalInput(beambreakId);
+
+    this.colorSensorId = colorSensorId;
     colorMatch = new ColorMatch();
     colorMatch.setConfidenceThreshold(0.95);
     colorMatch.addColorMatch(Color.kRed);
@@ -83,19 +87,24 @@ public class Conveyor extends SubsystemBase implements Loggable {
     cargoColor = color;
   }
 
-  public boolean isBallPresent() {
-    // get color match
-    ColorMatchResult match = colorMatch.matchClosestColor(cargoColor);
-    if (match.color == Color.kRed || match.color == Color.kBlue) {
-      colorEmpty = true;
-    } else colorEmpty = false;
+  public boolean isBallPresent(boolean color) {
+    if (color) {
+      // get color match
+      ColorMatchResult match = colorMatch.matchClosestColor(cargoColor);
+      if (match.color == Color.kRed || match.color == Color.kBlue) {
+        colorEmpty = true;
+      } else colorEmpty = false;
 
-    // get current match
-    if (driver.getStatorCurrent() > ballPresentCurrentThreshold) {
-      currentEmpty = true;
-    } else currentEmpty = false;
-    
-    return colorEmpty || currentEmpty;
+      // get current match
+      if (driver.getStatorCurrent() > ballPresentCurrentThreshold) {
+        currentEmpty = true;
+      } else currentEmpty = false;
+      
+      return colorEmpty || currentEmpty;
+    } else {
+      // use beam break
+      return ballSensor.get();
+    }
   }
 
   @Override
@@ -103,7 +112,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
     // if the motor is running, set running to true
     running = driver.get() > 0;
     // are we empty
-    empty = isBallPresent();
+    empty = isBallPresent(false);
 
     driver.set(driverOutput);
   }

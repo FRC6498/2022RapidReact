@@ -70,11 +70,11 @@ public class Superstructure extends SubsystemBase {
 
     shooterReady = new Trigger(this::getShooterReady);
     seesawReady = new Trigger();
-    frontConveyorFull = new Trigger(frontConveyor::isBallPresent);
+    frontConveyorFull = new Trigger(() -> frontConveyor.isBallPresent(false));
     frontConveyorBallColorCorrect = new Trigger(() -> {return frontConveyor.getCargoColor() == this.getAllianceColor(); });
-    backConveyorFull = new Trigger(backConveyor::isBallPresent);
+    backConveyorFull = new Trigger(() -> backConveyor.isBallPresent(false));
     backConveyorBallColorCorrect = new Trigger(() -> {return backConveyor.getCargoColor() == this.getAllianceColor(); });
-    ///shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
+    shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
 
     setupConveyorCommands();
     setupShooterCommands();
