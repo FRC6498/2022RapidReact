@@ -11,7 +11,6 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.Compressor;
@@ -110,16 +109,6 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     return gyro.getRate();
   }
 
-  public void toggleBrakeMode() {
-    if (currentBrakeMode == NeutralMode.Brake) {
-      currentBrakeMode = NeutralMode.Coast;
-      setBrakeMode(currentBrakeMode);
-    } else {
-      currentBrakeMode = NeutralMode.Brake;
-      setBrakeMode(currentBrakeMode);
-    }
-  }
-
   public void setBrakeMode(NeutralMode brakeMode)
   {
     leftLeader.setNeutralMode(brakeMode);
@@ -178,17 +167,6 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     return currentBrakeMode.toString();
   }
 
-  public double getEncoderPosition()
-  {
-    return ((leftLeader.getSelectedSensorPosition() + leftFollower.getSelectedSensorPosition()) / 2) 
-      + ((rightLeader.getSelectedSensorPosition() + rightFollower.getSelectedSensorPosition()) / 2);
-  }
-
-  @Log.BooleanBox(name = "Compressor Running")
-  public boolean getPressure() {
-    return compressor.enabled();
-  }
-
   @Log(name = "Yaw (deg.)")
   public double getGyroAngleDegrees() {
     return getGyroAngle().getDegrees();
@@ -201,21 +179,5 @@ public class Drivetrain extends SubsystemBase implements Loggable {
       leftLeader.getSelectedSensorPosition(), 
       rightLeader.getSelectedSensorPosition()
     );
-  }
-
-  @Log.Graph
-  public double getLeftVelocity() {
-    return leftLeader.getSelectedSensorVelocity();
-  }
-
-  @Log.Graph
-  public double getRightVelocity() {
-    return rightLeader.getSelectedSensorVelocity();
-  }
-  
-  @Log.Dial
-  public double getSpeedRatio() {
-    // 1.0 => both sides equal, 0.0 => left 0, right 1, 100.0 => right 0, left 1
-    return MathUtil.applyDeadband(leftLeader.getSelectedSensorVelocity(), 0.01) / MathUtil.applyDeadband(rightLeader.getSelectedSensorVelocity(), 0.01);
   }
 }
