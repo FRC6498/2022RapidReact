@@ -48,22 +48,9 @@ public class Vision extends SubsystemBase implements Loggable {
     NT_lifecam = NT_photonvision.getSubTable("Microsoft_LifeCam_HD-3000");
   }
 
-  /**
-   * 
-   * @param target The target you want data for. Pass in directly from getTarget().
-   * @return A double[] with the yaw, pitch, and area values of the target in that order
-   */
-  public double[] getTargetData()
+  public PhotonTrackedTarget getBestTarget()
   {
-    PhotonTrackedTarget target = currentResult.getBestTarget();
-    double[] data = new double[]
-    {
-      target.getYaw(),
-      target.getPitch(),
-      target.getArea()
-
-    };
-    return data;
+    return currentResult.getBestTarget();
   }
 
   public void setLED(VisionLEDMode ledMode)
@@ -78,13 +65,13 @@ public class Vision extends SubsystemBase implements Loggable {
    * 
    * @return Distance to the current pipeline's best target, for input to a PID controller (for shooting)
    */
-  public double getBestTargetDistance()
+  public double getTargetDistance(PhotonTrackedTarget target)
   {
     return PhotonUtils.calculateDistanceToTargetMeters(
       comparisonConstants[0], 
       comparisonConstants[1], 
       comparisonConstants[2], 
-      Units.degreesToRadians(getTargetData()[1])
+      Units.degreesToRadians(target.getPitch())
     );
   }
 
