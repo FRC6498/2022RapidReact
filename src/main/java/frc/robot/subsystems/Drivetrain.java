@@ -78,7 +78,7 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     shifter = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, shifterForwardChannelId, shifterReverseChannelId);
 
     // engage brakes when neutral input
-    setBrakeMode(NeutralMode.Coast);
+    setBrakeMode(NeutralMode.Brake);
 
     // setup encoders
     leftLeader.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);

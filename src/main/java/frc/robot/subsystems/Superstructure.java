@@ -48,6 +48,7 @@ public class Superstructure extends SubsystemBase {
   // Flywheel
   public Trigger shooterAutoEnabled;
   ShotMap flywheelTable = new ShotMap();
+  ShooterMode shooterMode;
   @Config
   double flywheelRPM = 0.0;
 
@@ -76,6 +77,7 @@ public class Superstructure extends SubsystemBase {
     backConveyorBallColorCorrect = new Trigger(() -> {return backConveyor.getCargoColor() == this.getAllianceColor(); });
     shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
 
+    this.shooterMode = ShooterMode.FULL_AUTO;
     setupConveyorCommands();
     setupShooterCommands();
   }
@@ -129,14 +131,20 @@ public class Superstructure extends SubsystemBase {
     return shooterAutoEnabled.get();
   }
 
-  public void setShooterActive(boolean active) {
-    //shooterAutoEnabled = active;
+  public void setShooterActive(ShooterMode mode) {
+    shooterMode = mode;
   }
 
   public boolean getShooterReady() {
-    return false;//flywheel.atSetpoint() && turret.atSetpoint();
+    return flywheel.atSetpoint() && turret.atSetpoint();
   }
 
+  public enum ShooterMode {
+    FULL_AUTO, // turret and flywheel track the goal, ball is fired if present as soon as shooter is ready
+    MANUAL_FIRE, // turret and flywheel track the goal, ball is fired on operator command if present
+    TRACK_ONLY, // Turret tracks the goal but flywheel coats down
+    DISABLED // turret and flywheel do not move, shooting is impossible
+  }
   // Methods should be high level actions and command subsystems to achieve the goal
   // TODO: Define what subsytems need, which will inform requirements for this
 
