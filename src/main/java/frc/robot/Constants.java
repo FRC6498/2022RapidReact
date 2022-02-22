@@ -26,6 +26,9 @@ public final class Constants {
         public static final int backIntakeReverseChannel = 5;
     }
 
+    public static final class ClimberConstants{
+        public static final int climberMotorCANId = 1;
+    }
     public static final class DriveConstants {
         public static final int leftLeaderCANId = 1;
         public static final int leftFollowerCANId = 2;
