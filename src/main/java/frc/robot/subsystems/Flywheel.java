@@ -100,5 +100,6 @@ public class Flywheel extends SubsystemBase implements Loggable {
     } else {
       setFlywheelIdle();
     }
+    lastLoopPosition = rightEncoder.getPosition();
   }
 }
