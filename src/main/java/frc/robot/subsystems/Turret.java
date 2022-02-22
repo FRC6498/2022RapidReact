@@ -9,6 +9,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
@@ -28,6 +29,8 @@ public class Turret extends SubsystemBase implements Loggable {
   double visionDegrees;
   @Log
   double pidOutput;
+  SimpleMotorFeedforward turretFeedforward;
+  SimpleMotorFeedforward thing;
 
   public Turret() {
     visionDegrees = 0.0;
@@ -42,6 +45,9 @@ public class Turret extends SubsystemBase implements Loggable {
     pid = new PIDController(turretYaw_kP, 0, turretYaw_kD);
     // set position tolerance to 1 degree
     pid.setTolerance(turretPositionToleranceDegrees);
+
+    turretFeedforward = new SimpleMotorFeedforward(turretFeedforward_kA, turretFeedforward_ks, turretFeedforward_kv);
+    
   }
 
   public void setSetpointDegrees(double setpoint) {
@@ -61,6 +67,7 @@ public class Turret extends SubsystemBase implements Loggable {
     bearing.set(0);
   }
 
+  
   @Override
   public void periodic() {
     useOutput();
