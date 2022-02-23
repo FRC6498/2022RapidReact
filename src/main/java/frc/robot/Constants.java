@@ -18,8 +18,8 @@ public final class Constants {
     public static final double degreesToTurretTicks = 35.04;
     
     public static final class IntakeConstants {
-        public static final int intakeACANId = 7;
-        public static final int intakeBCANId = 8;
+        public static final int intakeACANId = 6;
+        public static final int intakeBCANId = 5;
         public static final int frontIntakeForwardChannel = 3;
         public static final int frontIntakeReverseChannel = 2;
         public static final int backIntakeForwardChannel = 4;
@@ -28,6 +28,11 @@ public final class Constants {
 
     public static final class ClimberConstants{
         public static final int climberMotorCANId = 1;
+        public static final double climber_kS = 0.0;
+        public static final double climber_kG = 0.0;
+        public static final double climber_kV = 0.0;
+        public static final double climber_kP = 0.0;
+        public static final double climber_kD = 0.0;
     }
     public static final class DriveConstants {
         public static final int leftLeaderCANId = 1;

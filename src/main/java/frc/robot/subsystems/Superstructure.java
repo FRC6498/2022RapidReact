@@ -86,20 +86,21 @@ public class Superstructure extends SubsystemBase {
 
   private void setupConveyorCommands() {
     // move to seesaw
-    shooterReady.and(frontConveyorFull).and(frontConveyorBallColorCorrect).and(seesawReady).whileActiveOnce(
-      new StartEndCommand(
-        frontConveyor::start, 
-        frontConveyor::stop, 
-        frontConveyor
-      )
-    );
-    shooterReady.and(backConveyorFull).and(backConveyorBallColorCorrect).and(seesawReady).whileActiveOnce(
-      new StartEndCommand(
-        backConveyor::start, 
-        backConveyor::stop, 
-        backConveyor
-      )
-    );
+    //shooterReady.and(frontConveyorFull).and(frontConveyorBallColorCorrect).and(seesawReady).whileActiveOnce(
+    //  new StartEndCommand(
+    //    frontConveyor::start, 
+    //    frontConveyor::stop, 
+    //    frontConveyor
+    //  )
+    //);
+    //shooterReady.and(backConveyorFull).and(backConveyorBallColorCorrect).and(seesawReady).whileActiveOnce(
+    //  new StartEndCommand(
+    //    backConveyor::start, 
+    //    backConveyor::stop, 
+    //    backConveyor
+    //  )
+    //);
+    
   }
 
   private void setupShooterCommands() {

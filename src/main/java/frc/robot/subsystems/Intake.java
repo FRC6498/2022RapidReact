@@ -14,23 +14,28 @@ import io.github.oblarg.oblog.Loggable;
 
 public class Intake extends SubsystemBase implements Loggable {
   WPI_TalonFX motor;
-  Double motorSetpoint;
+  Double motorSetpoint = 0.0;
   DoubleSolenoid piston;
 
   public Intake(int intakeMotorId, int pistonForwardId, int pistonReverseId) {
     motor = new WPI_TalonFX(intakeMotorId);
     piston = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, pistonForwardId, pistonReverseId);
-    piston.set(Value.kForward);
+    motor.configOpenloopRamp(1);
+    piston.set(Value.kReverse);
   }
 
   public void lowerIntake() {
     setMotorSetpoint(0.67);
-    piston.set(Value.kReverse);
+    piston.set(Value.kForward);
   }
 
   public void raiseIntake() {
     setMotorSetpoint(0.0);
-    piston.set(Value.kForward);
+    piston.set(Value.kReverse);
+  }
+
+  public void reverse() {
+    motorSetpoint *= -1;
   }
 
   //@Config
@@ -45,5 +50,6 @@ public class Intake extends SubsystemBase implements Loggable {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    motor.set(motorSetpoint);
   }
 }

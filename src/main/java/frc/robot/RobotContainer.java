@@ -12,9 +12,14 @@ import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveArcadeOpenLoop;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Conveyor;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Flywheel;
@@ -36,6 +41,7 @@ public class RobotContainer {
   Flywheel flywheel = new Flywheel();
   Turret turret = new Turret();
   Vision vision = new Vision();
+  Climber climber = new Climber();
   Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, Constants.ConveyorConstants.frontColorSensorId, Constants.ConveyorConstants.frontConveyorPhotoeyeId);
   Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.rearDriverCANId, Constants.ConveyorConstants.rearColorSensorId, Constants.ConveyorConstants.backConveyorPhotoeyeId);
   Intake frontIntake = new Intake(intakeACANId, frontIntakeForwardChannel, frontIntakeReverseChannel);
@@ -43,7 +49,9 @@ public class RobotContainer {
   Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret);
 
   XboxController driver = new XboxController(0);
-  XboxController operator = new XboxController(1);
+  //XboxController operator = new XboxController(1);
+  Trigger retractClimb = new Trigger();
+
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     Logger.configureLoggingAndConfig(this, false);
@@ -72,9 +80,14 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     new JoystickButton(driver, Button.kRightBumper.value).whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
-    new POVButton(driver, 0).and(superstructure.frontConveyorFull.negate()).whenActive(new ConditionalCommand(new InstantCommand(frontIntake::raiseIntake, frontIntake), new InstantCommand(frontIntake::lowerIntake, frontIntake), frontIntake::isExtended));
+    new POVButton(driver, 0).whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake));
     //new POVButton(driver, 90).whenActive(() -> )
-    new POVButton(driver, 180).and(superstructure.backConveyorFull.negate()).whenActive(new ConditionalCommand(new InstantCommand(backIntake::raiseIntake, backIntake), new InstantCommand(backIntake::lowerIntake, backIntake), backIntake::isExtended));
+    new POVButton(driver, 180).whileActiveOnce(new StartEndCommand(() -> backIntake.lowerIntake(), () -> backIntake.raiseIntake(), backIntake));
+    new POVButton(driver, 270).whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
+    new POVButton(driver, 90).whenActive(new InstantCommand(backIntake::reverse, backIntake));
+    
+    new JoystickButton(driver, Button.kX.value).whenActive(new ConditionalCommand(new InstantCommand(() -> frontConveyor.stop(), frontConveyor), new InstantCommand(() -> frontConveyor.start(), frontConveyor), () -> frontConveyor.running));
+    new JoystickButton(driver, Button.kY.value).whenActive(new ConditionalCommand(new InstantCommand(() -> backConveyor.stop(), backConveyor), new InstantCommand(() -> backConveyor.start(), backConveyor), () -> backConveyor.running));
   }
 
   /**
