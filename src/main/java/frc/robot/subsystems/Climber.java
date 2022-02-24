@@ -17,41 +17,50 @@ public class Climber extends SubsystemBase {
   /** Creates a new Climber. */
   WPI_TalonFX climberMotor;
   double climberMotorSetpoint;
-  public boolean isDown;
+  public boolean isDown = true;
+  boolean predeploy = true;
   public Climber() {
+    isDown = true;
     climberMotor = new WPI_TalonFX(climberMotorCANId);
-    climberMotor.configOpenloopRamp(1);
-    climberMotor.set(ControlMode.Position, climberMotorSetpoint);
+    climberMotor.configClosedloopRamp(1);
     //setup encoders
     climberMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
   }
-public double getEncoderPosition() {
-  return climberMotor.getSelectedSensorPosition();
-}
+  public double getEncoderPosition() {
+    return climberMotor.getSelectedSensorPosition();
+  }
+
   public void lowerClimber()  {
     climberMotorSetpoint = 0;
+    climberMotor.setNeutralMode(NeutralMode.Brake);
+    climberMotor.set(ControlMode.Position, climberMotorSetpoint);
   }
+
   public void releaseClimber() {
+    isDown = false;
     climberMotor.setNeutralMode(NeutralMode.Coast);
+    climberMotor.set(ControlMode.PercentOutput, 0);
   }
   
   public void whereClimber(double getEncoderPosition) {
     if (getEncoderPosition < 50) {
       isDown = true;
-      
     } else {
       isDown = false;
     }
   }
   public void toggleClimber() {
-    if (isDown) {
-      climberMotor.setNeutralMode(NeutralMode.Brake);
-    } else {
-      climberMotor.setNeutralMode(NeutralMode.Coast);
+    if (isDown && predeploy) { // raise climber
+      releaseClimber();
+      predeploy = false;
+    } else if (!isDown && !predeploy) { // retract
+      lowerClimber();
+      predeploy = true;
     }
   }
   @Override
   public void periodic() {
+    whereClimber(getEncoderPosition());
     // This method will be called once per scheduler run
   }
 }
