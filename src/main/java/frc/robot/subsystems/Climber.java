@@ -18,7 +18,6 @@ public class Climber extends SubsystemBase {
     climberMotor.configOpenloopRamp(1);
   
   }
-  move 
 
   public void toggle() {
 

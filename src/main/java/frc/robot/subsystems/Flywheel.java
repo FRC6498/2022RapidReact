@@ -48,8 +48,6 @@ public class Flywheel extends SubsystemBase implements Loggable {
       flywheelkA
     );
     
-
-    }
     flywheelRight.restoreFactoryDefaults(true);
     flywheelLeft.restoreFactoryDefaults(true);
     // invert follower because it is pointing the opposite direction
@@ -62,7 +60,8 @@ public class Flywheel extends SubsystemBase implements Loggable {
 
     flywheelActive = false;
     flywheelSpeedSetpoint = 0.0;
-  }
+    }
+    
   
   /**
    * 
