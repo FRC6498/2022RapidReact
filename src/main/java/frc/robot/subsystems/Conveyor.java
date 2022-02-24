@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import io.github.oblarg.oblog.Loggable;
-//import io.github.oblarg.oblog.annotations.Log;
+import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.ConveyorConstants.*;
 
@@ -33,6 +33,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
   boolean currentEmpty;
   public int colorSensorId;
   private ColorMatch colorMatch;
+  @Log
   private double driverOutput;
   
 
@@ -50,7 +51,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
     driverConfig = new TalonFXConfiguration();
     driverConfig.openloopRamp = 0.5;
     driverConfig.peakOutputForward = 0.1;
-    driverConfig.peakOutputReverse = 0.1;
+    driverConfig.peakOutputReverse = -0.1;
     driverConfig.voltageCompSaturation = 12;
 
     driver.configAllSettings(driverConfig);
@@ -69,15 +70,16 @@ public class Conveyor extends SubsystemBase implements Loggable {
   }
 
   public void start() {
-    start(1);
+    start(-1);
   }
 
   public void start(double dutyCycle) {
     driverOutput = Constants.ConveyorConstants.conveyorNominalSpeed * dutyCycle;
+    running = true;
   }
 
   public void stop() {
-    driver.set(0);
+    driverOutput = 0;
   }
 
   public void reverse() {
@@ -114,8 +116,6 @@ public class Conveyor extends SubsystemBase implements Loggable {
 
   @Override
   public void periodic() {
-    // if the motor is running, set running to true
-    running = driver.get() > 0;
     // are we empty
     empty = isBallPresent(false);
 
