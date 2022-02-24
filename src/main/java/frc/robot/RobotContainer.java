@@ -46,7 +46,7 @@ public class RobotContainer {
   Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.rearDriverCANId, Constants.ConveyorConstants.rearColorSensorId, Constants.ConveyorConstants.backConveyorPhotoeyeId);
   Intake frontIntake = new Intake(intakeACANId, frontIntakeForwardChannel, frontIntakeReverseChannel);
   Intake backIntake = new Intake(intakeBCANId, backIntakeForwardChannel, backIntakeReverseChannel);
-  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret);
+  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber);
 
   XboxController driver = new XboxController(0);
   //XboxController operator = new XboxController(1);
@@ -89,6 +89,7 @@ public class RobotContainer {
     new JoystickButton(driver, Button.kX.value).whenActive(new ConditionalCommand(new InstantCommand(() -> frontConveyor.stop(), frontConveyor), new InstantCommand(() -> frontConveyor.start(), frontConveyor), () -> frontConveyor.running));
     new JoystickButton(driver, Button.kY.value).whenActive(new ConditionalCommand(new InstantCommand(() -> backConveyor.stop(), backConveyor), new InstantCommand(() -> backConveyor.start(), backConveyor), () -> backConveyor.running));
     new JoystickButton(driver, Button.kB.value).whenActive(new InstantCommand(superstructure::toggleTickTock, superstructure));
+    new JoystickButton(driver, Button.kA.value).whenActive(new InstantCommand(climber::toggleClimber, climber));
   }
 
   /**

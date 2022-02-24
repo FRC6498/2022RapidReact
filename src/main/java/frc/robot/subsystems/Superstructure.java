@@ -5,14 +5,19 @@
 package frc.robot.subsystems;
 
 import static frc.robot.Constants.TickTock.*;
+
+import java.sql.Driver;
+
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.PS4Controller.Button;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.lib.PicoColorSensor;
 import frc.robot.lib.ShotMap;
@@ -39,7 +44,8 @@ public class Superstructure extends SubsystemBase {
   // Turret
   private final Turret turret;
   // Feeder
-
+  //climber
+  public final Climber climber;
   // Triggers
   // Superstructure
   public Trigger shooterReady;
@@ -60,7 +66,7 @@ public class Superstructure extends SubsystemBase {
   boolean isForward;
   boolean isReverse;
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake, Intake backIntake, Vision vision, Turret turret) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake, Intake backIntake, Vision vision, Turret turret, Climber climber) {
     this.flywheel = flywheel;
     this.frontConveyor = frontConveyor;
     this.backConveyor = backConveyor;
@@ -68,6 +74,7 @@ public class Superstructure extends SubsystemBase {
     this.backIntake = backIntake;
     this.turret = turret;
     this.vision = vision;
+    this.climber = climber;
     DoubleSolenoid tickTock;
     //colorSensor = new PicoColorSensor();
 
@@ -112,7 +119,8 @@ public class Superstructure extends SubsystemBase {
     //  )
     //);
   }
-
+  
+  
   private void setupShooterCommands() {
     // set speed
     shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> { flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))); }, flywheel));
