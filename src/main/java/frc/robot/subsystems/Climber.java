@@ -18,7 +18,11 @@ public class Climber extends SubsystemBase {
     climberMotor.configOpenloopRamp(1);
   
   }
+  move 
 
+  public void toggle() {
+
+  }
   @Override
   public void periodic() {
     // This method will be called once per scheduler run

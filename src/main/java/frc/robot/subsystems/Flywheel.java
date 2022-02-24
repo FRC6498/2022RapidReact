@@ -11,6 +11,8 @@ import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.math.controller.BangBangController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import io.github.oblarg.oblog.Loggable;
@@ -33,6 +35,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   private double feedforwardOutput;
   private double controllerOutput;
   private double lastLoopPosition;
+  public DoubleSolenoid tickTock;
   
   public Flywheel() {
     flywheelLeft = new CANSparkMax(leftFlywheelCANId, MotorType.kBrushless);
@@ -44,7 +47,9 @@ public class Flywheel extends SubsystemBase implements Loggable {
       flywheelkV, 
       flywheelkA
     );
+    
 
+    }
     flywheelRight.restoreFactoryDefaults(true);
     flywheelLeft.restoreFactoryDefaults(true);
     // invert follower because it is pointing the opposite direction
@@ -58,7 +63,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     flywheelActive = false;
     flywheelSpeedSetpoint = 0.0;
   }
-
+  
   /**
    * 
    * @param velocity Desired velocity in rpm
@@ -102,4 +107,5 @@ public class Flywheel extends SubsystemBase implements Loggable {
     }
     lastLoopPosition = rightEncoder.getPosition();
   }
+
 }

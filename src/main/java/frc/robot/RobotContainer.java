@@ -88,6 +88,7 @@ public class RobotContainer {
     
     new JoystickButton(driver, Button.kX.value).whenActive(new ConditionalCommand(new InstantCommand(() -> frontConveyor.stop(), frontConveyor), new InstantCommand(() -> frontConveyor.start(), frontConveyor), () -> frontConveyor.running));
     new JoystickButton(driver, Button.kY.value).whenActive(new ConditionalCommand(new InstantCommand(() -> backConveyor.stop(), backConveyor), new InstantCommand(() -> backConveyor.start(), backConveyor), () -> backConveyor.running));
+    new JoystickButton(driver, Button.kB.value).whenActive(new InstantCommand(superstructure::toggleTickTock, superstructure));
   }
 
   /**
