@@ -4,12 +4,14 @@
 
 package frc.robot.subsystems;
 
+
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorMatchResult;
 
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -34,6 +36,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
   public int colorSensorId;
   private ColorMatch colorMatch;
   private double driverOutput;
+  DoubleSolenoid tickTock;
   
 
   //TODO: What LEDs if any?

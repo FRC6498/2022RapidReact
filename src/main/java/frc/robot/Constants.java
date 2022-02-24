@@ -114,7 +114,7 @@ public final class Constants {
         public static final double lifecamPitch = Units.degreesToRadians(limelightPitch+180);
     }
     public static final class TickTock{
-        public static final double tickTockForwardChannel = 6;
-        public static final double tickTockReverseChannel = 7;
+        public static final int tickTockForwardChannel = 6;
+        public static final int tickTockReverseChannel = 7;
     }
 }
