@@ -3,16 +3,26 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems;
+
+import static frc.robot.Constants.TickTock.*;
+
+import java.sql.Driver;
+
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.PS4Controller.Button;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.lib.PicoColorSensor;
 import frc.robot.lib.ShotMap;
 import io.github.oblarg.oblog.annotations.Config;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 
 /**
  * Coordinates all subsystems involving cargo
@@ -34,7 +44,8 @@ public class Superstructure extends SubsystemBase {
   // Turret
   private final Turret turret;
   // Feeder
-
+  //climber
+  public final Climber climber;
   // Triggers
   // Superstructure
   public Trigger shooterReady;
@@ -51,8 +62,11 @@ public class Superstructure extends SubsystemBase {
   ShooterMode shooterMode;
   @Config
   double flywheelRPM = 0.0;
+  public DoubleSolenoid tickTock;
+  boolean isForward;
+  boolean isReverse;
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake, Intake backIntake, Vision vision, Turret turret) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake, Intake backIntake, Vision vision, Turret turret, Climber climber) {
     this.flywheel = flywheel;
     this.frontConveyor = frontConveyor;
     this.backConveyor = backConveyor;
@@ -60,6 +74,8 @@ public class Superstructure extends SubsystemBase {
     this.backIntake = backIntake;
     this.turret = turret;
     this.vision = vision;
+    this.climber = climber;
+    DoubleSolenoid tickTock;
     //colorSensor = new PicoColorSensor();
 
 
@@ -82,7 +98,9 @@ public class Superstructure extends SubsystemBase {
     setupShooterCommands();
   }
 
-  
+  public void ticktockwork(int tickTockForwardChannel, int tickTockReverseChannel) {
+    tickTock = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, tickTockForwardChannel, tickTockReverseChannel);
+  }
 
   private void setupConveyorCommands() {
     // move to seesaw
@@ -100,9 +118,9 @@ public class Superstructure extends SubsystemBase {
     //    backConveyor
     //  )
     //);
-    
   }
-
+  
+  
   private void setupShooterCommands() {
     // set speed
     shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> { flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))); }, flywheel));
@@ -149,4 +167,14 @@ public class Superstructure extends SubsystemBase {
   // Methods should be high level actions and command subsystems to achieve the goal
   // TODO: Define what subsytems need, which will inform requirements for this
 
+  
+  public void toggleTickTock() {
+    if(isForward) {
+      tickTock.set(Value.kReverse);
+      isForward = false;
+    } else {
+      tickTock.set(Value.kForward);
+      isForward = true;
+    }
+  }
 }
