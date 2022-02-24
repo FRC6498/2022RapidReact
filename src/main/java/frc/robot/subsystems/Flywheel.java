@@ -23,9 +23,8 @@ import static frc.robot.Constants.ShooterConstants.*;
 
 public class Flywheel extends SubsystemBase implements Loggable {
   // Hardware
-  private final CANSparkMax flywheelLeft;
-  private final CANSparkMax flywheelRight;
-  private final RelativeEncoder rightEncoder;
+  private final CANSparkMax neo;
+  private final RelativeEncoder encoder;
   // Software
   private final BangBangController flywheelBangBang;
   private final SimpleMotorFeedforward flywheelFeedforward;
@@ -38,9 +37,8 @@ public class Flywheel extends SubsystemBase implements Loggable {
   public DoubleSolenoid tickTock;
   
   public Flywheel() {
-    flywheelLeft = new CANSparkMax(leftFlywheelCANId, MotorType.kBrushless);
-    flywheelRight = new CANSparkMax(rightFlywheelCANId, MotorType.kBrushless);
-    rightEncoder = flywheelRight.getEncoder();
+    neo = new CANSparkMax(rightFlywheelCANId, MotorType.kBrushless);
+    encoder = neo.getEncoder();
     flywheelBangBang = new BangBangController(Constants.ShooterConstants.flywheelSetpointToleranceRPM);
     flywheelFeedforward = new SimpleMotorFeedforward(
       flywheelkS, 
@@ -48,15 +46,9 @@ public class Flywheel extends SubsystemBase implements Loggable {
       flywheelkA
     );
     
-    flywheelRight.restoreFactoryDefaults(true);
-    flywheelLeft.restoreFactoryDefaults(true);
-    // invert follower because it is pointing the opposite direction
-    flywheelLeft.follow(flywheelRight, true);
-    // coast flywheel motors so BangBang doesnt go wild
-    flywheelLeft.setIdleMode(IdleMode.kCoast);
-    flywheelRight.setIdleMode(IdleMode.kCoast);
-    flywheelRight.setOpenLoopRampRate(flywheelVelocityRampRateSeconds);
-    flywheelLeft.setOpenLoopRampRate(flywheelVelocityRampRateSeconds);
+    neo.restoreFactoryDefaults(true);
+    neo.setIdleMode(IdleMode.kCoast);
+    neo.setOpenLoopRampRate(flywheelVelocityRampRateSeconds);
 
     flywheelActive = false;
     flywheelSpeedSetpoint = 0.0;
@@ -73,11 +65,11 @@ public class Flywheel extends SubsystemBase implements Loggable {
 
   @Log(name = "Flywheel Velocity (RPM)")
   public double getFlywheelSpeed() {
-    return rightEncoder.getVelocity();
+    return encoder.getVelocity();
   }
 
   public void setFlywheelIdle() {
-    flywheelRight.set(0);
+    neo.set(0);
   }
 
   @Config.ToggleButton
@@ -90,21 +82,21 @@ public class Flywheel extends SubsystemBase implements Loggable {
   }
 
   public boolean atSetpoint() {
-    return Math.abs(rightEncoder.getVelocity() - flywheelSpeedSetpoint) < flywheelSetpointToleranceRPM;
+    return Math.abs(encoder.getVelocity() - flywheelSpeedSetpoint) < flywheelSetpointToleranceRPM;
   }
 
   @Override
   public void periodic() {
 
     if (flywheelActive) {
-      bangBangOutput = flywheelBangBang.calculate((rightEncoder.getPosition() - lastLoopPosition) / 0.02, flywheelSpeedSetpoint);
+      bangBangOutput = flywheelBangBang.calculate((encoder.getPosition() - lastLoopPosition) / 0.02, flywheelSpeedSetpoint);
       feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);
       controllerOutput = bangBangOutput + 0.9 * feedforwardOutput;
-      flywheelRight.set(controllerOutput);
+      neo.set(controllerOutput);
     } else {
       setFlywheelIdle();
     }
-    lastLoopPosition = rightEncoder.getPosition();
+    lastLoopPosition = encoder.getPosition();
   }
 
 }
