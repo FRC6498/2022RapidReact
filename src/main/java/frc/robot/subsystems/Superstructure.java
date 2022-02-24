@@ -62,9 +62,11 @@ public class Superstructure extends SubsystemBase {
   ShooterMode shooterMode;
   @Config
   double flywheelRPM = 0.0;
-  public DoubleSolenoid tickTock;
-  boolean isForward;
-  boolean isReverse;
+  public boolean isForward;
+  DoubleSolenoid tickTock;
+
+  
+  
 
   public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake, Intake backIntake, Vision vision, Turret turret, Climber climber) {
     this.flywheel = flywheel;
@@ -75,7 +77,6 @@ public class Superstructure extends SubsystemBase {
     this.turret = turret;
     this.vision = vision;
     this.climber = climber;
-    DoubleSolenoid tickTock;
     //colorSensor = new PicoColorSensor();
 
 
@@ -93,13 +94,24 @@ public class Superstructure extends SubsystemBase {
     backConveyorBallColorCorrect = new Trigger(() -> {return backConveyor.getCargoColor() == this.getAllianceColor(); });
     shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
 
+    
     this.shooterMode = ShooterMode.FULL_AUTO;
     setupConveyorCommands();
     setupShooterCommands();
   }
 
-  public void ticktockwork(int tickTockForwardChannel, int tickTockReverseChannel) {
-    tickTock = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, tickTockForwardChannel, tickTockReverseChannel);
+    public void tickTock() {
+  tickTock = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, tickTockForwardChannel, tickTockReverseChannel);
+    }
+  public boolean tickTockToggle() {
+    if (isForward) {
+      tickTock.set(Value.kReverse);
+      isForward = true;
+    } else {
+      tickTock.set(Value.kForward);
+      isForward = false;
+    }
+    return isForward;
   }
 
   private void setupConveyorCommands() {
@@ -167,14 +179,4 @@ public class Superstructure extends SubsystemBase {
   // Methods should be high level actions and command subsystems to achieve the goal
   // TODO: Define what subsytems need, which will inform requirements for this
 
-  
-  public void toggleTickTock() {
-    if(isForward) {
-      tickTock.set(Value.kReverse);
-      isForward = false;
-    } else {
-      tickTock.set(Value.kForward);
-      isForward = true;
-    }
-  }
 }
