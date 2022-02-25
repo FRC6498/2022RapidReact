@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
@@ -27,8 +28,11 @@ import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision;
+import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Logger;
 import static frc.robot.Constants.IntakeConstants.*;
+
+import java.util.Map;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -49,7 +53,7 @@ public class RobotContainer {
   Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber);
 
   XboxController driver = new XboxController(0);
-  //XboxController operator = new XboxController(1);
+  XboxController operator = new XboxController(1);
   Trigger retractClimb = new Trigger();
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -88,8 +92,12 @@ public class RobotContainer {
     
     new JoystickButton(driver, Button.kX.value).whenActive(new ConditionalCommand(new InstantCommand(() -> frontConveyor.stop(), frontConveyor), new InstantCommand(() -> frontConveyor.start(), frontConveyor), () -> frontConveyor.running));
     new JoystickButton(driver, Button.kY.value).whenActive(new ConditionalCommand(new InstantCommand(() -> backConveyor.stop(), backConveyor), new InstantCommand(() -> backConveyor.start(), backConveyor), () -> backConveyor.running));
-    new JoystickButton(driver, Button.kB.value).whenActive(new InstantCommand(()-> superstructure.tickTockToggle(), superstructure));
+    new JoystickButton(driver, Button.kB.value).whenActive(new InstantCommand(()-> superstructure.seesawToggle(), superstructure));
     new JoystickButton(driver, Button.kA.value).whenActive(new InstantCommand(climber::toggleClimber, climber));
+    new JoystickButton(operator, Button.kX.value).whenActive(new SelectCommand(Map.of(
+      ShooterMode.FULL_AUTO,  new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure),
+      ShooterMode.MANUAL_FIRE, new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.FULL_AUTO), superstructure)
+    ), superstructure::getShooterMode));
   }
 
   /**

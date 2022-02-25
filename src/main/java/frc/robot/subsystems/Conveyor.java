@@ -23,7 +23,7 @@ import static frc.robot.Constants.ConveyorConstants.*;
 public class Conveyor extends SubsystemBase implements Loggable {
 
   private final WPI_TalonFX driver;
-  private final DigitalInput ballSensor;
+  //private final DigitalInput ballSensor;
   private final TalonFXConfiguration driverConfig;
 
   private Color cargoColor;
@@ -35,7 +35,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
   boolean currentEmpty;
   public int colorSensorId;
   private ColorMatch colorMatch;
-  @Log
+  //@Log
   private double driverOutput;
   DoubleSolenoid tickTock;
   
@@ -63,7 +63,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
 
     cargoColor = Color.kGray;
     running = false;
-    ballSensor = new DigitalInput(beambreakId);
+    //ballSensor = new DigitalInput(beambreakId);
 
     this.colorSensorId = colorSensorId;
     colorMatch = new ColorMatch();
@@ -113,7 +113,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
       return colorEmpty || currentEmpty;
     } else {
       // use beam break
-      return ballSensor.get();
+      return false;//ballSensor.get();
     }
   }
 

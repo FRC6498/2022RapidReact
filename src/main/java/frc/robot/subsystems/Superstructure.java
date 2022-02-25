@@ -12,12 +12,10 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.PS4Controller.Button;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.lib.PicoColorSensor;
 import frc.robot.lib.ShotMap;
@@ -55,6 +53,7 @@ public class Superstructure extends SubsystemBase {
   public Trigger frontConveyorBallColorCorrect;
   public Trigger backConveyorFull;
   public Trigger backConveyorBallColorCorrect;
+  public Trigger inLowGear;
   // Intakes
   // Flywheel
   public Trigger shooterAutoEnabled;
@@ -63,7 +62,7 @@ public class Superstructure extends SubsystemBase {
   @Config
   double flywheelRPM = 0.0;
   public boolean isForward;
-  DoubleSolenoid tickTock;
+  DoubleSolenoid seesaw;
 
   
   
@@ -77,6 +76,7 @@ public class Superstructure extends SubsystemBase {
     this.turret = turret;
     this.vision = vision;
     this.climber = climber;
+    
     //colorSensor = new PicoColorSensor();
 
 
@@ -93,22 +93,20 @@ public class Superstructure extends SubsystemBase {
     backConveyorFull = new Trigger(() -> backConveyor.isBallPresent(false));
     backConveyorBallColorCorrect = new Trigger(() -> {return backConveyor.getCargoColor() == this.getAllianceColor(); });
     shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
-
+    inLowGear = new Trigger(() -> {return !Drivetrain.isHighGear;});
+    seesaw = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, seesawForwardChannel, seesawReverseChannel);
     
     this.shooterMode = ShooterMode.FULL_AUTO;
+    
     setupConveyorCommands();
     setupShooterCommands();
   }
-
-    public void tickTock() {
-  tickTock = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, tickTockForwardChannel, tickTockReverseChannel);
-    }
-  public boolean tickTockToggle() {
+  public boolean seesawToggle() {
     if (isForward) {
-      tickTock.set(Value.kReverse);
+      seesaw.set(Value.kReverse);
       isForward = true;
     } else {
-      tickTock.set(Value.kForward);
+      seesaw.set(Value.kForward);
       isForward = false;
     }
     return isForward;
@@ -116,20 +114,20 @@ public class Superstructure extends SubsystemBase {
 
   private void setupConveyorCommands() {
     // move to seesaw
-    //shooterReady.and(frontConveyorFull).and(frontConveyorBallColorCorrect).and(seesawReady).whileActiveOnce(
-    //  new StartEndCommand(
-    //    frontConveyor::start, 
-    //    frontConveyor::stop, 
-    //    frontConveyor
-    //  )
-    //);
-    //shooterReady.and(backConveyorFull).and(backConveyorBallColorCorrect).and(seesawReady).whileActiveOnce(
-    //  new StartEndCommand(
-    //    backConveyor::start, 
-    //    backConveyor::stop, 
-    //    backConveyor
-    //  )
-    //);
+    shooterReady.and(frontConveyorFull).and(frontConveyorBallColorCorrect).and(seesawReady).whileActiveOnce(
+      new StartEndCommand(
+        frontConveyor::start, 
+        frontConveyor::stop, 
+        frontConveyor
+      )
+    );
+    shooterReady.and(backConveyorFull).and(backConveyorBallColorCorrect).and(seesawReady).whileActiveOnce(
+      new StartEndCommand(
+        backConveyor::start, 
+        backConveyor::stop, 
+        backConveyor
+      )
+    );
   }
   
   
@@ -162,18 +160,23 @@ public class Superstructure extends SubsystemBase {
     return shooterAutoEnabled.get();
   }
 
-  public void setShooterActive(ShooterMode mode) {
+  public void setShooterMode(ShooterMode mode) {
     shooterMode = mode;
+  }
+
+  public ShooterMode getShooterMode() {
+    return shooterMode;
   }
 
   public boolean getShooterReady() {
     return flywheel.atSetpoint() && turret.atSetpoint();
   }
+  
 
   public enum ShooterMode {
     FULL_AUTO, // turret and flywheel track the goal, ball is fired if present as soon as shooter is ready
     MANUAL_FIRE, // turret and flywheel track the goal, ball is fired on operator command if present
-    TRACK_ONLY, // Turret tracks the goal but flywheel coats down
+    TRACK_ONLY, // Turret tracks the goal but flywheel coasts down
     DISABLED // turret and flywheel do not move, shooting is impossible
   }
   // Methods should be high level actions and command subsystems to achieve the goal

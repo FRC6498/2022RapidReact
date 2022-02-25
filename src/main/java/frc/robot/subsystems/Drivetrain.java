@@ -39,7 +39,7 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   // imu
   private final AHRS gyro;
   
-  private boolean isHighGear = false;
+  public static boolean isHighGear = false;
   private boolean driveInverted;
   private NeutralMode currentBrakeMode = NeutralMode.Coast;
   /*private final SimpleMotorFeedforward driveFeedforward =
