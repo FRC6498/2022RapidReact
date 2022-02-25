@@ -9,7 +9,9 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SelectCommand;
@@ -47,13 +49,15 @@ public class RobotContainer {
   Vision vision = new Vision();
   Climber climber = new Climber();
   Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, Constants.ConveyorConstants.frontColorSensorId, Constants.ConveyorConstants.frontConveyorPhotoeyeId);
-  Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.rearDriverCANId, Constants.ConveyorConstants.rearColorSensorId, Constants.ConveyorConstants.backConveyorPhotoeyeId);
   Intake frontIntake = new Intake(intakeACANId, frontIntakeForwardChannel, frontIntakeReverseChannel);
   Intake backIntake = new Intake(intakeBCANId, backIntakeForwardChannel, backIntakeReverseChannel);
-  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber);
+  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, frontIntake, backIntake, vision, turret, climber);
 
   XboxController driver = new XboxController(0);
   XboxController operator = new XboxController(1);
+
+  
+
   Trigger retractClimb = new Trigger();
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -69,7 +73,6 @@ public class RobotContainer {
     );
     drivetrain.setInverted(true);
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
-    backConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), backConveyor));
     frontIntake.setDefaultCommand(new RunCommand(() -> frontIntake.setMotorSetpoint(0.0), frontIntake));
     backIntake.setDefaultCommand(new RunCommand(() -> backIntake.setMotorSetpoint(0.0), backIntake));
     // Configure the button bindings
@@ -89,15 +92,9 @@ public class RobotContainer {
     new POVButton(driver, 180).whileActiveOnce(new StartEndCommand(() -> backIntake.lowerIntake(), () -> backIntake.raiseIntake(), backIntake));
     new POVButton(driver, 270).whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
     new POVButton(driver, 90).whenActive(new InstantCommand(backIntake::reverse, backIntake));
-    
-    new JoystickButton(driver, Button.kX.value).whenActive(new ConditionalCommand(new InstantCommand(() -> frontConveyor.stop(), frontConveyor), new InstantCommand(() -> frontConveyor.start(), frontConveyor), () -> frontConveyor.running));
-    new JoystickButton(driver, Button.kY.value).whenActive(new ConditionalCommand(new InstantCommand(() -> backConveyor.stop(), backConveyor), new InstantCommand(() -> backConveyor.start(), backConveyor), () -> backConveyor.running));
-    new JoystickButton(driver, Button.kB.value).whenActive(new InstantCommand(()-> superstructure.seesawToggle(), superstructure));
+
     new JoystickButton(driver, Button.kA.value).whenActive(new InstantCommand(climber::toggleClimber, climber));
-    new JoystickButton(operator, Button.kX.value).whenActive(new SelectCommand(Map.of(
-      ShooterMode.FULL_AUTO,  new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure),
-      ShooterMode.MANUAL_FIRE, new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.FULL_AUTO), superstructure)
-    ), superstructure::getShooterMode));
+    
   }
 
   /**

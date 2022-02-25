@@ -58,6 +58,7 @@ public final class Constants {
         public static final double flywheelkA = 0;
         public static final double flywheelVelocityRampRateSeconds = 0;
         public static final double flywheelSetpointToleranceRPM = 10;
+        public static final double flywheelDumpRPM = 0;
     }
 
     public static final class TurretConstants {
@@ -73,6 +74,7 @@ public final class Constants {
         public static final double turretFeedforward_kA = 0.89326;
         public static final double turretFeedforward_ks =  5.9704;
         public static final double turretFeedforward_kv =  0.21434;
+		public static final double turretDumpModePos = 0.0;
     }
 
     public static final class ConveyorConstants {
@@ -84,7 +86,7 @@ public final class Constants {
         public static final int rearColorSensorId = 0;
         public static final int frontColorSensorId = 1;
         public static final double ballPresentCurrentThreshold = 0;
-        public static final int frontConveyorPhotoeyeId = 0;
+        public static final int frontConveyorPhotoeyeId = 1;
         public static final int backConveyorPhotoeyeId = 0;
         public static final double conveyorNominalSpeed = 0.1;
     }

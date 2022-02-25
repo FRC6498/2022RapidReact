@@ -72,4 +72,8 @@ public class Turret extends SubsystemBase implements Loggable {
   public void periodic() {
     useOutput();
   }
+
+  public void setTurretPos(double position) {
+    
+  }
 }
