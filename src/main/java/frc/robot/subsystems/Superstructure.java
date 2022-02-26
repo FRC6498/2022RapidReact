@@ -11,6 +11,7 @@ import org.photonvision.common.hardware.VisionLEDMode;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -55,6 +56,7 @@ public class Superstructure extends SubsystemBase {
   public Trigger backConveyorFull;
   public Trigger backConveyorBallColorCorrect;
   public Trigger inLowGear;
+  public Trigger flyWheelAtSetpoint;
   // Intakes
   // Flywheel
   public Trigger shooterAutoEnabled;
@@ -63,12 +65,13 @@ public class Superstructure extends SubsystemBase {
   @Config
   double flywheelRPM = 0.0;
   public boolean isForward;
-  double feederSpeed = 0.5;
+  public double feederSpeedRunning = 0.50;
+  public double feederSpeedStopped = 0.0; 
   WPI_TalonFX feederA;
   WPI_TalonFX feederB;
 
   ParallelRaceGroup fullAuto;
-  ParallelRaceGroup manualFire;
+  ParallelRaceGroup manualShoot;
   ParallelRaceGroup disabled;
   ParallelRaceGroup dump;
   ParallelRaceGroup testing;
@@ -96,6 +99,7 @@ public class Superstructure extends SubsystemBase {
     frontConveyorBallColorCorrect = new Trigger(() -> {return frontConveyor.getCargoColor() == this.getAllianceColor(); });
     shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
     inLowGear = new Trigger(() -> {return !Drivetrain.isHighGear;});
+    flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
     
     RunCommand turretAutoAim = new RunCommand(() -> turret.setSetpointDegrees(vision.getBestTarget().getYaw()), turret);
     fullAuto = new ParallelCommandGroup(
@@ -107,10 +111,13 @@ public class Superstructure extends SubsystemBase {
       new RunCommand(() -> this.turret.setTurretPos(Constants.TurretConstants.turretDumpModePos), this.turret),
       new RunCommand(() -> this.flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), this.flywheel)
     ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.DUMP;} );
-
-
-    this.shooterMode = ShooterMode.FULL_AUTO;
+    
+    manualShoot = new ParallelCommandGroup(
+      turretAutoAim,
+      new RunCommand(() -> flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))), flywheel)
+       ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.MANUAL_FIRE;} );
     //setDefaultCommand(fullAuto);
+    
     
     setupConveyorCommands();
     setupShooterCommands();
@@ -132,8 +139,8 @@ public class Superstructure extends SubsystemBase {
     shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> { flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))); }, flywheel));
     shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> turret.setSetpointDegrees(vision.getClosestTarget().getYaw()), turret));
     shooterReady.and(frontConveyorFull).whileActiveOnce(new RunCommand(() -> {
-      feederA.set(feederSpeed);
-      feederB.set(feederSpeed);
+      feederA.set(feederSpeedRunning);
+      feederB.set(feederSpeedRunning);
     }, this));
     vision.setLED(VisionLEDMode.kOff);
     turret.setDefaultCommand(new RunCommand(() -> {
@@ -144,6 +151,15 @@ public class Superstructure extends SubsystemBase {
         //System.out.println("NO TARGET");
       }
     }, turret));
+  }
+  public void runFeeder() {
+    feederA.set(feederSpeedRunning);
+    feederB.set(feederSpeedRunning);
+  }
+  
+  public void stopFeeder() {
+    feederA.set(feederSpeedStopped);
+    feederB.set(feederSpeedStopped);
   }
 
   public Color getAllianceColor() {

@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -21,6 +23,8 @@ import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.ShooterConstants.*;
+
+import java.util.function.BooleanSupplier;
 
 public class Flywheel extends SubsystemBase implements Loggable {
   // Hardware
@@ -49,6 +53,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
       flywheelkV, 
       flywheelkA
     );
+
     
     neo.restoreFactoryDefaults(true);
     neo.setIdleMode(IdleMode.kCoast);
@@ -68,6 +73,10 @@ public class Flywheel extends SubsystemBase implements Loggable {
   @Config
   public void setFlywheelSpeed(double velocity) {
     flywheelSpeedSetpoint = velocity * 60;
+  }
+
+  public void runKicker() {
+    
   }
 
   @Log.Graph(name = "Flywheel Velocity (RPM)")
@@ -92,7 +101,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   public boolean atSetpoint() {
     return Math.abs(getFlywheelSpeed() - flywheelSpeedSetpoint) < flywheelSetpointToleranceRPM;
   }
-
+  
   @Override
   public void periodic() {
     flywheelSpeedEntry.setDouble(getFlywheelSpeed());
