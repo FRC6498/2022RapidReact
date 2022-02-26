@@ -66,13 +66,13 @@ public class Flywheel extends SubsystemBase implements Loggable {
     flywheelSpeedSetpoint = velocity;
   }
 
-  @Log(name = "Flywheel Velocity (RPM)")
+  @Log.Graph(name = "Flywheel Velocity (RPM)")
   public double getFlywheelSpeed() {
     return (encoder.getPosition() - lastLoopPosition) / 0.02;
   }
 
   public void setFlywheelIdle() {
-    neo.set(0);
+    neo.set(0.0);
   }
 
   @Config.ToggleButton
@@ -91,7 +91,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
 
   @Override
   public void periodic() {
-
+    flywheelActive = true;
     if (flywheelActive) {
       bangBangOutput = flywheelBangBang.calculate(getFlywheelSpeed(), flywheelSpeedSetpoint);
       feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);

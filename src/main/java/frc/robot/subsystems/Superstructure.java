@@ -141,7 +141,7 @@ public class Superstructure extends SubsystemBase {
         turret.setSetpointDegrees(vision.getBestTarget().getYaw());
       } else {
         turret.setSetpointDegrees(0);
-        System.out.println("NO TARGET");
+        //System.out.println("NO TARGET");
       }
     }, turret));
   }
