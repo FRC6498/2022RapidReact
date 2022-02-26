@@ -76,9 +76,9 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     new JoystickButton(driver, Button.kRightBumper.value).whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
-    new POVButton(driver, 0).whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake));
-    new POVButton(driver, 270).whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
-    new JoystickButton(driver, Button.kA.value).whenActive(new InstantCommand(climber::toggleClimber, climber));
+    new POVButton(operator, 0).whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake));
+    new POVButton(operator, 270).whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
+    new JoystickButton(operator, Button.kA.value).whenActive(new InstantCommand(climber::toggleClimber, climber));
   }
 
   /**

@@ -11,8 +11,9 @@ import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.math.controller.BangBangController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import io.github.oblarg.oblog.Loggable;
@@ -37,6 +38,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   private double feedforwardOutput;
   private double controllerOutput;
   private double lastLoopPosition;
+  private NetworkTableEntry flywheelSpeedEntry;
   
   public Flywheel() {
     neo = new CANSparkMax(rightFlywheelCANId, MotorType.kBrushless);
@@ -54,7 +56,9 @@ public class Flywheel extends SubsystemBase implements Loggable {
 
     flywheelActive = true;
     flywheelSpeedSetpoint = 500.0;
-    }
+
+    flywheelSpeedEntry = NetworkTableInstance.getDefault().getTable("team6498").getEntry("flywheelSpeed");
+  }
     
   
   /**
@@ -63,12 +67,12 @@ public class Flywheel extends SubsystemBase implements Loggable {
    */
   @Config
   public void setFlywheelSpeed(double velocity) {
-    flywheelSpeedSetpoint = velocity;
+    flywheelSpeedSetpoint = velocity * 60;
   }
 
   @Log.Graph(name = "Flywheel Velocity (RPM)")
   public double getFlywheelSpeed() {
-    return (encoder.getPosition() - lastLoopPosition) / 0.02;
+    return ((encoder.getPosition() - lastLoopPosition) / 0.02) / 60;
   }
 
   public void setFlywheelIdle() {
@@ -91,6 +95,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
 
   @Override
   public void periodic() {
+    flywheelSpeedEntry.setDouble(getFlywheelSpeed());
     flywheelActive = true;
     if (flywheelActive) {
       bangBangOutput = flywheelBangBang.calculate(getFlywheelSpeed(), flywheelSpeedSetpoint);
