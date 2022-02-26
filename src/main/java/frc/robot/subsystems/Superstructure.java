@@ -113,7 +113,7 @@ public class Superstructure extends SubsystemBase {
     ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.DUMP;} );
     
     manualShoot = new ParallelCommandGroup(
-      turretAutoAim,
+      new RunCommand(() -> turret.setSetpointDegrees(vision.getBestTarget().getYaw()), turret),
       new RunCommand(() -> flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))), flywheel)
        ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.MANUAL_FIRE;} );
     //setDefaultCommand(fullAuto);

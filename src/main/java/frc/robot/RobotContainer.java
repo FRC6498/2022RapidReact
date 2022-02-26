@@ -47,11 +47,13 @@ public class RobotContainer {
   XboxController driver = new XboxController(0);
   XboxController operator = new XboxController(1);
 
-  
-
   Trigger retractClimb = new Trigger();
   Trigger flyWheelAtSetpoint = new Trigger();
 
+  JoystickButton driver_rbumper = new JoystickButton(driver, Button.kRightBumper.value);
+  JoystickButton driver_a = new JoystickButton(driver, Button.kA.value);
+  POVButton op_up = new POVButton(operator, 0);
+  POVButton op_left = new POVButton(operator, 270);
   public boolean feederRunning;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -79,10 +81,10 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    new JoystickButton(driver, Button.kRightBumper.value).whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
-    new POVButton(operator, 0).whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake));
-    new POVButton(operator, 270).whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
-    new JoystickButton(operator, Button.kA.value).whenActive(new InstantCommand(climber::toggleClimber, climber));
+    driver_rbumper.whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
+    op_up.whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake));
+    op_left.whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
+    driver_a.whenActive(new InstantCommand(climber::toggleClimber, climber));
   }
 
   /**
