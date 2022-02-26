@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -49,6 +50,9 @@ public class RobotContainer {
   
 
   Trigger retractClimb = new Trigger();
+  Trigger flyWheelAtSetpoint = new Trigger();
+
+  public boolean feederRunning;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -79,6 +83,7 @@ public class RobotContainer {
     new POVButton(driver, 0).whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake));
     new POVButton(driver, 270).whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
     new JoystickButton(driver, Button.kA.value).whenActive(new InstantCommand(climber::toggleClimber, climber));
+    new JoystickButton(operator, Button.kA.value).whileActiveOnce(new ConditionalCommand(new RunCommand(() -> superstructure.runFeeder(), superstructure),new RunCommand(()-> superstructure.stopFeeder(), superstructure), flyWheelAtSetpoint ));
   }
 
   /**
