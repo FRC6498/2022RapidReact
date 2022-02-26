@@ -6,6 +6,8 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
+import org.photonvision.common.hardware.VisionLEDMode;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
@@ -84,7 +86,7 @@ public class Superstructure extends SubsystemBase {
 
 
 
-    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelIdle(), flywheel));
+    //flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelIdle(), flywheel));
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
     turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
 
@@ -108,6 +110,7 @@ public class Superstructure extends SubsystemBase {
 
 
     this.shooterMode = ShooterMode.FULL_AUTO;
+    //setDefaultCommand(fullAuto);
     
     setupConveyorCommands();
     setupShooterCommands();
@@ -132,6 +135,15 @@ public class Superstructure extends SubsystemBase {
       feederA.set(feederSpeed);
       feederB.set(feederSpeed);
     }, this));
+    vision.setLED(VisionLEDMode.kOff);
+    turret.setDefaultCommand(new RunCommand(() -> {
+      if (vision.hasTargets()) {
+        turret.setSetpointDegrees(vision.getBestTarget().getYaw());
+      } else {
+        turret.setSetpointDegrees(0);
+        System.out.println("NO TARGET");
+      }
+    }, turret));
   }
 
   public Color getAllianceColor() {
@@ -166,7 +178,8 @@ public class Superstructure extends SubsystemBase {
   }
 
   public boolean getShooterReady() {
-    return flywheel.atSetpoint() && turret.atSetpoint();
+    return false;
+    //return flywheel.atSetpoint() && turret.atSetpoint();
   }
   
 

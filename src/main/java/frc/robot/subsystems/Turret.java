@@ -25,9 +25,9 @@ public class Turret extends SubsystemBase implements Loggable {
   TalonFXConfiguration bearingConfig;
   PIDController pid;
   boolean homed;
-  @Log
+  @Log.Graph(name = "Yaw Angle (deg.)")
   double visionDegrees;
-  @Log
+  @Log.Graph
   double pidOutput;
   SimpleMotorFeedforward turretFeedforward;
   SimpleMotorFeedforward thing;
@@ -60,7 +60,7 @@ public class Turret extends SubsystemBase implements Loggable {
 
   private void useOutput() {
     pidOutput = pid.calculate(visionDegrees, 0);
-    bearing.set(pidOutput);
+    bearing.setVoltage(pidOutput);
   }
 
   public void stop() {

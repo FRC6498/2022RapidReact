@@ -1,0 +1,12 @@
+{
+  "NetworkTables Settings": {
+    "mode": "Client",
+    "serverTeam": "6498"
+  },
+  "photonvision": {
+    "limelight": {
+      "open": true
+    },
+    "open": true
+  }
+}

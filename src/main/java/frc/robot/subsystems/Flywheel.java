@@ -29,12 +29,14 @@ public class Flywheel extends SubsystemBase implements Loggable {
   private final BangBangController flywheelBangBang;
   private final SimpleMotorFeedforward flywheelFeedforward;
   private boolean flywheelActive;
-  private double flywheelSpeedSetpoint;
+  
+  public double flywheelSpeedSetpoint;
+  @Log
   private double bangBangOutput;
+  @Log
   private double feedforwardOutput;
   private double controllerOutput;
   private double lastLoopPosition;
-  public DoubleSolenoid tickTock;
   
   public Flywheel() {
     neo = new CANSparkMax(rightFlywheelCANId, MotorType.kBrushless);
@@ -50,8 +52,8 @@ public class Flywheel extends SubsystemBase implements Loggable {
     neo.setIdleMode(IdleMode.kCoast);
     neo.setOpenLoopRampRate(flywheelVelocityRampRateSeconds);
 
-    flywheelActive = false;
-    flywheelSpeedSetpoint = 0.0;
+    flywheelActive = true;
+    flywheelSpeedSetpoint = 500.0;
     }
     
   
@@ -59,13 +61,14 @@ public class Flywheel extends SubsystemBase implements Loggable {
    * 
    * @param velocity Desired velocity in rpm
    */
+  @Config
   public void setFlywheelSpeed(double velocity) {
     flywheelSpeedSetpoint = velocity;
   }
 
   @Log(name = "Flywheel Velocity (RPM)")
   public double getFlywheelSpeed() {
-    return encoder.getVelocity();
+    return (encoder.getPosition() - lastLoopPosition) / 0.02;
   }
 
   public void setFlywheelIdle() {
@@ -78,21 +81,22 @@ public class Flywheel extends SubsystemBase implements Loggable {
   }
 
   public boolean getFlywheelActive() {
-    return flywheelActive;
+    return false;
+    //return flywheelActive;
   }
 
   public boolean atSetpoint() {
-    return Math.abs(encoder.getVelocity() - flywheelSpeedSetpoint) < flywheelSetpointToleranceRPM;
+    return Math.abs(getFlywheelSpeed() - flywheelSpeedSetpoint) < flywheelSetpointToleranceRPM;
   }
 
   @Override
   public void periodic() {
 
     if (flywheelActive) {
-      bangBangOutput = flywheelBangBang.calculate((encoder.getPosition() - lastLoopPosition) / 0.02, flywheelSpeedSetpoint);
+      bangBangOutput = flywheelBangBang.calculate(getFlywheelSpeed(), flywheelSpeedSetpoint);
       feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);
       controllerOutput = bangBangOutput + 0.9 * feedforwardOutput;
-      neo.set(controllerOutput);
+      neo.setVoltage(controllerOutput);
     } else {
       setFlywheelIdle();
     }
