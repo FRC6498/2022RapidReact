@@ -70,10 +70,10 @@ public class Flywheel extends SubsystemBase implements Loggable {
     flywheelSpeedSetpoint = velocity * 60;
   }
 
-  @Log.Graph(name = "Flywheel Velocity (RPM)")
+  @Log(name = "Flywheel Velocity (RPM)")
   public double getFlywheelSpeed() {
-    
-    return ((encoder.getVelocity() - lastLoopPosition) / 0.02) / 60;
+    return encoder.getVelocity();
+    //return ((encoder.getPosition() - lastLoopPosition) / 0.02) / 60;
   }
 
   public void setFlywheelIdle() {
