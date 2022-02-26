@@ -12,12 +12,13 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import io.github.oblarg.oblog.annotations.Log;
 
 public class Climber extends SubsystemBase {
   /** Creates a new Climber. */
   WPI_TalonFX climberMotor;
   double climberMotorSetpoint;
-  public boolean isDown = true;
+  public boolean isDown = false;
   boolean predeploy = true;
   public Climber() {
     isDown = true;
@@ -25,6 +26,7 @@ public class Climber extends SubsystemBase {
     climberMotor.configClosedloopRamp(1);
     //setup encoders
     climberMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+    climberMotor.setSelectedSensorPosition(357205);
   }
   public double getEncoderPosition() {
     return climberMotor.getSelectedSensorPosition();
@@ -41,13 +43,14 @@ public class Climber extends SubsystemBase {
     climberMotor.setNeutralMode(NeutralMode.Coast);
     climberMotor.set(ControlMode.PercentOutput, 0);
   }
-  
-  public void whereClimber(double getEncoderPosition) {
+  @Log
+  public double whereClimber(double getEncoderPosition) {
     if (getEncoderPosition < 50) {
       isDown = true;
     } else {
       isDown = false;
     }
+    return getEncoderPosition;
   }
   public void toggleClimber() {
     if (isDown && predeploy) { // raise climber
