@@ -84,9 +84,9 @@ public class RobotContainer {
     driver_rbumper.whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
     op_up.whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake));
     op_left.whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
-    driver_a.whenActive(new InstantCommand(climber::toggleClimber, climber));
+    driver_a.whenActive(new InstantCommand(climber::lowerClimber, climber));
+    climber.setDefaultCommand(new RunCommand(() -> climber.setInput(driver.getRightY() / 10), climber));
   }
-
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *

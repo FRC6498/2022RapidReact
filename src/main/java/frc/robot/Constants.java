@@ -27,11 +27,11 @@ public final class Constants {
     }
 
     public static final class ClimberConstants{
-        public static final int climberMotorCANId = 1;
+        public static final int climberMotorCANId = 7;
         public static final double climber_kS = 0.0;
         public static final double climber_kG = 0.0;
         public static final double climber_kV = 0.0;
-        public static final double climber_kP = 0.0;
+        public static final double climber_kP = 0.1;
         public static final double climber_kD = 0.0;
     }
     public static final class DriveConstants {
