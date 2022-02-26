@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -13,7 +11,6 @@ import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.math.controller.BangBangController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -23,8 +20,6 @@ import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.ShooterConstants.*;
-
-import java.util.function.BooleanSupplier;
 
 public class Flywheel extends SubsystemBase implements Loggable {
   // Hardware
@@ -75,13 +70,10 @@ public class Flywheel extends SubsystemBase implements Loggable {
     flywheelSpeedSetpoint = velocity * 60;
   }
 
-  public void runKicker() {
-    
-  }
-
   @Log.Graph(name = "Flywheel Velocity (RPM)")
   public double getFlywheelSpeed() {
-    return ((encoder.getPosition() - lastLoopPosition) / 0.02) / 60;
+    
+    return ((encoder.getVelocity() - lastLoopPosition) / 0.02) / 60;
   }
 
   public void setFlywheelIdle() {
