@@ -8,9 +8,11 @@ import static frc.robot.Constants.DriveConstants.*;
 
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.Compressor;
@@ -21,7 +23,7 @@ import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
+import frc.robot.Constants;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -42,12 +44,12 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   public static boolean isHighGear = false;
   private boolean driveInverted;
   private NeutralMode currentBrakeMode = NeutralMode.Coast;
-  /*private final SimpleMotorFeedforward driveFeedforward =
+  private final SimpleMotorFeedforward drivetrainFeedforward =
     new SimpleMotorFeedforward(
-      kS,
-      kVLinear,
-      kALinear
-    );*/
+      Constants.DriveConstants.kS,
+      Constants.DriveConstants.kV,
+      Constants.DriveConstants.kA
+    );
 
   public Drivetrain()
   {
@@ -83,6 +85,11 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     // setup encoders
     leftLeader.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
     rightLeader.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+
+    leftFollower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 200);
+    rightFollower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 199);
+    leftFollower.setStatusFramePeriod(StatusFrame.Status_1_General, 201);
+    rightFollower.setStatusFramePeriod(StatusFrame.Status_1_General, 202);
   }
 
   // hardware methods

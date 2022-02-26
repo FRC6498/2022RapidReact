@@ -4,13 +4,9 @@
 
 package frc.robot.subsystems;
 
-import static frc.robot.Constants.TickTock.*;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
-import java.sql.Driver;
-
-import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -20,11 +16,10 @@ import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
-import frc.robot.lib.PicoColorSensor;
+//import frc.robot.lib.PicoColorSensor;
 import frc.robot.lib.ShotMap;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 
 /**
  * Coordinates all subsystems involving cargo
@@ -34,11 +29,11 @@ import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
  */
 public class Superstructure extends SubsystemBase {
   // Intake
-  private final Intake frontIntake, backIntake;
+  private final Intake intake;
   // Vision
   private final Vision vision;
   // Conveyor
-  private final Conveyor frontConveyor;
+  private final Conveyor conveyor;
   
   //private final PicoColorSensor colorSensor;
   // Flywheel
@@ -66,19 +61,21 @@ public class Superstructure extends SubsystemBase {
   @Config
   double flywheelRPM = 0.0;
   public boolean isForward;
-  DoubleSolenoid seesaw;
+  double feederSpeed = 0.5;
+  WPI_TalonFX feederA;
+  WPI_TalonFX feederB;
 
   ParallelRaceGroup fullAuto;
   ParallelRaceGroup manualFire;
   ParallelRaceGroup disabled;
   ParallelRaceGroup dump;
+  ParallelRaceGroup testing;
   
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Intake frontIntake, Intake backIntake, Vision vision, Turret turret, Climber climber) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Intake frontIntake, Vision vision, Turret turret, Climber climber) {
     this.flywheel = flywheel;
-    this.frontConveyor = frontConveyor;
-    this.frontIntake = frontIntake;
-    this.backIntake = backIntake;
+    this.conveyor = frontConveyor;
+    this.intake = frontIntake;
     this.turret = turret;
     this.vision = vision;
     this.climber = climber;
@@ -97,7 +94,6 @@ public class Superstructure extends SubsystemBase {
     frontConveyorBallColorCorrect = new Trigger(() -> {return frontConveyor.getCargoColor() == this.getAllianceColor(); });
     shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
     inLowGear = new Trigger(() -> {return !Drivetrain.isHighGear;});
-    seesaw = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, seesawForwardChannel, seesawReverseChannel);
     
     RunCommand turretAutoAim = new RunCommand(() -> turret.setSetpointDegrees(vision.getBestTarget().getYaw()), turret);
     fullAuto = new ParallelCommandGroup(
@@ -116,38 +112,26 @@ public class Superstructure extends SubsystemBase {
     setupConveyorCommands();
     setupShooterCommands();
   }
-  public boolean seesawToggle() {
-    if (isForward) {
-      seesaw.set(Value.kReverse);
-      isForward = true;
-    } else {
-      seesaw.set(Value.kForward);
-      isForward = false;
-    }
-    return isForward;
-  }
 
   private void setupConveyorCommands() {
     // move to seesaw
     frontConveyorFull.whileActiveOnce(
       new StartEndCommand(
-        frontConveyor::start, 
-        frontConveyor::stop, 
-        frontConveyor
+        conveyor::start, 
+        conveyor::stop, 
+        conveyor
       )
     );
   }
-
-  @Log
-  public boolean getFull() {
-    return frontConveyorFull.get();
-  }
-  
   
   private void setupShooterCommands() {
     // set speed
     shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> { flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))); }, flywheel));
     shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> turret.setSetpointDegrees(vision.getClosestTarget().getYaw()), turret));
+    shooterReady.and(frontConveyorFull).whileActiveOnce(new RunCommand(() -> {
+      feederA.set(feederSpeed);
+      feederB.set(feederSpeed);
+    }, this));
   }
 
   public Color getAllianceColor() {
@@ -194,5 +178,5 @@ public class Superstructure extends SubsystemBase {
   }
   // Methods should be high level actions and command subsystems to achieve the goal
   // TODO: Define what subsytems need, which will inform requirements for this
-
+  
 }

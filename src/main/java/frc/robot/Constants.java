@@ -42,21 +42,23 @@ public final class Constants {
         public static final int driveRampRate = 1;
         public static final int shifterForwardChannelId = 0;
         public static final int shifterReverseChannelId = 1;
+        public static final double kS = 0;
+        public static final double kV = 0;
+        public static final double kA = 0;
         
     }
 
     public static final class ShooterConstants {
         //TODO: perform SysId
-        public static final int leftFlywheelCANId = 13;
         public static final int rightFlywheelCANId = 14;
         public static final int feederACANId = 10;
         public static final int feederBCANId = 11;     
-        public static final double flywheelkP = 0;
+        public static final double flywheelkP = 0.1782;
         public static final double flywheelkD = 0;
-        public static final double flywheelkS = 0;
-        public static final double flywheelkV = 0;
-        public static final double flywheelkA = 0;
-        public static final double flywheelVelocityRampRateSeconds = 0;
+        public static final double flywheelkS = 0.020432;
+        public static final double flywheelkV = 0.12027;
+        public static final double flywheelkA = 0.018595;
+        public static final double flywheelVelocityRampRateSeconds = 0.5;
         public static final double flywheelSetpointToleranceRPM = 10;
         public static final double flywheelDumpRPM = 0;
     }
@@ -74,6 +76,7 @@ public final class Constants {
         public static final double turretFeedforward_kA = 0.89326;
         public static final double turretFeedforward_ks =  5.9704;
         public static final double turretFeedforward_kv =  0.21434;
+        // encoder pos associated with dump
 		public static final double turretDumpModePos = 0.0;
     }
 

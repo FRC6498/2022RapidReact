@@ -8,16 +8,10 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SelectCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -30,11 +24,8 @@ import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision;
-import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Logger;
 import static frc.robot.Constants.IntakeConstants.*;
-
-import java.util.Map;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -50,8 +41,7 @@ public class RobotContainer {
   Climber climber = new Climber();
   Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, Constants.ConveyorConstants.frontColorSensorId, Constants.ConveyorConstants.frontConveyorPhotoeyeId);
   Intake frontIntake = new Intake(intakeACANId, frontIntakeForwardChannel, frontIntakeReverseChannel);
-  Intake backIntake = new Intake(intakeBCANId, backIntakeForwardChannel, backIntakeReverseChannel);
-  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, frontIntake, backIntake, vision, turret, climber);
+  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, frontIntake, vision, turret, climber);
 
   XboxController driver = new XboxController(0);
   XboxController operator = new XboxController(1);
@@ -74,7 +64,6 @@ public class RobotContainer {
     drivetrain.setInverted(true);
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
     frontIntake.setDefaultCommand(new RunCommand(() -> frontIntake.setMotorSetpoint(0.0), frontIntake));
-    backIntake.setDefaultCommand(new RunCommand(() -> backIntake.setMotorSetpoint(0.0), backIntake));
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -88,13 +77,8 @@ public class RobotContainer {
   private void configureButtonBindings() {
     new JoystickButton(driver, Button.kRightBumper.value).whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
     new POVButton(driver, 0).whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake));
-    //new POVButton(driver, 90).whenActive(() -> )
-    new POVButton(driver, 180).whileActiveOnce(new StartEndCommand(() -> backIntake.lowerIntake(), () -> backIntake.raiseIntake(), backIntake));
     new POVButton(driver, 270).whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
-    new POVButton(driver, 90).whenActive(new InstantCommand(backIntake::reverse, backIntake));
-
     new JoystickButton(driver, Button.kA.value).whenActive(new InstantCommand(climber::toggleClimber, climber));
-    
   }
 
   /**
