@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import org.photonvision.common.hardware.VisionLEDMode;
@@ -113,10 +114,10 @@ public class Superstructure extends SubsystemBase {
     ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.DUMP;} );
     
     manualShoot = new ParallelCommandGroup(
-      turretAutoAim,
+      new RunCommand(() -> turret.setSetpointDegrees(vision.getBestTarget().getYaw()), turret),
       new RunCommand(() -> flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))), flywheel)
        ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.MANUAL_FIRE;} );
-    //setDefaultCommand(fullAuto);
+  setDefaultCommand(fullAuto);
     
     
     setupConveyorCommands();
@@ -155,11 +156,15 @@ public class Superstructure extends SubsystemBase {
   public void runFeeder() {
     feederA.set(feederSpeedRunning);
     feederB.set(feederSpeedRunning);
+    feederA.setNeutralMode(NeutralMode.Coast);
+    feederB.setNeutralMode(NeutralMode.Coast);
   }
   
   public void stopFeeder() {
     feederA.set(feederSpeedStopped);
     feederB.set(feederSpeedStopped);
+    feederA.setNeutralMode(NeutralMode.Brake);
+    feederB.setNeutralMode(NeutralMode.Brake);
   }
 
   public Color getAllianceColor() {

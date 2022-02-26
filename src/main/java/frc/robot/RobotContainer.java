@@ -44,8 +44,8 @@ public class RobotContainer {
   Intake frontIntake = new Intake(intakeACANId, frontIntakeForwardChannel, frontIntakeReverseChannel);
   Superstructure superstructure = new Superstructure(flywheel, frontConveyor, frontIntake, vision, turret, climber);
 
-  XboxController driver = new XboxController(0);
-  XboxController operator = new XboxController(1);
+  XboxController driver = new XboxController(3);
+  XboxController operator = new XboxController(2);
 
   
 
@@ -83,6 +83,7 @@ public class RobotContainer {
     new POVButton(operator, 0).whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake));
     new POVButton(operator, 270).whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
     new JoystickButton(operator, Button.kA.value).whenActive(new InstantCommand(climber::toggleClimber, climber));
+    new JoystickButton(operator, Button.kB.value).whenActive(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
   }
 
   /**
