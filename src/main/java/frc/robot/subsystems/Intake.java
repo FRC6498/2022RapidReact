@@ -44,7 +44,8 @@ public class Intake extends SubsystemBase implements Loggable {
   }
 
   public boolean isExtended() {
-    return motorSetpoint > 0.05;
+    // reverse = raised
+    return piston.get() == Value.kForward;
   }
 
   @Override

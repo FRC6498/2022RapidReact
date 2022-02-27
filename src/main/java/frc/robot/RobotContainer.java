@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
@@ -27,6 +28,8 @@ import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision;
 import io.github.oblarg.oblog.Logger;
 import static frc.robot.Constants.IntakeConstants.*;
+
+import java.util.Map;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -85,6 +88,10 @@ public class RobotContainer {
   private void configureButtonBindings() {
     driver_rbumper.whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
     op_up.whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake));
+    op_up.whenActive(new SelectCommand(Map.of(
+      true, new InstantCommand(frontIntake::raiseIntake, frontIntake), // intake down
+      false, new InstantCommand(frontIntake::lowerIntake, frontIntake) // intake up
+    ), frontIntake::isExtended));
     op_left.whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
     driver_a.whenActive(new InstantCommand(climber::lowerClimber, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(driver.getRightY() / 10), climber));
