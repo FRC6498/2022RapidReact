@@ -11,6 +11,7 @@ import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.math.controller.BangBangController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -36,8 +37,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   @Log
   private double feedforwardOutput;
   private double controllerOutput;
-  private double lastLoopPosition;
-  private NetworkTableEntry flywheelSpeedEntry;
+  private NetworkTableEntry flywheelSpeedEntry, feedforwardEntry, bangBangEntry;
   
   public Flywheel() {
     neo = new CANSparkMax(rightFlywheelCANId, MotorType.kBrushless);
@@ -55,9 +55,11 @@ public class Flywheel extends SubsystemBase implements Loggable {
     neo.setOpenLoopRampRate(flywheelVelocityRampRateSeconds);
     neo.setInverted(true);
     flywheelActive = true;
-    flywheelSpeedSetpoint = 500.0;
-
-    flywheelSpeedEntry = NetworkTableInstance.getDefault().getTable("team6498").getEntry("flywheelSpeed");
+    flywheelSpeedSetpoint = 1.5;
+    NetworkTable teamtable = NetworkTableInstance.getDefault().getTable("team6498");
+    flywheelSpeedEntry = teamtable.getEntry("flywheelSpeed");
+    feedforwardEntry = teamtable.getEntry("feedforward");
+    bangBangEntry = teamtable.getEntry("bangbang");
   }
     
   
@@ -71,10 +73,11 @@ public class Flywheel extends SubsystemBase implements Loggable {
   }
 
 
-  @Log.Graph(name = "Flywheel Velocity (RPM)")
+  @Log(name = "Flywheel Velocity (RPM)")
   public double getFlywheelSpeed() {
     return encoder.getVelocity();
   }
+  // input -> rpm conversion rate is approx. 1 : 3000
 
   public void setFlywheelIdle() {
     neo.set(0.0);
@@ -106,7 +109,6 @@ public class Flywheel extends SubsystemBase implements Loggable {
     } else {
       setFlywheelIdle();
     }
-    lastLoopPosition = encoder.getCountsPerRevolution();
   }
 
 }
