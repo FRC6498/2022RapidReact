@@ -53,7 +53,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     neo.restoreFactoryDefaults(true);
     neo.setIdleMode(IdleMode.kCoast);
     neo.setOpenLoopRampRate(flywheelVelocityRampRateSeconds);
-
+    neo.setInverted(true);
     flywheelActive = true;
     flywheelSpeedSetpoint = 500.0;
 
@@ -67,14 +67,13 @@ public class Flywheel extends SubsystemBase implements Loggable {
    */
   @Config
   public void setFlywheelSpeed(double velocity) {
-    flywheelSpeedSetpoint = velocity * 60;
+    flywheelSpeedSetpoint = -velocity * 60;
   }
 
 
   @Log.Graph(name = "Flywheel Velocity (RPM)")
   public double getFlywheelSpeed() {
-    
-    return ((encoder.getPosition() - lastLoopPosition) / 0.02) / 2048;
+    return encoder.getVelocity();
   }
 
   public void setFlywheelIdle() {

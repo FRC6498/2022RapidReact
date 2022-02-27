@@ -54,8 +54,8 @@ public class Conveyor extends SubsystemBase implements Loggable {
 
     driverConfig = new TalonFXConfiguration();
     driverConfig.openloopRamp = 0.5;
-    driverConfig.peakOutputForward = 0.1;
-    driverConfig.peakOutputReverse = -0.1;
+    driverConfig.peakOutputForward = 0.5;
+    driverConfig.peakOutputReverse = -0.5;
     driverConfig.voltageCompSaturation = 12;
 
     driver.configAllSettings(driverConfig);

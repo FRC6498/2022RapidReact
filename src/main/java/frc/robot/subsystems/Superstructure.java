@@ -66,7 +66,7 @@ public class Superstructure extends SubsystemBase {
   @Config
   double flywheelRPM = 0.0;
   public boolean isForward;
-  public double feederSpeedRunning = 0.50;
+  public double feederSpeedRunning = 0.75;
   public double feederSpeedStopped = 0.0; 
   WPI_TalonFX feederA;
   WPI_TalonFX feederB;
@@ -88,7 +88,9 @@ public class Superstructure extends SubsystemBase {
     
     //colorSensor = new PicoColorSensor();
 
-
+    feederA = new WPI_TalonFX(10);
+    feederA.setInverted(true);
+    feederB = new WPI_TalonFX(11);
 
     //flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelIdle(), flywheel));
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
@@ -104,20 +106,19 @@ public class Superstructure extends SubsystemBase {
     
     RunCommand turretAutoAim = new RunCommand(() -> turret.setSetpointDegrees(vision.getBestTarget().getYaw()), turret);
     fullAuto = new ParallelCommandGroup(
-      turretAutoAim,
       new RunCommand(() -> flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))), flywheel)
     ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.FULL_AUTO; });
 
     dump = new ParallelCommandGroup(
-      new RunCommand(() -> this.turret.setTurretPos(Constants.TurretConstants.turretDumpModePos), this.turret),
       new RunCommand(() -> this.flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), this.flywheel)
     ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.DUMP;} );
     
-    manualShoot = new ParallelCommandGroup(
-      new RunCommand(() -> turret.setSetpointDegrees(vision.getBestTarget().getYaw()), turret),
+    manualShoot = new ParallelRaceGroup(
       new RunCommand(() -> flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))), flywheel)
-       ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.MANUAL_FIRE;} );
-  setDefaultCommand(fullAuto);
+       ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.MANUAL_FIRE;} 
+      );
+
+    //setDefaultCommand(fullAuto.perpetually());
     
     
     setupConveyorCommands();
@@ -139,19 +140,19 @@ public class Superstructure extends SubsystemBase {
     // set speed
     shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> { flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))); }, flywheel));
     shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> turret.setSetpointDegrees(vision.getClosestTarget().getYaw()), turret));
-    shooterReady.and(frontConveyorFull).whileActiveOnce(new RunCommand(() -> {
-      feederA.set(feederSpeedRunning);
-      feederB.set(feederSpeedRunning);
+    frontConveyorFull.whileActiveOnce(new RunCommand(() -> {
+      feederA.set(0.25);
+      feederB.set(0.25);
     }, this));
     vision.setLED(VisionLEDMode.kOff);
-    turret.setDefaultCommand(new RunCommand(() -> {
+    /*turret.setDefaultCommand(new RunCommand(() -> {
       if (vision.hasTargets()) {
         turret.setSetpointDegrees(vision.getBestTarget().getYaw());
       } else {
         turret.setSetpointDegrees(0);
         //System.out.println("NO TARGET");
       }
-    }, turret));
+    }, turret));*/
   }
   public void runFeeder() {
     feederA.set(feederSpeedRunning);

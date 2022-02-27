@@ -44,14 +44,15 @@ public class RobotContainer {
   Intake frontIntake = new Intake(intakeACANId, frontIntakeForwardChannel, frontIntakeReverseChannel);
   Superstructure superstructure = new Superstructure(flywheel, frontConveyor, frontIntake, vision, turret, climber);
 
-  XboxController driver = new XboxController(3);
-  XboxController operator = new XboxController(2);
+  XboxController driver = new XboxController(0);
+  XboxController operator = new XboxController(1);
 
   Trigger retractClimb = new Trigger();
   Trigger flyWheelAtSetpoint = new Trigger();
 
   JoystickButton driver_rbumper = new JoystickButton(driver, Button.kRightBumper.value);
   JoystickButton driver_a = new JoystickButton(driver, Button.kA.value);
+  JoystickButton op_b = new JoystickButton(driver, Button.kB.value);
   POVButton op_up = new POVButton(operator, 0);
   POVButton op_left = new POVButton(operator, 270);
   JoystickButton driver_lBumper = new JoystickButton(driver, Button.kLeftBumper.value);
@@ -87,7 +88,7 @@ public class RobotContainer {
     op_left.whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
     driver_a.whenActive(new InstantCommand(climber::lowerClimber, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(driver.getRightY() / 10), climber));
-    new JoystickButton(operator, Button.kB.value).whenActive(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
+    op_b.whileActiveOnce(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
   }
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
