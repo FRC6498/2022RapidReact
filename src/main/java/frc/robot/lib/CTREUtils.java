@@ -20,5 +20,5 @@ public class CTREUtils {
         // 1 degree = 2048 ticks / 360
         // 1 degree = 5.689 ticks
         return degrees * Constants.degreesToTurretTicks;
-      }
+    }
 }

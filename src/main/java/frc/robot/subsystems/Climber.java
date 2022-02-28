@@ -15,6 +15,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class Climber extends SubsystemBase implements Loggable{
@@ -28,16 +29,23 @@ public class Climber extends SubsystemBase implements Loggable{
     isDown = true;
     climberMotor = new WPI_TalonFX(climberMotorCANId);
     climberMotor.configClosedloopRamp(1);
-    climberMotor.configPeakOutputForward(0.1);
-    climberMotor.configPeakOutputReverse(-0.1);
+    climberMotor.configPeakOutputForward(0.5);
+    climberMotor.configPeakOutputReverse(-0.5);
     climberMotor.setInverted(true);
     climberMotor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
-    
+    climberMotor.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
+    climberMotor.configClearPositionOnLimitF(true, 20);
+    climberMotor.configClearPositionOnLimitR(true, 20);
     //setup encoders
     climberMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
     climberMotor.config_kP(0, climber_kP);
     //climberMotor.configForwardSoftLimitThreshold(17860 * 0.5);
+    climberMotor.configForwardSoftLimitThreshold(286300);
+    climberMotor.configReverseSoftLimitThreshold(0);
+    climberMotor.configReverseSoftLimitEnable(false);
+    climberMotor.configForwardSoftLimitEnable(true);
     climberMotor.setSelectedSensorPosition(0);
+    climberMotor.setNeutralMode(NeutralMode.Brake);
   }
   @Log
   public double getEncoderPosition() {
@@ -48,16 +56,16 @@ public class Climber extends SubsystemBase implements Loggable{
     this.input = input;
   }
 
+  // 1 inch = 11660 ticks
+  int ticksPerInch = 11660;
   public void lowerClimber()  {
-    climberMotorSetpoint = 10000;
-    climberMotor.setNeutralMode(NeutralMode.Brake);
-    climberMotor.set(ControlMode.Position, climberMotorSetpoint);
+    climberMotorSetpoint = 0;
+    isDown = true;
   }
 
-  public void releaseClimber() {
+  public void raiseClimber() {
+    climberMotorSetpoint = 21 * ticksPerInch;
     isDown = false;
-    climberMotor.setNeutralMode(NeutralMode.Coast);
-    climberMotor.set(ControlMode.PercentOutput, 0);
   }
   //@Log
   public double whereClimber(double getEncoderPosition) {
@@ -68,19 +76,20 @@ public class Climber extends SubsystemBase implements Loggable{
     }
     return getEncoderPosition;
   }
+
   public void toggleClimber() {
-    if (isDown && predeploy) { // raise climber
-      releaseClimber();
-      predeploy = false;
-    } else if (!isDown && !predeploy) { // retract
+    if (isDown) {
+      raiseClimber();
+    } else {
       lowerClimber();
-      predeploy = true;
     }
   }
   @Override
   public void periodic() {
     whereClimber(getEncoderPosition());
     climberMotor.set(ControlMode.PercentOutput, input);
+
+    //climberMotor.set(ControlMode.Position, climberMotorSetpoint);
     // This method will be called once per scheduler run
   }
 }

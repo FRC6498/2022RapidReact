@@ -3,6 +3,11 @@
     "mode": "Client",
     "serverTeam": "6498"
   },
+  "Shuffleboard": {
+    "Flywheel": {
+      "open": true
+    }
+  },
   "photonvision": {
     "limelight": {
       "open": true

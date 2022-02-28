@@ -9,6 +9,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import org.photonvision.common.hardware.VisionLEDMode;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
@@ -96,6 +97,10 @@ public class Superstructure extends SubsystemBase {
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
     turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
 
+
+    flywheelTable.put(0, 0.8);
+    flywheelTable.put(Units.feetToMeters(9), 1.6);
+    flywheelTable.put(Units.inchesToMeters(10*12+4), 1.8);
     shooterReady = new Trigger(this::getShooterReady);
     seesawReady = new Trigger();
     frontConveyorFull = new Trigger(() -> frontConveyor.isBallPresent(false));
@@ -103,10 +108,9 @@ public class Superstructure extends SubsystemBase {
     shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
     inLowGear = new Trigger(() -> {return !Drivetrain.isHighGear;});
     flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
-    
-    RunCommand turretAutoAim = new RunCommand(() -> turret.setSetpointDegrees(vision.getBestTarget().getYaw()), turret);
+
     fullAuto = new ParallelCommandGroup(
-      new RunCommand(() -> flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))), flywheel)
+      new RunCommand(() -> flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))), this.flywheel)
     ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.FULL_AUTO; });
 
     dump = new ParallelCommandGroup(
@@ -118,7 +122,7 @@ public class Superstructure extends SubsystemBase {
        ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.MANUAL_FIRE;} 
       );
 
-    //setDefaultCommand(fullAuto.perpetually());
+    setDefaultCommand(fullAuto.perpetually());
     
     
     setupConveyorCommands();
@@ -145,14 +149,15 @@ public class Superstructure extends SubsystemBase {
       feederB.set(0.25);
     }, this));
     vision.setLED(VisionLEDMode.kOff);
-    /*turret.setDefaultCommand(new RunCommand(() -> {
+    turret.setDefaultCommand(new RunCommand(() -> {
       if (vision.hasTargets()) {
-        turret.setSetpointDegrees(vision.getBestTarget().getYaw());
+        //turret.setSetpointDegrees(vision.getBestTarget().getYaw());
+        turret.setSetpointDegrees(0);
       } else {
         turret.setSetpointDegrees(0);
         //System.out.println("NO TARGET");
       }
-    }, turret));*/
+    }, turret));
   }
   public void runFeeder() {
     feederA.set(feederSpeedRunning);

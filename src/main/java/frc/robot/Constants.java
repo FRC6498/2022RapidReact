@@ -45,6 +45,8 @@ public final class Constants {
         public static final double kS = 0;
         public static final double kV = 0;
         public static final double kA = 0;
+        public static final double trackWidthMeters = 0;
+        public static final double driveDistancePerTickMeters = Math.PI * Units.inchesToMeters(4);
         
     }
 
@@ -60,7 +62,7 @@ public final class Constants {
         public static final double flywheelkA = 0.018595;
         public static final double flywheelVelocityRampRateSeconds = 0.5;
         public static final double flywheelSetpointToleranceRPM = 10;
-        public static final double flywheelDumpRPM = 0;
+        public static final double flywheelDumpRPM = 0.8;
     }
 
     public static final class TurretConstants {

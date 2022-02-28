@@ -68,9 +68,9 @@ public class Vision extends SubsystemBase implements Loggable {
   public double getTargetDistance(PhotonTrackedTarget target)
   {
     return PhotonUtils.calculateDistanceToTargetMeters(
-      comparisonConstants[0], 
-      comparisonConstants[1], 
-      comparisonConstants[2], 
+      Units.inchesToMeters(29), 
+      2.64, // 264cm from floor->ring
+      Units.degreesToRadians(20), 
       Units.degreesToRadians(target.getPitch())
     );
   }

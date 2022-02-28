@@ -10,10 +10,14 @@ import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SelectCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -26,6 +30,7 @@ import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision;
+import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Logger;
 import static frc.robot.Constants.IntakeConstants.*;
 
@@ -93,8 +98,8 @@ public class RobotContainer {
       false, new InstantCommand(frontIntake::lowerIntake, frontIntake) // intake up
     ), frontIntake::isExtended));
     op_left.whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
-    driver_a.whenActive(new InstantCommand(climber::lowerClimber, climber));
-    climber.setDefaultCommand(new RunCommand(() -> climber.setInput(driver.getRightY() / 10), climber));
+    driver_a.whenActive(new InstantCommand(climber::toggleClimber, climber));
+    climber.setDefaultCommand(new RunCommand(() -> climber.setInput(driver.getRightY() / 2), climber));
     op_b.whileActiveOnce(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
   }
   /**
@@ -103,7 +108,24 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // An ExampleCommand will run in autonomous
-    return new PrintCommand("Auto Started!");
+    
+    return new SequentialCommandGroup(
+      // drive forward and intake
+      new ParallelCommandGroup(
+        new ParallelRaceGroup(
+          new RunCommand(() -> drivetrain.arcadeDrive(0.5, 0), drivetrain),
+          new WaitUntilCommand(1)
+        ),
+        new StartEndCommand(frontIntake::lowerIntake, frontIntake::raiseIntake, frontIntake).withInterrupt(() -> frontConveyor.isBallPresent(false))
+      ),
+      // set dump mode (we will go for the fender)
+      new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP)),
+      // drive back to fender
+      new ParallelCommandGroup(
+        new RunCommand(() -> drivetrain.arcadeDrive(-0.5, 0)).withInterrupt(drivetrain::getStopped)
+      ),
+      // send balls into shooter until conveyor is empty
+      new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure).withInterrupt(() -> frontConveyor.isBallPresent(false) == false)
+    );
   }
 }

@@ -54,6 +54,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     neo.setIdleMode(IdleMode.kCoast);
     neo.setOpenLoopRampRate(flywheelVelocityRampRateSeconds);
     neo.setInverted(true);
+    neo.enableVoltageCompensation(12);
     flywheelActive = true;
     flywheelSpeedSetpoint = 1.5;
     NetworkTable teamtable = NetworkTableInstance.getDefault().getTable("team6498");

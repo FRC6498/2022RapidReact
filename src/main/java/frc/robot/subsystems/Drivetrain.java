@@ -13,8 +13,11 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
@@ -33,6 +36,7 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   private final WPI_TalonFX leftFollower, rightFollower;
   private final MotorControllerGroup leftMotors, rightMotors;
   private final DifferentialDriveOdometry odometry;
+  private final DifferentialDriveKinematics kinematics;
   private final DifferentialDrive diffDrive;
   // 
   @Log
@@ -41,9 +45,11 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   // imu
   private final AHRS gyro;
   
+  private LinearFilter velAvg = LinearFilter.movingAverage(5);
   public static boolean isHighGear = false;
   private boolean driveInverted;
   private NeutralMode currentBrakeMode = NeutralMode.Coast;
+  private double currentSpeedMetersPerSecond = 0.0;
   private final SimpleMotorFeedforward drivetrainFeedforward =
     new SimpleMotorFeedforward(
       Constants.DriveConstants.kS,
@@ -75,6 +81,7 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     gyro = new AHRS(Port.kMXP);
     gyro.reset();
     odometry = new DifferentialDriveOdometry(gyro.getRotation2d());
+    kinematics = new DifferentialDriveKinematics(Constants.DriveConstants.trackWidthMeters);
 
     compressor = new Compressor(PneumaticsModuleType.CTREPCM);
     shifter = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, shifterForwardChannelId, shifterReverseChannelId);
@@ -183,8 +190,20 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   public void periodic() {
     odometry.update(
       gyro.getRotation2d(), 
-      leftLeader.getSelectedSensorPosition(), 
-      rightLeader.getSelectedSensorPosition()
+      leftLeader.getSelectedSensorPosition() * driveDistancePerTickMeters, 
+      rightLeader.getSelectedSensorPosition() * driveDistancePerTickMeters
     );
+    currentSpeedMetersPerSecond = velAvg.calculate(
+      kinematics.toChassisSpeeds(
+        new DifferentialDriveWheelSpeeds(
+          leftLeader.getSelectedSensorVelocity() * driveDistancePerTickMeters, 
+          rightLeader.getSelectedSensorVelocity() * driveDistancePerTickMeters
+        )
+      ).vxMetersPerSecond
+    );
+  }
+
+  public boolean getStopped() {
+    return currentSpeedMetersPerSecond < 0.1;
   }
 }
