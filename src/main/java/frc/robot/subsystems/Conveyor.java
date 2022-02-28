@@ -12,6 +12,7 @@ import com.revrobotics.ColorMatchResult;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -23,7 +24,7 @@ import static frc.robot.Constants.ConveyorConstants.*;
 public class Conveyor extends SubsystemBase implements Loggable {
 
   private final WPI_TalonFX driver;
-  private final DigitalInput ballSensor;
+  private final Ultrasonic ballSensor;
   private final TalonFXConfiguration driverConfig;
 
   private Color cargoColor;
@@ -38,7 +39,6 @@ public class Conveyor extends SubsystemBase implements Loggable {
   private ColorMatch colorMatch;
   @Log
   private double driverOutput;
-  DoubleSolenoid tickTock;
   
 
   //TODO: What LEDs if any?
@@ -49,7 +49,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
    */
 
   /** Creates a new Conveyor. */
-  public Conveyor(int driverCANId, int colorSensorId, int beambreakId) {
+  public Conveyor(int driverCANId, int ultrasonicOutput, int ultrasonicInput) {
     driver = new WPI_TalonFX(driverCANId);
 
     driverConfig = new TalonFXConfiguration();
@@ -64,9 +64,9 @@ public class Conveyor extends SubsystemBase implements Loggable {
 
     cargoColor = Color.kGray;
     running = false;
-    ballSensor = new DigitalInput(beambreakId);
+    ballSensor = new Ultrasonic(ultrasonicOutput, ultrasonicInput);
 
-    this.colorSensorId = colorSensorId;
+    //this.colorSensorId = colorSensorId;
     colorMatch = new ColorMatch();
     colorMatch.setConfidenceThreshold(0.95);
     colorMatch.addColorMatch(Color.kRed);
@@ -114,14 +114,14 @@ public class Conveyor extends SubsystemBase implements Loggable {
       return colorEmpty || currentEmpty;
     } else {
       // use beam break
-      return ballSensor.get();
+      return ballSensor.getRangeInches() < 0.3;
     }
   }
 
   @Override
   public void periodic() {
     // are we empty
-    empty = !ballSensor.get();
+    empty = !isBallPresent(false);
 
     if (empty) {
       driver.set(0);
