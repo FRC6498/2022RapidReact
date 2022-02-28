@@ -111,15 +111,15 @@ public class Superstructure extends SubsystemBase {
 
     fullAuto = new ParallelCommandGroup(
       new RunCommand(() -> flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))), this.flywheel)
-    ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.FULL_AUTO; });
+    ).until(() -> { return this.getShooterMode() != ShooterMode.FULL_AUTO; });
 
     dump = new ParallelCommandGroup(
       new RunCommand(() -> this.flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), this.flywheel)
-    ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.DUMP;} );
+    ).until(() -> { return this.getShooterMode() != ShooterMode.DUMP;} );
     
     manualShoot = new ParallelRaceGroup(
       new RunCommand(() -> flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))), flywheel)
-       ).withInterrupt(() -> { return this.getShooterMode() != ShooterMode.MANUAL_FIRE;} 
+       ).until(() -> { return this.getShooterMode() != ShooterMode.MANUAL_FIRE;} 
       );
 
     setDefaultCommand(fullAuto.perpetually());

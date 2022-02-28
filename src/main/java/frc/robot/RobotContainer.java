@@ -108,7 +108,6 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    
     return new SequentialCommandGroup(
       // drive forward and intake
       new ParallelCommandGroup(
@@ -116,16 +115,16 @@ public class RobotContainer {
           new RunCommand(() -> drivetrain.arcadeDrive(0.5, 0), drivetrain),
           new WaitUntilCommand(1)
         ),
-        new StartEndCommand(frontIntake::lowerIntake, frontIntake::raiseIntake, frontIntake).withInterrupt(() -> frontConveyor.isBallPresent(false))
+        new StartEndCommand(frontIntake::lowerIntake, frontIntake::raiseIntake, frontIntake).until(() -> frontConveyor.isBallPresent(false))
       ),
       // set dump mode (we will go for the fender)
       new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP)),
       // drive back to fender
       new ParallelCommandGroup(
-        new RunCommand(() -> drivetrain.arcadeDrive(-0.5, 0)).withInterrupt(drivetrain::getStopped)
+        new RunCommand(() -> drivetrain.arcadeDrive(-0.5, 0)).until(drivetrain::getStopped)
       ),
       // send balls into shooter until conveyor is empty
-      new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure).withInterrupt(() -> frontConveyor.isBallPresent(false) == false)
+      new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure).until(() -> frontConveyor.isBallPresent(false) == false)
     );
   }
 }
