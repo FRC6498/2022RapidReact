@@ -11,9 +11,6 @@ import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorMatchResult;
 
 import edu.wpi.first.wpilibj.AnalogInput;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -121,8 +118,9 @@ public class Conveyor extends SubsystemBase implements Loggable {
   }
 
   public boolean isBallPresent() {
-    return true;//getSonarDistance() < 
+    return getSonarDistance() < 50; // 50mm = 5cm
   }
+
   @Log
   private double getSonarDistance() {
     return (5/-0.000488) * ballSensor.getVoltage();
@@ -131,7 +129,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
   @Override
   public void periodic() {
     // are we empty
-    empty = !isBallPresent(false);
+    empty = !isBallPresent();
 
     if (empty) {
       driver.set(0);

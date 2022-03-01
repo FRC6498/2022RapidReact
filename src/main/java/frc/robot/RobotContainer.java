@@ -8,11 +8,9 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -97,11 +95,11 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     driver_rbumper.whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
-    op_up.whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake));
-    op_up.whenActive(new SelectCommand(Map.of(
-      true, new InstantCommand(frontIntake::raiseIntake, frontIntake), // intake down
-      false, new InstantCommand(frontIntake::lowerIntake, frontIntake) // intake up
-    ), frontIntake::isExtended));
+    op_up.whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake)).debounce(seconds);
+    //op_up.whenActive(new SelectCommand(Map.of(
+    //  true, new InstantCommand(frontIntake::raiseIntake, frontIntake), // intake down
+    //  false, new InstantCommand(frontIntake::lowerIntake, frontIntake) // intake up
+    //), frontIntake::isExtended));
     op_left.whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
     driver_a.whenActive(new InstantCommand(climber::toggleClimber, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(driver.getRightY() / 2), climber));

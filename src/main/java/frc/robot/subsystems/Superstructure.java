@@ -15,18 +15,13 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants;
 //import frc.robot.lib.PicoColorSensor;
-import frc.robot.lib.ShotMap;
 import io.github.oblarg.oblog.annotations.Config;
-import io.github.oblarg.oblog.annotations.Log;
 
 /**
  * Coordinates all subsystems involving cargo
@@ -56,9 +51,9 @@ public class Superstructure extends SubsystemBase {
   public Trigger seesawReady;
   // Conveyors
   public Trigger frontConveyorFull;
-  public Trigger frontConveyorBallColorCorrect;
+  //public Trigger frontConveyorBallColorCorrect;
   public Trigger backConveyorFull;
-  public Trigger backConveyorBallColorCorrect;
+  //public Trigger backConveyorBallColorCorrect;
   public Trigger inLowGear;
   public Trigger flyWheelAtSetpoint;
   // Intakes
@@ -104,8 +99,8 @@ public class Superstructure extends SubsystemBase {
     
     shooterReady = new Trigger(this::getShooterReady);
     seesawReady = new Trigger();
-    frontConveyorFull = new Trigger(() -> frontConveyor.isBallPresent(false));
-    frontConveyorBallColorCorrect = new Trigger(() -> {return frontConveyor.getCargoColor() == this.getAllianceColor(); });
+    frontConveyorFull = new Trigger(frontConveyor::isBallPresent);
+    //frontConveyorBallColorCorrect = new Trigger(() -> {return frontConveyor.getCargoColor() == this.getAllianceColor(); });
     shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
     inLowGear = new Trigger(() -> {return !Drivetrain.isHighGear;});
     flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});    
@@ -134,10 +129,8 @@ public class Superstructure extends SubsystemBase {
         turret.setSetpointDegrees(vision.getClosestTarget().getYaw());
       } 
     }, flywheel, turret));
-    frontConveyorFull.whileActiveOnce(new RunCommand(() -> {
-      feederA.set(0.25);
-      feederB.set(0.25);
-    }, this));
+
+    frontConveyorFull.whileActiveOnce(new StartEndCommand(this::runFeeder, this::stopFeeder, this));
     vision.setLED(VisionLEDMode.kOff);
     turret.setDefaultCommand(new RunCommand(() -> { turret.setSetpointDegrees(0); }, turret));
   }
