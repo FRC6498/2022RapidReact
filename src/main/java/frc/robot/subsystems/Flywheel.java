@@ -11,11 +11,14 @@ import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.math.controller.BangBangController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.lib.ShotMap;
+import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -37,9 +40,16 @@ public class Flywheel extends SubsystemBase implements Loggable {
   @Log
   private double feedforwardOutput;
   private double controllerOutput;
-  private NetworkTableEntry flywheelSpeedEntry, feedforwardEntry, bangBangEntry;
+  double lastPosition = 0.0;
+  double distanceToHub = 0.0;
+  private NetworkTableEntry flywheelSparkMAXSpeedEntry, flywheelSpeedPositionDifferenceEntry;
+  private ShooterMode mode;
+  ShotMap flywheelTable = new ShotMap();
   
   public Flywheel() {
+    flywheelTable.put(0, 0.8);
+    flywheelTable.put(Units.feetToMeters(9), 1.6);
+    flywheelTable.put(Units.inchesToMeters(10*12+4), 1.8);
     neo = new CANSparkMax(rightFlywheelCANId, MotorType.kBrushless);
     encoder = neo.getEncoder();
     flywheelBangBang = new BangBangController(Constants.ShooterConstants.flywheelSetpointToleranceRPM);
@@ -58,9 +68,8 @@ public class Flywheel extends SubsystemBase implements Loggable {
     flywheelActive = true;
     flywheelSpeedSetpoint = 1.5;
     NetworkTable teamtable = NetworkTableInstance.getDefault().getTable("team6498");
-    flywheelSpeedEntry = teamtable.getEntry("flywheelSpeed");
-    feedforwardEntry = teamtable.getEntry("feedforward");
-    bangBangEntry = teamtable.getEntry("bangbang");
+    flywheelSparkMAXSpeedEntry = teamtable.getEntry("flywheelSpeedEncoderVelocity");
+    flywheelSpeedPositionDifferenceEntry = teamtable.getEntry("flywheelSpeedPositionDifference");
   }
     
   
@@ -71,6 +80,10 @@ public class Flywheel extends SubsystemBase implements Loggable {
   @Config
   public void setFlywheelSpeed(double velocity) {
     flywheelSpeedSetpoint = -velocity * 60;
+  }
+
+  public void setFlywheelDistance(double distance) {
+    distanceToHub = distance;
   }
 
 
@@ -90,18 +103,37 @@ public class Flywheel extends SubsystemBase implements Loggable {
   }
 
   public boolean getFlywheelActive() {
-    return false;
-    //return flywheelActive;
+    return flywheelActive;
   }
 
   public boolean atSetpoint() {
     return Math.abs(getFlywheelSpeed() - flywheelSpeedSetpoint) < flywheelSetpointToleranceRPM;
   }
+
+  public void setShooterMode(ShooterMode mode) {
+    this.mode = mode;
+  }
   
   @Override
   public void periodic() {
-    flywheelSpeedEntry.setDouble(getFlywheelSpeed());
+    flywheelSparkMAXSpeedEntry.setDouble(getFlywheelSpeed());
+    flywheelSpeedPositionDifferenceEntry.setDouble((encoder.getPosition() - lastPosition) / 0.02);
     flywheelActive = true;
+    // set setpoint based on mode
+    switch (mode) {
+      case DISABLED:
+        flywheelSpeedSetpoint = 0;
+        flywheelActive = false;
+        break;
+      case DUMP:
+        flywheelSpeedSetpoint = flywheelTable.getRPM(0);
+        flywheelActive = false;
+      break;
+      case FULL_AUTO:
+      flywheelSpeedSetpoint = flywheelTable.getRPM(distanceToHub);
+      default:
+        break;
+    }
     if (flywheelActive) {
       bangBangOutput = flywheelBangBang.calculate(getFlywheelSpeed(), flywheelSpeedSetpoint);
       feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);
@@ -110,6 +142,8 @@ public class Flywheel extends SubsystemBase implements Loggable {
     } else {
       setFlywheelIdle();
     }
+
+    lastPosition = encoder.getPosition();
   }
 
 }

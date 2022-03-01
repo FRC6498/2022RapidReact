@@ -10,6 +10,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorMatchResult;
 
+import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.Ultrasonic;
@@ -24,7 +25,7 @@ import static frc.robot.Constants.ConveyorConstants.*;
 public class Conveyor extends SubsystemBase implements Loggable {
 
   private final WPI_TalonFX driver;
-  private final Ultrasonic ballSensor;
+  private final AnalogInput ballSensor;
   private final TalonFXConfiguration driverConfig;
 
   private Color cargoColor;
@@ -39,6 +40,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
   private ColorMatch colorMatch;
   @Log
   private double driverOutput;
+  //private double ballDistanceThresholdMillimeters = 
   
 
   //TODO: What LEDs if any?
@@ -49,7 +51,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
    */
 
   /** Creates a new Conveyor. */
-  public Conveyor(int driverCANId, int ultrasonicOutput, int ultrasonicInput) {
+  public Conveyor(int driverCANId, int ballSensorChannelID) {
     driver = new WPI_TalonFX(driverCANId);
 
     driverConfig = new TalonFXConfiguration();
@@ -64,7 +66,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
 
     cargoColor = Color.kGray;
     running = false;
-    ballSensor = new Ultrasonic(ultrasonicOutput, ultrasonicInput);
+    ballSensor = new AnalogInput(ballSensorChannelID);
 
     //this.colorSensorId = colorSensorId;
     colorMatch = new ColorMatch();
@@ -113,9 +115,17 @@ public class Conveyor extends SubsystemBase implements Loggable {
       
       return colorEmpty || currentEmpty;
     } else {
-      // use beam break
-      return ballSensor.getRangeInches() < 0.3;
+      // use ultrasonic
+      return true;
     }
+  }
+
+  public boolean isBallPresent() {
+    return true;//getSonarDistance() < 
+  }
+  @Log
+  private double getSonarDistance() {
+    return (5/-0.000488) * ballSensor.getVoltage();
   }
 
   @Override

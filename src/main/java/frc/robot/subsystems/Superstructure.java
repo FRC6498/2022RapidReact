@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import java.util.function.Consumer;
+
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
@@ -62,7 +64,7 @@ public class Superstructure extends SubsystemBase {
   // Intakes
   // Flywheel
   public Trigger shooterAutoEnabled;
-  ShotMap flywheelTable = new ShotMap();
+  
   ShooterMode shooterMode;
   @Config
   double flywheelRPM = 0.0;
@@ -77,15 +79,16 @@ public class Superstructure extends SubsystemBase {
   ParallelRaceGroup disabled;
   ParallelRaceGroup dump;
   ParallelRaceGroup testing;
-  
+  Consumer<ShooterMode> shooterModeUpdater;
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Intake frontIntake, Vision vision, Turret turret, Climber climber) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Intake frontIntake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater) {
     this.flywheel = flywheel;
     this.conveyor = frontConveyor;
     this.intake = frontIntake;
     this.turret = turret;
     this.vision = vision;
     this.climber = climber;
+    this.shooterModeUpdater = shooterModeUpdater;
     
     //colorSensor = new PicoColorSensor();
 
@@ -98,32 +101,14 @@ public class Superstructure extends SubsystemBase {
     turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
 
 
-    flywheelTable.put(0, 0.8);
-    flywheelTable.put(Units.feetToMeters(9), 1.6);
-    flywheelTable.put(Units.inchesToMeters(10*12+4), 1.8);
+    
     shooterReady = new Trigger(this::getShooterReady);
     seesawReady = new Trigger();
     frontConveyorFull = new Trigger(() -> frontConveyor.isBallPresent(false));
     frontConveyorBallColorCorrect = new Trigger(() -> {return frontConveyor.getCargoColor() == this.getAllianceColor(); });
     shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
     inLowGear = new Trigger(() -> {return !Drivetrain.isHighGear;});
-    flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
-
-    fullAuto = new ParallelCommandGroup(
-      new RunCommand(() -> flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))), this.flywheel)
-    ).until(() -> { return this.getShooterMode() != ShooterMode.FULL_AUTO; });
-
-    dump = new ParallelCommandGroup(
-      new RunCommand(() -> this.flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), this.flywheel)
-    ).until(() -> { return this.getShooterMode() != ShooterMode.DUMP;} );
-    
-    manualShoot = new ParallelRaceGroup(
-      new RunCommand(() -> flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))), flywheel)
-       ).until(() -> { return this.getShooterMode() != ShooterMode.MANUAL_FIRE;} 
-      );
-
-    setDefaultCommand(fullAuto.perpetually());
-    
+    flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});    
     
     setupConveyorCommands();
     setupShooterCommands();
@@ -142,22 +127,19 @@ public class Superstructure extends SubsystemBase {
   
   private void setupShooterCommands() {
     // set speed
-    shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> { flywheel.setFlywheelSpeed(flywheelTable.getRPM(vision.getTargetDistance(vision.getBestTarget()))); }, flywheel));
-    shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> turret.setSetpointDegrees(vision.getClosestTarget().getYaw()), turret));
+    shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> { 
+      if (vision.hasTargets()) 
+      { 
+        flywheel.setFlywheelDistance(vision.getTargetDistance(vision.getBestTarget()));
+        turret.setSetpointDegrees(vision.getClosestTarget().getYaw());
+      } 
+    }, flywheel, turret));
     frontConveyorFull.whileActiveOnce(new RunCommand(() -> {
       feederA.set(0.25);
       feederB.set(0.25);
     }, this));
     vision.setLED(VisionLEDMode.kOff);
-    turret.setDefaultCommand(new RunCommand(() -> {
-      if (vision.hasTargets()) {
-        //turret.setSetpointDegrees(vision.getBestTarget().getYaw());
-        turret.setSetpointDegrees(0);
-      } else {
-        turret.setSetpointDegrees(0);
-        //System.out.println("NO TARGET");
-      }
-    }, turret));
+    turret.setDefaultCommand(new RunCommand(() -> { turret.setSetpointDegrees(0); }, turret));
   }
   public void runFeeder() {
     feederA.set(feederSpeedRunning);
@@ -198,6 +180,7 @@ public class Superstructure extends SubsystemBase {
 
   public void setShooterMode(ShooterMode mode) {
     shooterMode = mode;
+    shooterModeUpdater.accept(mode);
   }
 
   public ShooterMode getShooterMode() {
@@ -216,7 +199,7 @@ public class Superstructure extends SubsystemBase {
     DUMP, // Turret locks to dead ahead but flywheel is set to minimum
     DISABLED // turret and flywheel do not move, shooting is impossible
   }
-  // Methods should be high level actions and command subsystems to achieve the goal
-  // TODO: Define what subsytems need, which will inform requirements for this
+  // setShooterMode method here
+  // subsystems check shooter mode, act accordingly
   
 }

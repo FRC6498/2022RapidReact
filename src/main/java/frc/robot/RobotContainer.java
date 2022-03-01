@@ -35,6 +35,7 @@ import io.github.oblarg.oblog.Logger;
 import static frc.robot.Constants.IntakeConstants.*;
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -48,9 +49,13 @@ public class RobotContainer {
   Turret turret = new Turret();
   Vision vision = new Vision();
   Climber climber = new Climber();
-  Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, Constants.ConveyorConstants.frontColorSensorId, Constants.ConveyorConstants.frontConveyorPhotoeyeId);
+  Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, 0);
   Intake frontIntake = new Intake(intakeACANId, frontIntakeForwardChannel, frontIntakeReverseChannel);
-  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, frontIntake, vision, turret, climber);
+  Consumer<ShooterMode> shooterModeUpdater = (ShooterMode mode) -> {
+    flywheel.setShooterMode(mode);
+    turret.setShooterMode(mode);
+  };
+  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, frontIntake, vision, turret, climber, shooterModeUpdater);
 
   XboxController driver = new XboxController(0);
   XboxController operator = new XboxController(1);

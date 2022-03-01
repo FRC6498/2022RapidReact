@@ -11,6 +11,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -30,7 +31,7 @@ public class Turret extends SubsystemBase implements Loggable {
   @Log.Graph
   double pidOutput;
   SimpleMotorFeedforward turretFeedforward;
-  SimpleMotorFeedforward thing;
+  ShooterMode mode;
 
   public Turret() {
     visionDegrees = 0.0;
@@ -73,7 +74,7 @@ public class Turret extends SubsystemBase implements Loggable {
     useOutput();
   }
 
-  public void setTurretPos(double position) {
-    
+  public void setShooterMode(ShooterMode mode) {
+    this.mode = mode;
   }
 }
