@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import org.photonvision.common.hardware.VisionLEDMode;
-
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -32,6 +30,7 @@ public class Robot extends TimedRobot {
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
     addPeriodic(() -> m_robotContainer.superstructure.getBallColors(), 0.5);
+    Logger.configureLoggingAndConfig(m_robotContainer, false);
   }
 
   /**

@@ -11,7 +11,6 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import org.photonvision.common.hardware.VisionLEDMode;
 
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
@@ -76,10 +75,10 @@ public class Superstructure extends SubsystemBase {
   ParallelRaceGroup testing;
   Consumer<ShooterMode> shooterModeUpdater;
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Intake frontIntake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Intake intake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater) {
     this.flywheel = flywheel;
     this.conveyor = frontConveyor;
-    this.intake = frontIntake;
+    this.intake = intake;
     this.turret = turret;
     this.vision = vision;
     this.climber = climber;

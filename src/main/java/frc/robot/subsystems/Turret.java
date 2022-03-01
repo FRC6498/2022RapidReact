@@ -34,6 +34,7 @@ public class Turret extends SubsystemBase implements Loggable {
   ShooterMode mode;
 
   public Turret() {
+    mode = ShooterMode.DISABLED;
     visionDegrees = 0.0;
     pidOutput = 0.0;
     homed = false;
@@ -71,6 +72,15 @@ public class Turret extends SubsystemBase implements Loggable {
   
   @Override
   public void periodic() {
+    switch (mode) {
+      case DUMP:
+      case DISABLED:
+        visionDegrees = 0;
+        pidOutput = 0;
+        break;
+      default:
+        break;
+    }
     useOutput();
   }
 

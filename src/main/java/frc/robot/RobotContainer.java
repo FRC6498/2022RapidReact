@@ -8,13 +8,14 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
@@ -29,10 +30,8 @@ import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.Superstructure.ShooterMode;
-import io.github.oblarg.oblog.Logger;
 import static frc.robot.Constants.IntakeConstants.*;
 
-import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -71,7 +70,7 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    Logger.configureLoggingAndConfig(this, false);
+    
     drivetrain.setDefaultCommand(
       new DriveArcadeOpenLoop(
         driver::getRightTriggerAxis, 
@@ -95,11 +94,13 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     driver_rbumper.whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
-    op_up.whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake)).debounce(seconds);
-    //op_up.whenActive(new SelectCommand(Map.of(
-    //  true, new InstantCommand(frontIntake::raiseIntake, frontIntake), // intake down
-    //  false, new InstantCommand(frontIntake::lowerIntake, frontIntake) // intake up
-    //), frontIntake::isExtended));
+    op_up.whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake));
+    op_up.whenActive(new ConditionalCommand(
+      new InstantCommand(frontIntake::raiseIntake, frontIntake), // intake down, so raise it
+      new SequentialCommandGroup( // intake up, so lower it
+        new InstantCommand(frontIntake::lowerIntake, frontIntake),
+        new WaitCommand(5) 
+      ),  frontIntake::isExtended));
     op_left.whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
     driver_a.whenActive(new InstantCommand(climber::toggleClimber, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(driver.getRightY() / 2), climber));
@@ -118,7 +119,7 @@ public class RobotContainer {
           new RunCommand(() -> drivetrain.arcadeDrive(0.5, 0), drivetrain),
           new WaitUntilCommand(1)
         ),
-        new StartEndCommand(frontIntake::lowerIntake, frontIntake::raiseIntake, frontIntake).until(() -> frontConveyor.isBallPresent(false))
+        new StartEndCommand(frontIntake::lowerIntake, frontIntake::raiseIntake, frontIntake).until(() -> frontConveyor.isBallPresent())
       ),
       // set dump mode (we will go for the fender)
       new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP)),
@@ -127,7 +128,7 @@ public class RobotContainer {
         new RunCommand(() -> drivetrain.arcadeDrive(-0.5, 0)).until(drivetrain::getStopped)
       ),
       // send balls into shooter until conveyor is empty
-      new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure).until(() -> frontConveyor.isBallPresent(false) == false)
+      new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure).until(() -> frontConveyor.isBallPresent() == false)
     );
   }
 }

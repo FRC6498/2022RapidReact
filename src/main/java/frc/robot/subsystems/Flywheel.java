@@ -47,7 +47,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   ShotMap flywheelTable = new ShotMap();
   
   public Flywheel() {
-    mode = ShooterMode.DUMP;
+    mode = ShooterMode.DISABLED;
     flywheelTable.put(0, 0.8);
     flywheelTable.put(Units.feetToMeters(9), 1.6);
     flywheelTable.put(Units.inchesToMeters(10*12+4), 1.8);
@@ -71,8 +71,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     NetworkTable teamtable = NetworkTableInstance.getDefault().getTable("team6498");
     flywheelSparkMAXSpeedEntry = teamtable.getEntry("flywheelSpeedEncoderVelocity");
     flywheelSpeedPositionDifferenceEntry = teamtable.getEntry("flywheelSpeedPositionDifference");
-  }
-    
+  } 
   
   /**
    * 
@@ -86,7 +85,6 @@ public class Flywheel extends SubsystemBase implements Loggable {
   public void setFlywheelDistance(double distance) {
     distanceToHub = distance;
   }
-
 
   @Log(name = "Flywheel Velocity (RPM)")
   public double getFlywheelSpeed() {
@@ -121,7 +119,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     flywheelSpeedPositionDifferenceEntry.setDouble((encoder.getPosition() - lastPosition) / 0.02);
     flywheelActive = true;
     // set setpoint based on mode
-    /*switch (mode) {
+    switch (mode) {
       case DISABLED:
         flywheelSpeedSetpoint = 0;
         flywheelActive = false;
@@ -130,11 +128,11 @@ public class Flywheel extends SubsystemBase implements Loggable {
         flywheelSpeedSetpoint = flywheelTable.getRPM(0);
         flywheelActive = false;
       break;
-      case FULL_AUTO:
-      flywheelSpeedSetpoint = flywheelTable.getRPM(distanceToHub);
+      //case FULL_AUTO:
+      //flywheelSpeedSetpoint = flywheelTable.getRPM(distanceToHub);
       default:
         break;
-    }*/
+    }
     if (flywheelActive) {
       bangBangOutput = flywheelBangBang.calculate(getFlywheelSpeed(), flywheelSpeedSetpoint);
       feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);
