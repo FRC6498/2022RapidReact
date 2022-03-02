@@ -121,9 +121,11 @@ public class Conveyor extends SubsystemBase implements Loggable {
     return getSonarDistance() < 50; // 50mm = 5cm
   }
 
-  @Log
+  @Log(name = "Ball Sensor Distance (mm)")
   private double getSonarDistance() {
-    return (5/-0.000488) * ballSensor.getVoltage();
+    // volts = millivolts / 1000
+    double volts = ballSensor.getVoltage();
+    return Constants.ConveyorConstants.ultrasonicScaleFactor * volts;
   }
 
   @Override

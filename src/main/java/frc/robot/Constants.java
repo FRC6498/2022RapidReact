@@ -80,6 +80,8 @@ public final class Constants {
         public static final double turretFeedforward_kv =  0.21434;
         // encoder pos associated with dump
 		public static final double turretDumpModePos = 0.0;
+        public static final double turretRampRate = 0;
+        public static final int turretMaxOutput = 0;
     }
 
     public static final class ConveyorConstants {
@@ -94,6 +96,7 @@ public final class Constants {
         public static final int frontConveyorPhotoeyeId = 1;
         public static final int backConveyorPhotoeyeId = 0;
         public static final double conveyorNominalSpeed = 0.1;
+        public static final double ultrasonicScaleFactor = 1024;//0.000976;
     }
 
     public static final class VisionConstants {
