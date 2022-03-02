@@ -15,6 +15,7 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public class Intake extends SubsystemBase implements Loggable {
   WPI_TalonFX motor;
+  @Log
   Double motorSetpoint = 0.0;
   DoubleSolenoid piston;
   boolean extended = false;

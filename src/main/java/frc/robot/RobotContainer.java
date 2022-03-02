@@ -34,6 +34,8 @@ import static frc.robot.Constants.IntakeConstants.*;
 
 import java.util.function.Consumer;
 
+import org.photonvision.common.hardware.VisionLEDMode;
+
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -70,7 +72,7 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    
+    vision.setLED(VisionLEDMode.kOff);
     drivetrain.setDefaultCommand(
       new DriveArcadeOpenLoop(
         driver::getRightTriggerAxis, 
@@ -97,10 +99,9 @@ public class RobotContainer {
     op_up.whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake));
     op_up.whenActive(new ConditionalCommand(
       new InstantCommand(frontIntake::raiseIntake, frontIntake), // intake down, so raise it
-      new SequentialCommandGroup( // intake up, so lower it
-        new InstantCommand(frontIntake::lowerIntake, frontIntake),
-        new WaitCommand(5) 
-      ),  frontIntake::isExtended));
+      new InstantCommand(frontIntake::lowerIntake, frontIntake), // intake up, so lower it
+      frontIntake::isExtended)
+    );
     op_left.whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
     driver_a.whenActive(new InstantCommand(climber::toggleClimber, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(driver.getRightY() / 2), climber));
@@ -116,7 +117,7 @@ public class RobotContainer {
       // drive forward and intake
       new ParallelCommandGroup(
         new ParallelRaceGroup(
-          new RunCommand(() -> drivetrain.arcadeDrive(0.5, 0), drivetrain),
+          new RunCommand(() -> drivetrain.arcadeDrive(1, 0), drivetrain),
           new WaitUntilCommand(1)
         ),
         new StartEndCommand(frontIntake::lowerIntake, frontIntake::raiseIntake, frontIntake).until(() -> frontConveyor.isBallPresent())
@@ -125,7 +126,7 @@ public class RobotContainer {
       new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP)),
       // drive back to fender
       new ParallelCommandGroup(
-        new RunCommand(() -> drivetrain.arcadeDrive(-0.5, 0)).until(drivetrain::getStopped)
+        new RunCommand(() -> drivetrain.arcadeDrive(-1, 0)).until(drivetrain::getStopped)
       ),
       // send balls into shooter until conveyor is empty
       new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure).until(() -> frontConveyor.isBallPresent() == false)
