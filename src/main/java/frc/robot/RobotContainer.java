@@ -96,13 +96,16 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     driver_rbumper.whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
-    op_up.whileActiveOnce(new StartEndCommand(() -> frontIntake.lowerIntake(), () -> frontIntake.raiseIntake(), frontIntake));
     op_up.whenActive(new ConditionalCommand(
       new InstantCommand(frontIntake::raiseIntake, frontIntake), // intake down, so raise it
       new InstantCommand(frontIntake::lowerIntake, frontIntake), // intake up, so lower it
       frontIntake::isExtended)
     );
-    op_left.whenActive(new InstantCommand(frontIntake::reverse, frontIntake));
+    op_left.whenActive(new ConditionalCommand(
+      new InstantCommand(frontIntake::setForward, frontIntake), // inverted, so go forward
+      new InstantCommand(frontIntake::setReverse, frontIntake), // forward up, so invert it
+      frontIntake::isInverted)
+    );
     driver_a.whenActive(new InstantCommand(climber::toggleClimber, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(driver.getRightY() / 2), climber));
     op_b.whileActiveOnce(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));

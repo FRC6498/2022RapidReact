@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.CANifier.PinValues;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -19,6 +20,7 @@ public class Intake extends SubsystemBase implements Loggable {
   Double motorSetpoint = 0.0;
   DoubleSolenoid piston;
   boolean extended = false;
+  int reverse = 1;
 
   public Intake(int intakeMotorId, int pistonForwardId, int pistonReverseId) {
     motor = new WPI_TalonFX(intakeMotorId);
@@ -28,19 +30,27 @@ public class Intake extends SubsystemBase implements Loggable {
   }
 
   public void lowerIntake() {
-    setMotorSetpoint(0.67);
+    motor.set(0.67);
     piston.set(Value.kForward);
     extended = true;
   }
 
   public void raiseIntake() {
-    setMotorSetpoint(0.0);
+    motor.set(0.0);
     piston.set(Value.kReverse);
     extended = false;
   }
 
-  public void reverse() {
-    motorSetpoint *= -1;
+  public void setReverse() {
+    motor.setInverted(true);
+  }
+
+  public void setForward() {
+    motor.setInverted(false);
+  }
+
+  public boolean isInverted() {
+    return motor.getInverted();
   }
 
   //@Config
@@ -57,7 +67,7 @@ public class Intake extends SubsystemBase implements Loggable {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    motor.set(motorSetpoint);
+    //motor.set(motorSetpoint);
     if (piston.get() == Value.kReverse) {
       extended = false;
     } else if (piston.get() == Value.kForward) {
