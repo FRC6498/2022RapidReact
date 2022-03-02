@@ -11,11 +11,13 @@ import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import io.github.oblarg.oblog.Loggable;
 //import io.github.oblarg.oblog.annotations.Config;
+import io.github.oblarg.oblog.annotations.Log;
 
 public class Intake extends SubsystemBase implements Loggable {
   WPI_TalonFX motor;
   Double motorSetpoint = 0.0;
   DoubleSolenoid piston;
+  boolean extended = false;
 
   public Intake(int intakeMotorId, int pistonForwardId, int pistonReverseId) {
     motor = new WPI_TalonFX(intakeMotorId);
@@ -27,11 +29,13 @@ public class Intake extends SubsystemBase implements Loggable {
   public void lowerIntake() {
     setMotorSetpoint(0.67);
     piston.set(Value.kForward);
+    extended = true;
   }
 
   public void raiseIntake() {
     setMotorSetpoint(0.0);
     piston.set(Value.kReverse);
+    extended = false;
   }
 
   public void reverse() {
@@ -43,14 +47,20 @@ public class Intake extends SubsystemBase implements Loggable {
     motorSetpoint = percent;
   }
 
+  @Log.BooleanBox(name = "Intake Lowered")
   public boolean isExtended() {
     // reverse = raised
-    return piston.get() == Value.kForward;
+    return extended;
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     motor.set(motorSetpoint);
+    if (piston.get() == Value.kReverse) {
+      extended = false;
+    } else if (piston.get() == Value.kForward) {
+      extended = true;
+    }
   }
 }

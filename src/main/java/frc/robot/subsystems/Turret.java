@@ -47,7 +47,6 @@ public class Turret extends SubsystemBase implements Loggable {
     pid = new PIDController(turretYaw_kP, 0, turretYaw_kD);
     // set position tolerance to 1 degree
     pid.setTolerance(turretPositionToleranceDegrees);
-
     turretFeedforward = new SimpleMotorFeedforward(turretFeedforward_kA, turretFeedforward_ks, turretFeedforward_kv);
     
   }
@@ -73,15 +72,16 @@ public class Turret extends SubsystemBase implements Loggable {
   @Override
   public void periodic() {
     switch (mode) {
+      case FULL_AUTO:
+      case MANUAL_FIRE:
+        useOutput();
       case DUMP:
       case DISABLED:
-        visionDegrees = 0;
-        pidOutput = 0;
+        bearing.setVoltage(0);
         break;
       default:
         break;
     }
-    useOutput();
   }
 
   public void setShooterMode(ShooterMode mode) {
