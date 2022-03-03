@@ -90,7 +90,7 @@ public class Superstructure extends SubsystemBase {
     feederA.setInverted(true);
     feederB = new WPI_TalonFX(11);
 
-    //flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelIdle(), flywheel));
+    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(0.7), flywheel));
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
     turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
 

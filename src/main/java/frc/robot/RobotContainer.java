@@ -81,6 +81,7 @@ public class RobotContainer {
         drivetrain
       )
     );
+    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(0.7), flywheel));
     drivetrain.setInverted(true);
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
     frontIntake.setDefaultCommand(new RunCommand(() -> frontIntake.setMotorSetpoint(0.0), frontIntake));
@@ -116,23 +117,33 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return new SequentialCommandGroup(
+    return new ParallelCommandGroup(
+      // flywheel ALWAYS spinning
+      new RunCommand(() -> flywheel.setFlywheelSpeed(0.7), flywheel),
+      new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP), superstructure),
+      new SequentialCommandGroup(
       // drive forward and intake
       new ParallelCommandGroup(
         new ParallelRaceGroup(
-          new RunCommand(() -> drivetrain.arcadeDrive(1, 0), drivetrain),
-          new WaitUntilCommand(1)
+          new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain),
+          new WaitCommand(2.25)
         ),
-        new StartEndCommand(frontIntake::lowerIntake, frontIntake::raiseIntake, frontIntake).until(() -> frontConveyor.isBallPresent())
+        new ParallelRaceGroup(
+          new StartEndCommand(frontIntake::lowerIntake, frontIntake::raiseIntake, frontIntake),
+          new WaitCommand(3.5)
+        ) 
       ),
-      // set dump mode (we will go for the fender)
-      new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP)),
       // drive back to fender
-      new ParallelCommandGroup(
-        new RunCommand(() -> drivetrain.arcadeDrive(-1, 0)).until(drivetrain::getStopped)
+      new ParallelRaceGroup(
+        new RunCommand(() -> drivetrain.arcadeDrive(1, 0)),
+        new WaitCommand(2)
       ),
       // send balls into shooter until conveyor is empty
-      new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure).until(() -> frontConveyor.isBallPresent() == false)
+      new ParallelRaceGroup(
+        new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure),
+        new WaitCommand(4)
+      )
+    )
     );
   }
 }

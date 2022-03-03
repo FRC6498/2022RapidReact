@@ -119,21 +119,23 @@ public class Flywheel extends SubsystemBase implements Loggable {
     flywheelSpeedPositionDifferenceEntry.setDouble((encoder.getPosition() - lastPosition) / 0.02);
     flywheelActive = true;
     // set setpoint based on mode
-    switch (mode) {
+    /*switch (mode) {
       case DISABLED:
         flywheelSpeedSetpoint = 0;
-        flywheelActive = false;
+        flywheelActive = true;
         break;
       case DUMP:
         flywheelSpeedSetpoint = flywheelTable.getRPM(0);
-        flywheelActive = false;
+        flywheelActive = true;
       break;
       //case FULL_AUTO:
       //flywheelSpeedSetpoint = flywheelTable.getRPM(distanceToHub);
       default:
         break;
-    }
+    }*/
+    flywheelActive = true;
     if (flywheelActive) {
+      //flywheelSpeedSetpoint = 0.7;
       bangBangOutput = flywheelBangBang.calculate(getFlywheelSpeed(), flywheelSpeedSetpoint);
       feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);
       controllerOutput = bangBangOutput + 0.9 * feedforwardOutput;
