@@ -9,15 +9,20 @@ import static frc.robot.Constants.DriveConstants.*;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatusFrame;
+import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
@@ -25,8 +30,12 @@ import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
+import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -34,7 +43,13 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   // motors
   private final WPI_TalonFX leftLeader, rightLeader;
   private final WPI_TalonFX leftFollower, rightFollower;
+  private final TalonFXSimCollection leftSim, rightSim;
   private final MotorControllerGroup leftMotors, rightMotors;
+
+  @Log
+  private Field2d field = new Field2d();
+  private FieldObject2d robotPath = field.getObject("robot-path");
+  private DifferentialDrivetrainSim driveSim;
   private final DifferentialDriveOdometry odometry;
   private final DifferentialDriveKinematics kinematics;
   private final DifferentialDrive diffDrive;
@@ -72,6 +87,9 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     leftFollower.follow(leftLeader);
     rightFollower.follow(rightLeader);
 
+    leftSim = leftLeader.getSimCollection();
+    rightSim = rightLeader.getSimCollection();
+
     leftMotors = new MotorControllerGroup(leftLeader, leftFollower);
     rightMotors = new MotorControllerGroup(rightLeader, rightFollower);
     leftMotors.setInverted(true);
@@ -97,6 +115,21 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     rightFollower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 199);
     leftFollower.setStatusFramePeriod(StatusFrame.Status_1_General, 201);
     rightFollower.setStatusFramePeriod(StatusFrame.Status_1_General, 202);
+    if (Robot.isSimulation()) {
+      driveSim = new DifferentialDrivetrainSim(
+        LinearSystemId.identifyDrivetrainSystem(
+          Constants.DriveConstants.kVLinear, 
+          Constants.DriveConstants.kALinear, 
+          Constants.DriveConstants.kVAngular, 
+          Constants.DriveConstants.kAAngular
+        ), 
+        DCMotor.getFalcon500(2), 
+        12, 
+        trackWidthMeters, 
+        Units.inchesToMeters(4), 
+        VecBuilder.fill(0.001, 0.001, 0.001, 0.1, 0.1, 0.005, 0.005)
+      );
+    }
   }
 
   // hardware methods

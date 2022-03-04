@@ -47,6 +47,10 @@ public final class Constants {
         public static final double kA = 0;
         public static final double trackWidthMeters = 0;
         public static final double driveDistancePerTickMeters = Math.PI * Units.inchesToMeters(4);
+        public static final double kAAngular = 0;
+        public static final double kVAngular = 0;
+        public static final double kALinear = 0;
+        public static final double kVLinear = 0;
         
     }
 
