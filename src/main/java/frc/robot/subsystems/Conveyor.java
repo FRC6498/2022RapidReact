@@ -45,7 +45,8 @@ public class Conveyor extends SubsystemBase implements Loggable {
   private ColorMatch colorMatch;
   @Log
   private double driverOutput;
-  //private double ballDistanceThresholdMillimeters = 
+
+  private double ballDistanceThresholdMillimeters = 325;
   
 
   //TODO: What LEDs if any?
@@ -79,7 +80,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
     colorMatch.addColorMatch(Color.kRed);
     colorMatch.addColorMatch(Color.kBlue);
 
-    sensorSmoother = LinearFilter.singlePoleIIR(0.5, 0.02);
+    sensorSmoother = LinearFilter.singlePoleIIR(0.25, 0.02);
     sensorOutliers = new MedianFilter(5);
     sensorDistanceEntry = NetworkTableInstance.getDefault().getTable("team6498").getEntry("ballDistance");
   }
@@ -130,7 +131,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
   }
 
   public boolean isBallPresent() {
-    return getSonarDistance() < 50; // 50mm = 5cm
+    return getSonarDistance() < ballDistanceThresholdMillimeters; // 50mm = 5cm
   }
 
   @Log.Graph(name = "Ball Sensor Distance (mm)")

@@ -91,7 +91,7 @@ public class Superstructure extends SubsystemBase {
     feederB = new WPI_TalonFX(11);
 
     flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(0.7), flywheel));
-    frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
+    frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
     turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
 
 
@@ -110,13 +110,13 @@ public class Superstructure extends SubsystemBase {
 
   private void setupConveyorCommands() {
     // move to seesaw
-    frontConveyorFull.whileActiveOnce(
-      new StartEndCommand(
-        conveyor::start, 
-        conveyor::stop, 
-        conveyor
-      )
-    );
+    //frontConveyorFull.whileActiveOnce(
+    //  new StartEndCommand(
+    //    conveyor::start, 
+    //    conveyor::stop, 
+    //    conveyor
+    //  )
+    //);
   }
   
   private void setupShooterCommands() {
@@ -129,7 +129,7 @@ public class Superstructure extends SubsystemBase {
       } 
     }, flywheel, turret));
 
-    frontConveyorFull.whileActiveOnce(new StartEndCommand(this::runFeeder, this::stopFeeder, this));
+    //frontConveyorFull.whileActiveOnce(new StartEndCommand(this::runFeeder, this::stopFeeder, this));
     vision.setLED(VisionLEDMode.kOff);
     turret.setDefaultCommand(new RunCommand(() -> { turret.setSetpointDegrees(0); }, turret));
   }

@@ -107,7 +107,7 @@ public class RobotContainer {
       new InstantCommand(frontIntake::setReverse, frontIntake), // forward up, so invert it
       frontIntake::isInverted)
     );
-    driver_a.whenActive(new InstantCommand(climber::toggleClimber, climber));
+    //driver_a.whenActive(new InstantCommand(climber::toggleClimber, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(driver.getRightY() / 2), climber));
     op_b.whileActiveOnce(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
   }

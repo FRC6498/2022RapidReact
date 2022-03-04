@@ -95,7 +95,7 @@ public final class Constants {
         public static final double ballPresentCurrentThreshold = 0;
         public static final int frontConveyorPhotoeyeId = 1;
         public static final int backConveyorPhotoeyeId = 0;
-        public static final double conveyorNominalSpeed = 0.1;
+        public static final double conveyorNominalSpeed = 0.25;
         public static final double ultrasonicScaleFactor = 1024;//0.000976;
     }
 

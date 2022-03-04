@@ -11,6 +11,8 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.StatusFrame;
+import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -20,31 +22,42 @@ import io.github.oblarg.oblog.annotations.Log;
 public class Climber extends SubsystemBase implements Loggable{
   /** Creates a new Climber. */
   WPI_TalonFX climberMotor;
+  TalonFXConfiguration config;
   double climberMotorSetpoint;
   public boolean isDown = false;
+
   boolean predeploy = true;
   double input;
+  //private final StallDetector climberStall;
   public Climber() {
+    config = new TalonFXConfiguration();
     isDown = true;
+    //climberStall = new StallDetector(new PDPSlot(new PDP(), PDPPortNumber.Port8, PDPBreaker.TwentyAmp));
+    //climberStall.setStallCurrent(40);
+    //climberStall.setMinStallMillis(100);
     climberMotor = new WPI_TalonFX(climberMotorCANId);
-    climberMotor.configClosedloopRamp(1);
-    climberMotor.configPeakOutputForward(0.5);
-    climberMotor.configPeakOutputReverse(-0.5);
+    config.closedloopRamp = 1;
+    config.peakOutputForward = 0.5;
+    config.peakOutputReverse = -0.5;
     climberMotor.setInverted(true);
-    climberMotor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
-    climberMotor.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
-    climberMotor.configClearPositionOnLimitF(true, 20);
-    climberMotor.configClearPositionOnLimitR(true, 20);
+    config.forwardLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
+    config.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
+    config.reverseLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
+    config.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
+    config.clearPositionOnLimitF = true;
+    config.clearPositionOnLimitR = true;
+    
     //setup encoders
-    climberMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
-    climberMotor.config_kP(0, climber_kP);
+    config.slot0.kP = climber_kP;
+    climberMotor.configAllSettings(config);
     //climberMotor.configForwardSoftLimitThreshold(17860 * 0.5);
-    climberMotor.configForwardSoftLimitThreshold(286300);
-    climberMotor.configReverseSoftLimitThreshold(0);
-    climberMotor.configReverseSoftLimitEnable(false);
-    climberMotor.configForwardSoftLimitEnable(true);
-    climberMotor.setSelectedSensorPosition(0);
+    //climberMotor.configForwardSoftLimitThreshold(286300);
+    //climberMotor.configReverseSoftLimitThreshold(0);
+    //climberMotor.configReverseSoftLimitEnable(false);
+    //climberMotor.configForwardSoftLimitEnable(true);
+    //climberMotor.setSelectedSensorPosition(0);
     climberMotor.setNeutralMode(NeutralMode.Brake);
+    configStatusFrames();
   }
   @Log
   public double getEncoderPosition() {
@@ -83,12 +96,27 @@ public class Climber extends SubsystemBase implements Loggable{
       lowerClimber();
     }
   }
+
+  @Log.BooleanBox(name = "Climb Complete")
+  private boolean getClimbed() {
+    return true;//return climberStall.getStallStatus().isStalled == true;
+  }
+
   @Override
   public void periodic() {
     whereClimber(getEncoderPosition());
+    //climberStall.updateStallStatus();
+    if (getClimbed()) {
+      input = 0;
+
+    }
     climberMotor.set(ControlMode.PercentOutput, input);
 
     //climberMotor.set(ControlMode.Position, climberMotorSetpoint);
     // This method will be called once per scheduler run
+  }
+
+  private void configStatusFrames() {
+    climberMotor.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 250);
   }
 }
