@@ -24,9 +24,7 @@ import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.ConveyorConstants.*;
 
-import javax.print.attribute.standard.Media;
-
-public class Conveyor extends SubsystemBase implements Loggable {
+public class Conveyor extends SubsystemBase {
 
   private final WPI_TalonFX driver;
   private final AnalogInput ballSensor;
@@ -36,7 +34,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
   private final NetworkTableEntry sensorDistanceEntry;
   private Color cargoColor;
   public boolean running;
-  @Log
+  //@Log
   public boolean empty;
   //@Log.BooleanBox(name = "Ball Present (Color)")
   boolean colorEmpty;
@@ -44,7 +42,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
   boolean currentEmpty;
   public int colorSensorId;
   private ColorMatch colorMatch;
-  @Log
+  //@Log
   private double driverOutput;
 
   private double ballDistanceThresholdMillimeters = 325;
@@ -59,7 +57,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
 
   /** Creates a new Conveyor. */
   public Conveyor(int driverCANId, int ballSensorChannelID) {
-    driver = new WPI_TalonFX(driverCANId);
+    driver = new WPI_TalonFX(driverCANId); 
 
     driverConfig = new TalonFXConfiguration();
     driverConfig.openloopRamp = 0.5;
@@ -135,7 +133,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
     return getSonarDistance() < ballDistanceThresholdMillimeters; // 50mm = 5cm
   }
 
-  @Log.Graph(name = "Ball Sensor Distance (mm)")
+  //@Log.Graph(name = "Ball Sensor Distance (mm)")
   private double getSonarDistance() {
     // volts = millivolts / 1000
     double volts = ballSensor.getVoltage();

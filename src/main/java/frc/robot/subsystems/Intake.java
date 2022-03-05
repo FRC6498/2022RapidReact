@@ -14,9 +14,9 @@ import io.github.oblarg.oblog.Loggable;
 //import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
-public class Intake extends SubsystemBase implements Loggable {
+public class Intake extends SubsystemBase {
   WPI_TalonFX motor;
-  @Log
+  //@Log
   Double motorSetpoint = 0.0;
   DoubleSolenoid piston;
   boolean extended = false;
@@ -58,7 +58,7 @@ public class Intake extends SubsystemBase implements Loggable {
     motorSetpoint = percent;
   }
 
-  @Log.BooleanBox(name = "Intake Lowered")
+  //@Log.BooleanBox(name = "Intake Lowered")
   public boolean isExtended() {
     // reverse = raised
     return extended;
