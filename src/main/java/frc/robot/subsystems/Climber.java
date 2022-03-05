@@ -99,7 +99,7 @@ public class Climber extends SubsystemBase implements Loggable{
 
   @Log.BooleanBox(name = "Climb Complete")
   private boolean getClimbed() {
-    return true;//return climberStall.getStallStatus().isStalled == true;
+    return false;//return climberStall.getStallStatus().isStalled == true;
   }
 
   @Override

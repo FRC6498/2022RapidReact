@@ -151,7 +151,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
     if (empty) {
       driver.set(0);
     } else {
-      driver.set(0.1);
+      driver.set(Constants.ConveyorConstants.conveyorNominalSpeed);
     }
   }
 }
