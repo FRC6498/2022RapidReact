@@ -86,7 +86,7 @@ public final class Constants {
 
     public static final class ConveyorConstants {
 
-        public static final int rearDriverCANId = 9;
+        public static final int backDriverCANId = 9;
         public static final int frontDriverCANId = 8;
         public static final int seesawForwardPCMId = 0;
         public static final int seesawReversePCMId = 0;

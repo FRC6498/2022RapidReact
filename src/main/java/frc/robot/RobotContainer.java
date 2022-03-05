@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -49,12 +48,14 @@ public class RobotContainer {
   Vision vision = new Vision();
   Climber climber = new Climber();
   Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, 0);
+  Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.backDriverCANId, 1);
   Intake frontIntake = new Intake(intakeACANId, frontIntakeForwardChannel, frontIntakeReverseChannel);
+  Intake backIntake = new Intake(intakeBCANId, backIntakeForwardChannel, backIntakeReverseChannel);
   Consumer<ShooterMode> shooterModeUpdater = (ShooterMode mode) -> {
     flywheel.setShooterMode(mode);
     turret.setShooterMode(mode);
   };
-  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, frontIntake, vision, turret, climber, shooterModeUpdater);
+  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, shooterModeUpdater);
 
   XboxController driver = new XboxController(0);
   XboxController operator = new XboxController(1);
@@ -64,9 +65,11 @@ public class RobotContainer {
 
   JoystickButton driver_rbumper = new JoystickButton(driver, Button.kRightBumper.value);
   JoystickButton driver_a = new JoystickButton(driver, Button.kA.value);
-  JoystickButton op_b = new JoystickButton(driver, Button.kB.value);
+  JoystickButton driver_b = new JoystickButton(driver, Button.kB.value);
   POVButton op_up = new POVButton(operator, 0);
   POVButton op_left = new POVButton(operator, 270);
+  POVButton op_down = new POVButton(operator, 180);
+  POVButton op_right = new POVButton(operator, 90);
   JoystickButton driver_lBumper = new JoystickButton(driver, Button.kLeftBumper.value);
   public boolean feederRunning;
 
@@ -107,9 +110,19 @@ public class RobotContainer {
       new InstantCommand(frontIntake::setReverse, frontIntake), // forward up, so invert it
       frontIntake::isInverted)
     );
+    op_down.whenActive(new ConditionalCommand(
+      new InstantCommand(backIntake::raiseIntake, backIntake), // intake down, so raise it
+      new InstantCommand(backIntake::lowerIntake, backIntake), // intake up, so lower it
+      backIntake::isExtended)
+    );
+    op_right.whenActive(new ConditionalCommand(
+      new InstantCommand(backIntake::setForward, backIntake), // inverted, so go forward
+      new InstantCommand(backIntake::setReverse, backIntake), // forward up, so invert it
+      backIntake::isInverted)
+    );
     //driver_a.whenActive(new InstantCommand(climber::toggleClimber, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(driver.getRightY() / 2), climber));
-    op_b.whileActiveOnce(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
+    driver_b.whileActiveOnce(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
   }
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

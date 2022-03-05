@@ -30,11 +30,13 @@ import io.github.oblarg.oblog.annotations.Config;
  */
 public class Superstructure extends SubsystemBase {
   // Intake
-  private final Intake intake;
+  private final Intake frontIntake;
+  private final Intake backIntake;
   // Vision
   private final Vision vision;
   // Conveyor
-  private final Conveyor conveyor;
+  private final Conveyor frontConveyor;
+  private final Conveyor backConveyor;
   
   //private final PicoColorSensor colorSensor;
   // Flywheel
@@ -75,10 +77,12 @@ public class Superstructure extends SubsystemBase {
   ParallelRaceGroup testing;
   Consumer<ShooterMode> shooterModeUpdater;
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Intake intake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater) {
     this.flywheel = flywheel;
-    this.conveyor = frontConveyor;
-    this.intake = intake;
+    this.frontConveyor = frontConveyor;
+    this.backConveyor = backConveyor;
+    this.frontIntake = frontIntake;
+    this.backIntake = backIntake;
     this.turret = turret;
     this.vision = vision;
     this.climber = climber;
