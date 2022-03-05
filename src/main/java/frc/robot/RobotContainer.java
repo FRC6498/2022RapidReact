@@ -120,13 +120,13 @@ public class RobotContainer {
     return new ParallelCommandGroup(
       // flywheel ALWAYS spinning
       new RunCommand(() -> flywheel.setFlywheelSpeed(0.7), flywheel),
-      new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP), superstructure),
+      //new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP), superstructure),
       new SequentialCommandGroup(
       // drive forward and intake
       new ParallelCommandGroup(
         new ParallelRaceGroup(
           new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain),
-          new WaitCommand(2.25)
+          new WaitCommand(.25)
         ),
         new ParallelRaceGroup(
           new StartEndCommand(frontIntake::lowerIntake, frontIntake::raiseIntake, frontIntake),
@@ -136,7 +136,7 @@ public class RobotContainer {
       // drive back to fender
       new ParallelRaceGroup(
         new RunCommand(() -> drivetrain.arcadeDrive(1, 0)),
-        new WaitCommand(2)
+        new WaitCommand(1)
       ),
       // send balls into shooter until conveyor is empty
       new ParallelRaceGroup(

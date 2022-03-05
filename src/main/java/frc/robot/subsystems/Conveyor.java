@@ -15,6 +15,7 @@ import edu.wpi.first.math.filter.MedianFilter;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -148,10 +149,12 @@ public class Conveyor extends SubsystemBase implements Loggable {
     // are we empty
     empty = !isBallPresent();
     empty = false;
-    if (empty) {
-      driver.set(0);
-    } else {
-      driver.set(Constants.ConveyorConstants.conveyorNominalSpeed);
+    if (DriverStation.isFMSAttached()) {
+      if (empty) {
+        driver.set(0);
+      } else {
+        driver.set(Constants.ConveyorConstants.conveyorNominalSpeed);
+      }
     }
   }
 }

@@ -15,6 +15,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.lib.ShotMap;
@@ -134,7 +135,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
         break;
     }*/
     flywheelActive = true;
-    if (flywheelActive) {
+    if (flywheelActive && DriverStation.isFMSAttached()) {
       //flywheelSpeedSetpoint = 0.7;
       bangBangOutput = flywheelBangBang.calculate(getFlywheelSpeed(), flywheelSpeedSetpoint);
       feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);
