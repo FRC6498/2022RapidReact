@@ -12,15 +12,15 @@ import com.revrobotics.ColorMatchResult;
 
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.MedianFilter;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
+//import edu.wpi.first.networktables.NetworkTableEntry;
+//import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.AnalogInput;
-import edu.wpi.first.wpilibj.DriverStation;
+//import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log;
+//import io.github.oblarg.oblog.Loggable;
+//import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.ConveyorConstants.*;
 
@@ -31,9 +31,10 @@ public class Conveyor extends SubsystemBase {
   private final TalonFXConfiguration driverConfig;
   private final LinearFilter sensorSmoother;
   private final MedianFilter sensorOutliers;
-  private final NetworkTableEntry sensorDistanceEntry;
+  //private final NetworkTableEntry sensorDistanceEntry;
   private Color cargoColor;
   public boolean running;
+  boolean reversed;
   //@Log
   public boolean empty;
   //@Log.BooleanBox(name = "Ball Present (Color)")
@@ -43,13 +44,10 @@ public class Conveyor extends SubsystemBase {
   public int colorSensorId;
   private ColorMatch colorMatch;
   //@Log
-  private double driverOutput;
+  //private double driverOutput;
 
   private double ballDistanceThresholdMillimeters = 325;
   
-
-  //TODO: What LEDs if any?
-
   /** Commands
    * Start/Stop Front
    * Start/Stop Back
@@ -67,7 +65,7 @@ public class Conveyor extends SubsystemBase {
 
     driver.configAllSettings(driverConfig);
     driver.enableVoltageCompensation(true);
-    driverOutput = 0.0;
+    //driverOutput = 0.0;
 
     cargoColor = Color.kGray;
     running = false;
@@ -81,24 +79,31 @@ public class Conveyor extends SubsystemBase {
 
     sensorSmoother = LinearFilter.singlePoleIIR(0.25, 0.02);
     sensorOutliers = new MedianFilter(5);
-    sensorDistanceEntry = NetworkTableInstance.getDefault().getTable("team6498").getEntry("ballDistance");
+    //sensorDistanceEntry = NetworkTableInstance.getDefault().getTable("team6498").getEntry("ballDistance");
+    if (driverCANId == 9) {
+      driver.setInverted(true);
+    }
   }
 
   public void start() {
-    start(-1);
+    running = true;
   }
 
   public void start(double dutyCycle) {
-    driverOutput = Constants.ConveyorConstants.conveyorNominalSpeed * dutyCycle;
+    //driverOutput = Constants.ConveyorConstants.conveyorNominalSpeed * dutyCycle;
     running = true;
   }
 
   public void stop() {
-    driverOutput = 0;
+    driver.set(0);
   }
 
-  public void reverse() {
-    driverOutput *= -1;
+  public void setForward() {
+    reversed = false;
+  }
+
+  public void setReversed() {
+    reversed = true;
   }
 
   public Color getCargoColor() {
@@ -147,11 +152,15 @@ public class Conveyor extends SubsystemBase {
     // are we empty
     empty = !isBallPresent();
     empty = false;
-    if (DriverStation.isFMSAttached()) {
+    if (running) {
       if (empty) {
         driver.set(0);
       } else {
-        driver.set(Constants.ConveyorConstants.conveyorNominalSpeed);
+        if (reversed) {
+          driver.set(-Constants.ConveyorConstants.conveyorNominalSpeed);
+        } else {
+          driver.set(Constants.ConveyorConstants.conveyorNominalSpeed);
+        }
       }
     }
   }

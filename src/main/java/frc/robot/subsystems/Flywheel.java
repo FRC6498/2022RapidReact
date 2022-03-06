@@ -15,7 +15,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.lib.ShotMap;
@@ -44,11 +43,11 @@ public class Flywheel extends SubsystemBase implements Loggable {
   double lastPosition = 0.0;
   double distanceToHub = 0.0;
   private NetworkTableEntry flywheelSparkMAXSpeedEntry, flywheelSpeedPositionDifferenceEntry;
-  private ShooterMode mode;
+  //private ShooterMode mode;
   ShotMap flywheelTable = new ShotMap();
   
   public Flywheel() {
-    mode = ShooterMode.DISABLED;
+    //mode = ShooterMode.DISABLED;
     flywheelTable.put(0, 0.8);
     flywheelTable.put(Units.feetToMeters(9), 1.6);
     flywheelTable.put(Units.inchesToMeters(10*12+4), 1.8);
@@ -111,7 +110,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   }
 
   public void setShooterMode(ShooterMode mode) {
-    this.mode = mode;
+    //this.mode = mode;
   }
   
   @Override
@@ -135,7 +134,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
         break;
     }*/
     flywheelActive = true;
-    if (flywheelActive && DriverStation.isFMSAttached()) {
+    if (flywheelActive) {
       //flywheelSpeedSetpoint = 0.7;
       bangBangOutput = flywheelBangBang.calculate(getFlywheelSpeed(), flywheelSpeedSetpoint);
       feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);

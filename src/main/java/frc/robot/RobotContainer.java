@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -29,6 +30,8 @@ import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.Superstructure.ShooterMode;
+import io.github.oblarg.oblog.annotations.Log;
+
 import static frc.robot.Constants.IntakeConstants.*;
 
 import java.util.function.Consumer;
@@ -62,10 +65,13 @@ public class RobotContainer {
 
   Trigger retractClimb = new Trigger();
   Trigger flyWheelAtSetpoint = new Trigger();
+  @Log(tabName = "SmartDashboard")
+  SendableChooser<Command> autoSelector = new SendableChooser<>();
 
   JoystickButton driver_rbumper = new JoystickButton(driver, Button.kRightBumper.value);
   JoystickButton driver_a = new JoystickButton(driver, Button.kA.value);
   JoystickButton driver_b = new JoystickButton(driver, Button.kB.value);
+  JoystickButton operator_a = new JoystickButton(operator, Button.kA.value);
   POVButton op_up = new POVButton(operator, 0);
   POVButton op_left = new POVButton(operator, 270);
   POVButton op_down = new POVButton(operator, 180);
@@ -73,8 +79,52 @@ public class RobotContainer {
   JoystickButton driver_lBumper = new JoystickButton(driver, Button.kLeftBumper.value);
   public boolean feederRunning;
 
+  SequentialCommandGroup lowAuto = new ParallelCommandGroup(
+    // flywheel ALWAYS spinning
+    new RunCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel),
+    //new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP), superstructure),
+    new SequentialCommandGroup(
+      // send balls into shooter until conveyor is empty
+      new ParallelRaceGroup(
+        new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure),
+        new WaitCommand(5)
+      ),
+      //new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel),
+      // drive forward and intake
+      new ParallelCommandGroup(
+        new ParallelRaceGroup(
+          new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain),
+          new WaitCommand(1.5)
+        )
+      )
+    )
+  ).andThen(() -> drivetrain.stop(), drivetrain);
+
+  SequentialCommandGroup highAuto = new SequentialCommandGroup(
+    // flywheel ALWAYS spinning
+    new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelHighRPM), flywheel),
+    //new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP), superstructure),
+    new SequentialCommandGroup(
+      // send balls into shooter until conveyor is empty
+      new ParallelRaceGroup(
+        new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure),
+        new WaitCommand(5)
+      ),
+      new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel),
+      // drive forward and intake
+      new ParallelCommandGroup(
+        new ParallelRaceGroup(
+          new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain),
+          new WaitCommand(1.5)
+        )
+      )
+    )
+  ).andThen(() -> drivetrain.stop(), drivetrain);
+
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    autoSelector.addOption("Low", lowAuto);
+    autoSelector.addOption("High", highAuto);
     vision.setLED(VisionLEDMode.kOff);
     drivetrain.setDefaultCommand(
       new DriveArcadeOpenLoop(
@@ -86,8 +136,9 @@ public class RobotContainer {
     );
     flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(0.7), flywheel));
     drivetrain.setInverted(true);
-    frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
+    frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
     frontIntake.setDefaultCommand(new RunCommand(() -> frontIntake.setMotorSetpoint(0.0), frontIntake));
+    
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -105,58 +156,49 @@ public class RobotContainer {
       new InstantCommand(frontIntake::lowerIntake, frontIntake), // intake up, so lower it
       frontIntake::isExtended)
     );
-    op_left.whenActive(new ConditionalCommand(
-      new InstantCommand(frontIntake::setForward, frontIntake), // inverted, so go forward
-      new InstantCommand(frontIntake::setReverse, frontIntake), // forward up, so invert it
-      frontIntake::isInverted)
-    );
-    op_down.whenActive(new ConditionalCommand(
+    op_left.whileActiveOnce(new StartEndCommand(
+      frontIntake::setReverse, // inverted, so go forward
+      frontIntake::setForward, // forward up, so invert it
+      frontIntake
+      ).alongWith(new StartEndCommand(
+        frontConveyor::setReversed, 
+        frontConveyor::setForward, 
+        frontConveyor
+        )
+      ));
+    op_right.whenActive(new ConditionalCommand(
       new InstantCommand(backIntake::raiseIntake, backIntake), // intake down, so raise it
       new InstantCommand(backIntake::lowerIntake, backIntake), // intake up, so lower it
       backIntake::isExtended)
     );
-    op_right.whenActive(new ConditionalCommand(
-      new InstantCommand(backIntake::setForward, backIntake), // inverted, so go forward
-      new InstantCommand(backIntake::setReverse, backIntake), // forward up, so invert it
-      backIntake::isInverted)
-    );
+    op_down.whileActiveOnce(
+      new StartEndCommand(
+        backIntake::setReverse, // invert 
+        backIntake::setForward, // uninvert
+        backIntake
+      ).alongWith(new StartEndCommand(
+        backConveyor::setReversed, 
+        backConveyor::setForward, 
+        backConveyor
+      )
+    ));
     //driver_a.whenActive(new InstantCommand(climber::toggleClimber, climber));
-    climber.setDefaultCommand(new RunCommand(() -> climber.setInput(driver.getRightY() / 2), climber));
+    climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
     driver_b.whileActiveOnce(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
+    operator_a.whileActiveOnce(new StartEndCommand(
+      () -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelHighRPM), 
+      () -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), 
+      flywheel
+    ));
   }
+
+
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return new ParallelCommandGroup(
-      // flywheel ALWAYS spinning
-      new RunCommand(() -> flywheel.setFlywheelSpeed(0.7), flywheel),
-      //new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP), superstructure),
-      new SequentialCommandGroup(
-      // drive forward and intake
-      new ParallelCommandGroup(
-        new ParallelRaceGroup(
-          new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain),
-          new WaitCommand(.25)
-        ),
-        new ParallelRaceGroup(
-          new StartEndCommand(frontIntake::lowerIntake, frontIntake::raiseIntake, frontIntake),
-          new WaitCommand(3.5)
-        ) 
-      ),
-      // drive back to fender
-      new ParallelRaceGroup(
-        new RunCommand(() -> drivetrain.arcadeDrive(1, 0)),
-        new WaitCommand(1)
-      ),
-      // send balls into shooter until conveyor is empty
-      new ParallelRaceGroup(
-        new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure),
-        new WaitCommand(4)
-      )
-    )
-    );
+    return autoSelector.getSelected();
   }
 }

@@ -4,15 +4,14 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.CANifier.PinValues;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import io.github.oblarg.oblog.Loggable;
+//import io.github.oblarg.oblog.Loggable;
 //import io.github.oblarg.oblog.annotations.Config;
-import io.github.oblarg.oblog.annotations.Log;
+//import io.github.oblarg.oblog.annotations.Log;
 
 public class Intake extends SubsystemBase {
   WPI_TalonFX motor;

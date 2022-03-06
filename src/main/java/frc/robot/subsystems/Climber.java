@@ -7,7 +7,6 @@ package frc.robot.subsystems;
 import static frc.robot.Constants.ClimberConstants.*;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
@@ -37,15 +36,12 @@ public class Climber extends SubsystemBase implements Loggable{
     //climberStall.setMinStallMillis(100);
     climberMotor = new WPI_TalonFX(climberMotorCANId);
     config.closedloopRamp = 1;
-    config.peakOutputForward = 0.5;
-    config.peakOutputReverse = -0.5;
-    climberMotor.setInverted(true);
+    config.peakOutputForward = 0.75;
+    config.peakOutputReverse = -0.75;
+    climberMotor.setInverted(false);
     config.forwardLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
     config.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
-    config.reverseLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
-    config.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
     config.clearPositionOnLimitF = true;
-    config.clearPositionOnLimitR = true;
     
     //setup encoders
     config.slot0.kP = climber_kP;
