@@ -6,8 +6,7 @@
 // 832 for Superstructure assistance
 // 449 for Oblarg
 // 3512 for Tyler Veness (and feedforwards/sysid)
-// 4390 and 4272 for picking us at Kokomo 2022!
-// 447 for having a nice chat :)
+// 4390 and 4272 for picking us at Kokomo
 
 package frc.robot;
 
@@ -100,21 +99,17 @@ public class RobotContainer {
     )
   ).andThen(() -> drivetrain.stop(), drivetrain);
 
-  /*SequentialCommandGroup lowAutoDecorated = 
-    new RunCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel)
+  SequentialCommandGroup lowAutoDecorated = 
+    new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel)
     .andThen(
       new StartEndCommand(
         superstructure::runFeeder, 
         superstructure::stopFeeder, 
         superstructure
-      ).raceWith(
-        new WaitCommand(5)
-      ),
-      new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain)
-      .raceWith(
-        new WaitCommand(1.5)
-      )
-    ).andThen(drivetrain::stop, drivetrain);*/
+      ).withTimeout(5)
+    ).andThen(
+      new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain).withTimeout(1.5)
+    ).andThen(drivetrain::stop, drivetrain);
 
   /*SequentialCommandGroup highAutoDecorated = 
     new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelHighRPM), flywheel)
