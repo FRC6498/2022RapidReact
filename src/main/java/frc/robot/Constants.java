@@ -50,8 +50,7 @@ public final class Constants {
         
     }
 
-    public static final class ShooterConstants {
-        //TODO: perform SysId
+    public static final class ShooterConstants {        
         public static final int rightFlywheelCANId = 14;
         public static final int feederACANId = 10;
         public static final int feederBCANId = 11;     
