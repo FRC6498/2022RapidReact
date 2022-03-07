@@ -2,6 +2,13 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
+// Special Thanks To:
+// 832 for Superstructure assistance
+// 449 for Oblarg
+// 3512 for Tyler Veness (and feedforwards/sysid)
+// 4390 and 4272 for picking us at Kokomo 2022!
+// 447 for having a nice chat :)
+
 package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
@@ -89,18 +96,39 @@ public class RobotContainer {
         new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure),
         new WaitCommand(5)
       ),
-      //new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel),
-      // drive forward and intake
-      new ParallelCommandGroup(
-        new ParallelRaceGroup(
-          new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain),
-          new WaitCommand(1.5)
-        )
-      )
+      new InstantCommand(drivetrain::stop, drivetrain)
     )
   ).andThen(() -> drivetrain.stop(), drivetrain);
 
-  SequentialCommandGroup highAuto = new SequentialCommandGroup(
+  /*SequentialCommandGroup lowAutoDecorated = 
+    new RunCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel)
+    .andThen(
+      new StartEndCommand(
+        superstructure::runFeeder, 
+        superstructure::stopFeeder, 
+        superstructure
+      ).raceWith(
+        new WaitCommand(5)
+      ),
+      new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain)
+      .raceWith(
+        new WaitCommand(1.5)
+      )
+    ).andThen(drivetrain::stop, drivetrain);*/
+
+  /*SequentialCommandGroup highAutoDecorated = 
+    new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelHighRPM), flywheel)
+    .andThen(
+      new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure)
+      .raceWith(new WaitCommand(5)),
+      new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel),
+      new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain)
+      .raceWith(
+        new WaitCommand(1.5)
+      )
+    ).andThen(drivetrain::stop, drivetrain);*/
+
+  /*SequentialCommandGroup highAuto = new SequentialCommandGroup(
     // flywheel ALWAYS spinning
     new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelHighRPM), flywheel),
     //new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP), superstructure),
@@ -110,21 +138,19 @@ public class RobotContainer {
         new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure),
         new WaitCommand(5)
       ),
-      new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel),
+      new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel)//,
       // drive forward and intake
-      new ParallelCommandGroup(
+      /*new ParallelCommandGroup(
         new ParallelRaceGroup(
           new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain),
           new WaitCommand(1.5)
         )
       )
     )
-  ).andThen(() -> drivetrain.stop(), drivetrain);
+  ).andThen(() -> drivetrain.stop(), drivetrain);*/
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    autoSelector.addOption("Low", lowAuto);
-    autoSelector.addOption("High", highAuto);
     vision.setLED(VisionLEDMode.kOff);
     drivetrain.setDefaultCommand(
       new DriveArcadeOpenLoop(
@@ -199,6 +225,6 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoSelector.getSelected();
+    return lowAuto;
   }
 }
