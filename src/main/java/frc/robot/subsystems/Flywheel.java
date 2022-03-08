@@ -38,7 +38,6 @@ public class Flywheel extends SubsystemBase implements Loggable {
   private final BangBangController flywheelBangBang;
   private final SimpleMotorFeedforward flywheelFeedforward;
   private boolean flywheelActive;
-  GenericHID hid = new GenericHID(0);
   
   public double flywheelSpeedSetpoint;
   @Log
@@ -52,11 +51,12 @@ public class Flywheel extends SubsystemBase implements Loggable {
   double lastPosition = 0.0;
   double distanceToHub = 0.0;
   private NetworkTableEntry flywheelSparkMAXSpeedEntry, flywheelSpeedPositionDifferenceEntry;
+  @Log.ToString(name = "Flywheel Mode", tabName = "SmartDashboard")
   private ShooterMode mode;
   ShotMap flywheelTable = new ShotMap();
   
   public Flywheel() {
-    //mode = ShooterMode.DISABLED;
+    mode = ShooterMode.DISABLED;
     flywheelTable.put(0, 0.8);
     flywheelTable.put(Units.feetToMeters(9), 1.6);
     flywheelTable.put(Units.inchesToMeters(10*12+4), 1.8);

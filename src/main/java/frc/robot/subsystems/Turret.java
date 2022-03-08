@@ -33,6 +33,7 @@ public class Turret extends SubsystemBase implements Loggable {
   @Log.Graph
   double pidOutput;
   SimpleMotorFeedforward turretFeedforward;
+  @Log.ToString(name = "Turret Mode", tabName = "SmartDashboard")
   ShooterMode mode;
 
   public Turret() {
@@ -77,7 +78,11 @@ public class Turret extends SubsystemBase implements Loggable {
     bearing.set(0);
   }
 
-  
+  public boolean getActive() {
+    // return mode < 2
+    return mode != ShooterMode.DUMP || mode != ShooterMode.DISABLED;
+  }
+
   @Override
   public void periodic() {
     switch (mode) {

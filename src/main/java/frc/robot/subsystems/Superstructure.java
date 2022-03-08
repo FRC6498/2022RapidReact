@@ -132,13 +132,18 @@ public class Superstructure extends SubsystemBase {
     backConveyorFull.and(frontConveyorFull.negate()).whenActive(new InstantCommand(this::seesawToRear));
 
     // set speed
-    shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> { 
+    turretEnabled.whileActiveOnce(new RunCommand(() -> { 
       if (vision.hasTargets()) 
       { 
         flywheel.setFlywheelDistance(vision.getTargetDistance(vision.getBestTarget()));
         turret.setSetpointDegrees(vision.getClosestTarget().getYaw());
       } 
     }, flywheel, turret));
+    flywheelEnabled.and(turretEnabled.negate()).whileActiveOnce(new RunCommand(() -> {
+      if (vision.hasTargets()) {
+        flywheel.setFlywheelDistance(vision.getTargetDistance(vision.getBestTarget()));
+      }
+    }, flywheel));
 
     //frontConveyorFull.whileActiveOnce(new StartEndCommand(this::runFeeder, this::stopFeeder, this));
     vision.setLED(VisionLEDMode.kOff);
@@ -184,12 +189,7 @@ public class Superstructure extends SubsystemBase {
   public void getBallColors() {
     //backConveyor.setCargoColor(colorSensor.getColor(backConveyor.colorSensorId));
     //frontConveyor.setCargoColor(colorSensor.getColor(frontConveyor.colorSensorId));
-  }
-
-
-  public boolean getShooterActive() {
-    return shooterAutoEnabled.get();
-  }
+  } 
 
   public void setShooterMode(ShooterMode mode) {
     shooterMode = mode;

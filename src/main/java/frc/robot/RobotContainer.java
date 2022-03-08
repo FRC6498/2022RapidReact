@@ -79,6 +79,7 @@ public class RobotContainer {
   JoystickButton driver_a = new JoystickButton(driver, Button.kA.value);
   JoystickButton driver_b = new JoystickButton(driver, Button.kB.value);
   JoystickButton operator_a = new JoystickButton(operator, Button.kA.value);
+  JoystickButton operator_x = new JoystickButton(operator, Button.kX.value);
   POVButton op_up = new POVButton(operator, 0);
   POVButton op_left = new POVButton(operator, 270);
   POVButton op_down = new POVButton(operator, 180);
@@ -125,6 +126,7 @@ public class RobotContainer {
     ).andThen(
       new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain).withTimeout(1.5)
     ).andThen(drivetrain::stop);
+
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     vision.setLED(VisionLEDMode.kOff);
@@ -192,6 +194,14 @@ public class RobotContainer {
       () -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), 
       flywheel
     ));
+
+    operator_x.whileActiveOnce(
+      new StartEndCommand(
+        () -> superstructure.setShooterMode(ShooterMode.DUMP), 
+        () -> superstructure.setShooterMode(ShooterMode.DISABLED), 
+        superstructure
+      )
+    );
   }
 
 
