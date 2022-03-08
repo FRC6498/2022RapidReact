@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -109,41 +110,21 @@ public class RobotContainer {
       ).withTimeout(5)
     ).andThen(
       new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain).withTimeout(1.5)
-    ).andThen(drivetrain::stop, drivetrain);
+    ).andThen(drivetrain::stop);
 
-  /*SequentialCommandGroup highAutoDecorated = 
+  SequentialCommandGroup highAutoDecorated = 
     new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelHighRPM), flywheel)
     .andThen(
-      new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure)
-      .raceWith(new WaitCommand(5)),
-      new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel),
-      new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain)
-      .raceWith(
-        new WaitCommand(1.5)
+      new WaitUntilCommand(flywheel::atSetpoint)
+    ).andThen(
+      new StartEndCommand(
+        superstructure::runFeeder, 
+        superstructure::stopFeeder, 
+        superstructure
       )
-    ).andThen(drivetrain::stop, drivetrain);*/
-
-  /*SequentialCommandGroup highAuto = new SequentialCommandGroup(
-    // flywheel ALWAYS spinning
-    new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelHighRPM), flywheel),
-    //new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP), superstructure),
-    new SequentialCommandGroup(
-      // send balls into shooter until conveyor is empty
-      new ParallelRaceGroup(
-        new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure),
-        new WaitCommand(5)
-      ),
-      new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel)//,
-      // drive forward and intake
-      /*new ParallelCommandGroup(
-        new ParallelRaceGroup(
-          new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain),
-          new WaitCommand(1.5)
-        )
-      )
-    )
-  ).andThen(() -> drivetrain.stop(), drivetrain);*/
-
+    ).andThen(
+      new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain).withTimeout(1.5)
+    ).andThen(drivetrain::stop);
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     vision.setLED(VisionLEDMode.kOff);

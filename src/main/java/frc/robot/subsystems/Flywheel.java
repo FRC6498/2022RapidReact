@@ -5,9 +5,12 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxPIDController;
 
 import edu.wpi.first.math.controller.BangBangController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -15,6 +18,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.lib.ShotMap;
@@ -29,21 +33,26 @@ public class Flywheel extends SubsystemBase implements Loggable {
   // Hardware
   private final CANSparkMax neo;
   private final RelativeEncoder encoder;
+  private final SparkMaxPIDController pid;
   // Software
   private final BangBangController flywheelBangBang;
   private final SimpleMotorFeedforward flywheelFeedforward;
   private boolean flywheelActive;
+  GenericHID hid = new GenericHID(0);
   
   public double flywheelSpeedSetpoint;
   @Log
   private double bangBangOutput;
   @Log
   private double feedforwardOutput;
+  @Log 
+  private double pidOutput;
+  @Log
   private double controllerOutput;
   double lastPosition = 0.0;
   double distanceToHub = 0.0;
   private NetworkTableEntry flywheelSparkMAXSpeedEntry, flywheelSpeedPositionDifferenceEntry;
-  //private ShooterMode mode;
+  private ShooterMode mode;
   ShotMap flywheelTable = new ShotMap();
   
   public Flywheel() {
@@ -59,13 +68,17 @@ public class Flywheel extends SubsystemBase implements Loggable {
       flywheelkV, 
       flywheelkA
     );
-
+    pid = neo.getPIDController();
     
     neo.restoreFactoryDefaults(true);
     neo.setIdleMode(IdleMode.kCoast);
     neo.setOpenLoopRampRate(flywheelVelocityRampRateSeconds);
     neo.setInverted(true);
     neo.enableVoltageCompensation(12);
+    pid.setP(0.12528);
+    pid.setI(0);
+    pid.setD(0);
+    pid.setFF(0);
     flywheelActive = true;
     flywheelSpeedSetpoint = 1.5;
     NetworkTable teamtable = NetworkTableInstance.getDefault().getTable("team6498");
@@ -101,7 +114,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     flywheelActive = active;
   }
 
-  public boolean getFlywheelActive() {
+  public boolean getActive() {
     return flywheelActive;
   }
 
@@ -110,16 +123,15 @@ public class Flywheel extends SubsystemBase implements Loggable {
   }
 
   public void setShooterMode(ShooterMode mode) {
-    //this.mode = mode;
+    this.mode = mode;
   }
   
   @Override
   public void periodic() {
     flywheelSparkMAXSpeedEntry.setDouble(getFlywheelSpeed());
     flywheelSpeedPositionDifferenceEntry.setDouble((encoder.getPosition() - lastPosition) / 0.02);
-    flywheelActive = true;
     // set setpoint based on mode
-    /*switch (mode) {
+    switch (mode) {
       case DISABLED:
         flywheelSpeedSetpoint = 0;
         flywheelActive = true;
@@ -128,18 +140,18 @@ public class Flywheel extends SubsystemBase implements Loggable {
         flywheelSpeedSetpoint = flywheelTable.getRPM(0);
         flywheelActive = true;
       break;
-      //case FULL_AUTO:
-      //flywheelSpeedSetpoint = flywheelTable.getRPM(distanceToHub);
+      case FULL_AUTO:
+      flywheelSpeedSetpoint = flywheelTable.getRPM(distanceToHub);
       default:
         break;
-    }*/
+    }
     flywheelActive = true;
     if (flywheelActive) {
-      //flywheelSpeedSetpoint = 0.7;
-      bangBangOutput = flywheelBangBang.calculate(getFlywheelSpeed(), flywheelSpeedSetpoint);
+      /*bangBangOutput = flywheelBangBang.calculate(getFlywheelSpeed(), flywheelSpeedSetpoint);
       feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);
       controllerOutput = bangBangOutput + 0.9 * feedforwardOutput;
-      neo.setVoltage(controllerOutput);
+      neo.setVoltage(controllerOutput);*/
+      pid.setReference(flywheelSpeedSetpoint, ControlType.kVelocity, 0, flywheelFeedforward.calculate(flywheelSpeedSetpoint), ArbFFUnits.kVoltage);
     } else {
       setFlywheelIdle();
     }

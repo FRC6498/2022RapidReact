@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -56,14 +57,12 @@ public class Superstructure extends SubsystemBase {
   public Trigger seesawReady;
   // Conveyors
   public Trigger frontConveyorFull;
-  //public Trigger frontConveyorBallColorCorrect;
   public Trigger backConveyorFull;
-  //public Trigger backConveyorBallColorCorrect;
-  public Trigger inLowGear;
   public Trigger flyWheelAtSetpoint;
   // Intakes
   // Flywheel
-  public Trigger shooterAutoEnabled;
+  public Trigger flywheelEnabled;
+  public Trigger turretEnabled;
   //TODO: Log conveyor/intake states in superstructure separately to avoid collisions
   //TODO: Create Driver Dashboard
   //TODO: make sure back intake/conveyor operates normally
@@ -107,7 +106,7 @@ public class Superstructure extends SubsystemBase {
 
     merger = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.ConveyorConstants.seesawForwardPCMId, Constants.ConveyorConstants.seesawReversePCMId);
 
-    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(0.7), flywheel));
+    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(0.0), flywheel));
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
     turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
     backConveyor.setDefaultCommand(new RunCommand(backConveyor::stop, backConveyor));
@@ -116,29 +115,22 @@ public class Superstructure extends SubsystemBase {
     shooterReady = new Trigger(this::getShooterReady);
     seesawReady = new Trigger();
     frontConveyorFull = new Trigger(frontConveyor::isBallPresent);
-    //frontConveyorBallColorCorrect = new Trigger(() -> {return frontConveyor.getCargoColor() == this.getAllianceColor(); });
-    shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
-    inLowGear = new Trigger(() -> {return !Drivetrain.isHighGear;});
+    backConveyorFull = new Trigger(backConveyor::isBallPresent);
+    flywheelEnabled = new Trigger(flywheel::getActive);
+    turretEnabled = new Trigger(turret::getActive);
     flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});    
-    
-    //seesawToFront();
 
     setupConveyorCommands();
     setupShooterCommands();
   }
 
   private void setupConveyorCommands() {
-    // move to seesaw
-    //frontConveyorFull.whileActiveOnce(
-    //  new StartEndCommand(
-    //    conveyor::start, 
-    //    conveyor::stop, 
-    //    conveyor
-    //  )
-    //);
   }
   
   private void setupShooterCommands() {
+    frontConveyorFull.whenActive(new InstantCommand(this::seesawToFront));
+    backConveyorFull.and(frontConveyorFull.negate()).whenActive(new InstantCommand(this::seesawToRear));
+
     // set speed
     shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> { 
       if (vision.hasTargets()) 
@@ -168,13 +160,13 @@ public class Superstructure extends SubsystemBase {
     feederB.setNeutralMode(NeutralMode.Brake);
   }
 
-  /*public void seesawToRear() {
+  public void seesawToRear() {
     merger.set(Value.kForward);
   }
 
   public void seesawToFront() {
     merger.set(Value.kReverse);
-  }*/
+  }
 
   public Color getAllianceColor() {
     Alliance alliance = DriverStation.getAlliance();

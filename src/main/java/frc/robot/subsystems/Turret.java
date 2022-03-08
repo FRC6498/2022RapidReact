@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
+import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
@@ -38,10 +40,17 @@ public class Turret extends SubsystemBase implements Loggable {
     visionDegrees = 0.0;
     pidOutput = 0.0;
     homed = false;
+    bearing = new WPI_TalonFX(yawMotorCANId);
     bearingConfig = new TalonFXConfiguration();
     bearingConfig.peakOutputForward = 0.2;
     bearingConfig.peakOutputReverse = -0.2;
-    bearing = new WPI_TalonFX(yawMotorCANId);
+    bearingConfig.slot0.kP = turretYaw_kP;
+    bearingConfig.slot0.kI = 0;
+    bearingConfig.slot0.kD = turretYaw_kD;
+    bearingConfig.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
+    bearingConfig.forwardLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
+    bearingConfig.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
+    bearingConfig.reverseLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
     bearing.configAllSettings(bearingConfig);
     bearing.setNeutralMode(NeutralMode.Brake);
     pid = new PIDController(turretYaw_kP, 0, turretYaw_kD);
