@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -15,7 +16,6 @@ import edu.wpi.first.math.util.Units;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-    public static final double degreesToTurretTicks = 35.04;
     
     public static final class IntakeConstants {
         public static final int intakeACANId = 6;
@@ -75,13 +75,16 @@ public final class Constants {
         public static final double turretMinPosition = -135-13.25;
         public static final double turretSoftLimitOffset = 20;
         public static final double turretHomingVelocityStopThreshold = 0.1;
-        public static final double turretFeedforward_kA = 0.89326;
-        public static final double turretFeedforward_ks =  5.9705;
-        public static final double turretFeedforward_kv =  0.21434;
+        public static final double kS = 0.89326;
+        public static final double kV =  0.020207;
+        public static final double kA =  0.00072803;
+        public static final Rotation2d maxClockwise = Rotation2d.fromDegrees(-30);
+        public static final Rotation2d maxCounterClockwise = Rotation2d.fromDegrees(210);
         // encoder pos associated with dump
-		public static final double turretDumpModePos = 0.0;
+		public static final Rotation2d turretDumpModePos = Rotation2d.fromDegrees(0);
         public static final double turretRampRate = 0;
         public static final int turretMaxOutput = 0;
+        public static final double turretTicksPerDegree = 254.7;
     }
 
     public static final class ConveyorConstants {

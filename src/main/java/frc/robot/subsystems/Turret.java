@@ -18,6 +18,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.TurretConstants;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
@@ -30,6 +31,7 @@ import java.util.function.DoubleSupplier;
  * Turret subsystem using WPILib controls instead of Phoenix (because its less of a black box and the units are better).
  * Position is measured in Degrees, which is obtained from encoder ticks as soon as position is read off.
  */
+// turret clockwise = forward 
 public class Turret extends SubsystemBase implements Loggable {
   WPI_TalonFX bearing;
   TalonFXConfiguration bearingConfig;
@@ -65,7 +67,7 @@ public class Turret extends SubsystemBase implements Loggable {
     pid = new PIDController(turretYaw_kP, 0, turretYaw_kD);
     // set position tolerance to 1 degree
     pid.setTolerance(turretPositionToleranceDegrees);
-    turretFeedforward = new SimpleMotorFeedforward(turretFeedforward_kA, turretFeedforward_ks, turretFeedforward_kv);
+    turretFeedforward = new SimpleMotorFeedforward(TurretConstants.kS, TurretConstants.kV, TurretConstants.kA);
     
   }
 
@@ -105,6 +107,7 @@ public class Turret extends SubsystemBase implements Loggable {
       case DISABLED:
         //bearing.setVoltage(0);
         break;
+      case HOMING:
       default:
         break;
     }
@@ -127,7 +130,7 @@ public class Turret extends SubsystemBase implements Loggable {
   }
 
   public void resetSensor() {
-    bearing.setSelectedSensorPosition(0);
+    bearing.setSelectedSensorPosition(rotation2dToNativeUnits(maxClockwise));
   }
 
   public void setAngleRelative(double degrees) {

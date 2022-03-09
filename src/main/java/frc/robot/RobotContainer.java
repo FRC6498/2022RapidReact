@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.TurretConstants;
 import frc.robot.commands.DriveArcadeOpenLoop;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Conveyor;
@@ -129,12 +130,18 @@ public class RobotContainer {
     ).andThen(drivetrain::stop);
 
     SequentialCommandGroup turretCmd = 
-      new RunCommand(() -> turret.openLoop(0.2), turret)
+      new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.HOMING))
+      .andThen(new RunCommand(() -> turret.openLoop(0.1), turret))
       .until(() -> { return turret.getFwdLimit() || turret.getRevLimit(); })
-      .andThen(new RunCommand(() -> turret.openLoop(0), turret))
-      .andThen(new InstantCommand(turret::resetSensor, turret))
-      .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(0)), turret));
-
+      .andThen(
+        new InstantCommand(turret::resetSensor, turret),
+        new RunCommand(() -> turret.openLoop(0), turret)
+        //,
+        //new InstantCommand(() -> turret.setPositionSetpoint(TurretConstants.maxClockwise), turret)
+      );//.andThen(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(0)));
+      //.andThen(next);
+  @Log
+  double turretInput;
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     vision.setLED(VisionLEDMode.kOff);
@@ -146,11 +153,11 @@ public class RobotContainer {
         drivetrain
       )
     );
-    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(0.7), flywheel));
+    flywheel.setDefaultCommand(new RunCommand(flywheel::setFlywheelIdle, flywheel));
     drivetrain.setInverted(true);
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
     frontIntake.setDefaultCommand(new RunCommand(() -> frontIntake.setMotorSetpoint(0.0), frontIntake));
-    turret.setDefaultCommand(new RunCommand(() -> turret.openLoop(operator.getLeftX()), turret));
+    turret.setDefaultCommand(new RunCommand(turret::stop, turret));
     // Configure the button bindings
     configureButtonBindings();
   }

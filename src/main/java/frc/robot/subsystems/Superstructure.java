@@ -210,6 +210,7 @@ public class Superstructure extends SubsystemBase {
     FULL_AUTO, // turret and flywheel track the goal, ball is fired if present as soon as shooter is ready
     MANUAL_FIRE, // turret and flywheel track the goal, ball is fired on operator command if present
     DUMP, // Turret locks to dead ahead but flywheel is set to minimum
+    HOMING,
     DISABLED // turret and flywheel do not move, shooting is impossible
   }
   // setShooterMode method here
