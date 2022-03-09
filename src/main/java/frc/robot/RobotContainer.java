@@ -10,6 +10,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
@@ -130,7 +131,9 @@ public class RobotContainer {
     SequentialCommandGroup turretCmd = 
       new RunCommand(() -> turret.openLoop(0.2), turret)
       .until(() -> { return turret.getFwdLimit() || turret.getRevLimit(); })
-      .andThen(new RunCommand(() -> turret.openLoop(0), turret));
+      .andThen(new RunCommand(() -> turret.openLoop(0), turret))
+      .andThen(new InstantCommand(turret::resetSensor, turret))
+      .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(0)), turret));
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {

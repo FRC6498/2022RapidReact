@@ -5,14 +5,18 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
+import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
@@ -38,6 +42,7 @@ public class Turret extends SubsystemBase implements Loggable {
   SimpleMotorFeedforward turretFeedforward;
   @Log.ToString(name = "Turret Mode", tabName = "SmartDashboard")
   ShooterMode mode;
+  private Rotation2d turretPositionSetpoint;
 
   public Turret() {
     mode = ShooterMode.DISABLED;
@@ -73,8 +78,12 @@ public class Turret extends SubsystemBase implements Loggable {
   }
 
   private void useOutput() {
-    pidOutput = pid.calculate(visionDegrees, 0);
-    bearing.setVoltage(pidOutput);
+    bearing.set(TalonFXControlMode.Position, rotation2dToNativeUnits(turretPositionSetpoint), DemandType.Neutral, 0);
+  }
+
+  private double rotation2dToNativeUnits(Rotation2d rotation) {
+    double degrees = rotation.getDegrees();
+    return degrees * 178.352;
   }
 
   public void stop() {
@@ -115,5 +124,19 @@ public class Turret extends SubsystemBase implements Loggable {
 
   public void setShooterMode(ShooterMode mode) {
     this.mode = mode;
+  }
+
+  public void resetSensor() {
+    bearing.setSelectedSensorPosition(0);
+  }
+
+  public void setAngleRelative(double degrees) {
+    Rotation2d transform = Rotation2d.fromDegrees(degrees);
+    Rotation2d pose = turretPositionSetpoint.plus(transform);
+    setPositionSetpoint(pose);
+  }
+
+  public void setPositionSetpoint(Rotation2d setpoint) {
+    turretPositionSetpoint = setpoint;
   }
 }
