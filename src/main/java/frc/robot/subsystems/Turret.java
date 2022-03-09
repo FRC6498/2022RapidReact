@@ -19,11 +19,12 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.TurretConstants;
+import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
-import static frc.robot.Constants.TurretConstants.*;
+import static frc.robot.Constants.*;
 
 import java.util.function.DoubleSupplier;
 /**
@@ -45,30 +46,32 @@ public class Turret extends SubsystemBase implements Loggable {
   @Log.ToString(name = "Turret Mode", tabName = "SmartDashboard")
   ShooterMode mode;
   private Rotation2d turretPositionSetpoint;
+  private Rotation2d turretCurrentPosition;
 
   public Turret() {
     mode = ShooterMode.DISABLED;
     visionDegrees = 0.0;
     pidOutput = 0.0;
     homed = false;
-    bearing = new WPI_TalonFX(yawMotorCANId);
+    bearing = new WPI_TalonFX(TurretConstants.yawMotorCANId);
     bearingConfig = new TalonFXConfiguration();
     bearingConfig.peakOutputForward = 0.2;
     bearingConfig.peakOutputReverse = -0.2;
-    bearingConfig.slot0.kP = turretYaw_kP;
+    bearingConfig.slot0.kP = TurretConstants.turretYaw_kP;
     bearingConfig.slot0.kI = 0;
-    bearingConfig.slot0.kD = turretYaw_kD;
+    bearingConfig.slot0.kD = TurretConstants.turretYaw_kD;
     bearingConfig.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
     bearingConfig.forwardLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
     bearingConfig.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
     bearingConfig.reverseLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
     bearing.configAllSettings(bearingConfig);
     bearing.setNeutralMode(NeutralMode.Brake);
-    pid = new PIDController(turretYaw_kP, 0, turretYaw_kD);
+    pid = new PIDController(TurretConstants.turretYaw_kP, 0, TurretConstants.turretYaw_kD);
     // set position tolerance to 1 degree
-    pid.setTolerance(turretPositionToleranceDegrees);
+    pid.setTolerance(TurretConstants.turretPositionToleranceDegrees);
     turretFeedforward = new SimpleMotorFeedforward(TurretConstants.kS, TurretConstants.kV, TurretConstants.kA);
-    
+    turretCurrentPosition = Rotation2d.fromDegrees(0);
+    turretPositionSetpoint = Rotation2d.fromDegrees(0);
   }
 
   public void setSetpointDegrees(double setpoint) {
@@ -80,12 +83,17 @@ public class Turret extends SubsystemBase implements Loggable {
   }
 
   private void useOutput() {
-    bearing.set(TalonFXControlMode.Position, rotation2dToNativeUnits(turretPositionSetpoint), DemandType.Neutral, 0);
+    bearing.set(TalonFXControlMode.Position, rotation2dToNativeUnits(turretPositionSetpoint));
   }
 
   private double rotation2dToNativeUnits(Rotation2d rotation) {
     double degrees = rotation.getDegrees();
-    return degrees * 178.352;
+    return degrees * -254.7;
+  }
+
+  private Rotation2d nativeUnitsToRotation2d(double units) {
+    //254.7 ticks / 1 degree
+    return Rotation2d.fromDegrees(units / -254.7);
   }
 
   public void stop() {
@@ -99,6 +107,9 @@ public class Turret extends SubsystemBase implements Loggable {
 
   @Override
   public void periodic() {
+    turretCurrentPosition = nativeUnitsToRotation2d(bearing.getSelectedSensorPosition());
+    NTHelper.setDouble("turret_position_deg", turretCurrentPosition.getDegrees());
+    NTHelper.setDouble("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
     switch (mode) {
       case FULL_AUTO:
       case MANUAL_FIRE:
@@ -108,6 +119,8 @@ public class Turret extends SubsystemBase implements Loggable {
         //bearing.setVoltage(0);
         break;
       case HOMING:
+        useOutput();
+        break;
       default:
         break;
     }
@@ -130,7 +143,7 @@ public class Turret extends SubsystemBase implements Loggable {
   }
 
   public void resetSensor() {
-    bearing.setSelectedSensorPosition(rotation2dToNativeUnits(maxClockwise));
+    bearing.setSelectedSensorPosition(rotation2dToNativeUnits(TurretConstants.maxClockwise));
   }
 
   public void setAngleRelative(double degrees) {

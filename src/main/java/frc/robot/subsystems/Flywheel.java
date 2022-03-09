@@ -35,13 +35,13 @@ public class Flywheel extends SubsystemBase implements Loggable {
   private final RelativeEncoder encoder;
   private final SparkMaxPIDController pid;
   // Software
-  private final BangBangController flywheelBangBang;
+  //private final BangBangController flywheelBangBang;
   private final SimpleMotorFeedforward flywheelFeedforward;
   private boolean flywheelActive;
   
   public double flywheelSpeedSetpoint;
-  @Log
-  private double bangBangOutput;
+  //@Log
+  //private double bangBangOutput;
   @Log
   private double feedforwardOutput;
   @Log 
@@ -62,7 +62,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     flywheelTable.put(Units.inchesToMeters(10*12+4), 1.8);
     neo = new CANSparkMax(rightFlywheelCANId, MotorType.kBrushless);
     encoder = neo.getEncoder();
-    flywheelBangBang = new BangBangController(Constants.ShooterConstants.flywheelSetpointToleranceRPM);
+    //flywheelBangBang = new BangBangController(Constants.ShooterConstants.flywheelSetpointToleranceRPM);
     flywheelFeedforward = new SimpleMotorFeedforward(
       flywheelkS, 
       flywheelkV, 
@@ -134,7 +134,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     switch (mode) {
       case DISABLED:
         flywheelSpeedSetpoint = 0;
-        flywheelActive = true;
+        flywheelActive = false;
         break;
       case DUMP:
         flywheelSpeedSetpoint = flywheelTable.getRPM(0);

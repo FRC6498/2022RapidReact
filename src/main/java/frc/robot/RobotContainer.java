@@ -134,11 +134,9 @@ public class RobotContainer {
       .andThen(new RunCommand(() -> turret.openLoop(0.1), turret))
       .until(() -> { return turret.getFwdLimit() || turret.getRevLimit(); })
       .andThen(
-        new InstantCommand(turret::resetSensor, turret),
-        new RunCommand(() -> turret.openLoop(0), turret)
-        //,
-        //new InstantCommand(() -> turret.setPositionSetpoint(TurretConstants.maxClockwise), turret)
-      );//.andThen(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(0)));
+        new InstantCommand(turret::resetSensor, turret)
+        //new RunCommand(() -> turret.openLoop(0), turret),
+      ).andThen(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(7.221)));
       //.andThen(next);
   @Log
   double turretInput;
@@ -157,7 +155,7 @@ public class RobotContainer {
     drivetrain.setInverted(true);
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
     frontIntake.setDefaultCommand(new RunCommand(() -> frontIntake.setMotorSetpoint(0.0), frontIntake));
-    turret.setDefaultCommand(new RunCommand(turret::stop, turret));
+    turret.setDefaultCommand(turretCmd);//new RunCommand(turret::stop, turret));
     // Configure the button bindings
     configureButtonBindings();
   }
