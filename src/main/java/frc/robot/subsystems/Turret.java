@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
@@ -18,6 +19,8 @@ import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.TurretConstants.*;
+
+import java.util.function.DoubleSupplier;
 /**
  * THIS SUBSYSTEM IS WIP AND CURRENTLY UNUSED BY THE MAIN ROBOT CODE. IT WILL REMAIN SO UNTIL IT IS FINISHED.<p>
  * Turret subsystem using WPILib controls instead of Phoenix (because its less of a black box and the units are better).
@@ -91,11 +94,23 @@ public class Turret extends SubsystemBase implements Loggable {
         useOutput();
       case DUMP:
       case DISABLED:
-        bearing.setVoltage(0);
+        //bearing.setVoltage(0);
         break;
       default:
         break;
     }
+  }
+
+  public void openLoop(double percent) {
+    bearing.set(ControlMode.PercentOutput, percent);
+  }
+
+  public boolean getFwdLimit() {
+    return bearing.isFwdLimitSwitchClosed() == 1;
+  }
+
+  public boolean getRevLimit() {
+    return bearing.isRevLimitSwitchClosed() == 1;
   }
 
   public void setShooterMode(ShooterMode mode) {

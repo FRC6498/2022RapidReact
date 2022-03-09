@@ -127,6 +127,11 @@ public class RobotContainer {
       new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain).withTimeout(1.5)
     ).andThen(drivetrain::stop);
 
+    SequentialCommandGroup turretCmd = 
+      new RunCommand(() -> turret.openLoop(0.2), turret)
+      .until(() -> { return turret.getFwdLimit() || turret.getRevLimit(); })
+      .andThen(new RunCommand(() -> turret.openLoop(0), turret));
+
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     vision.setLED(VisionLEDMode.kOff);
@@ -142,7 +147,7 @@ public class RobotContainer {
     drivetrain.setInverted(true);
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
     frontIntake.setDefaultCommand(new RunCommand(() -> frontIntake.setMotorSetpoint(0.0), frontIntake));
-    
+    turret.setDefaultCommand(new RunCommand(() -> turret.openLoop(operator.getLeftX()), turret));
     // Configure the button bindings
     configureButtonBindings();
   }
