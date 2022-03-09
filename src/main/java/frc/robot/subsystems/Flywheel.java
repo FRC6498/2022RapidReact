@@ -12,8 +12,14 @@ import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 
+import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.BangBangController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.estimator.KalmanFilter;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.system.LinearSystem;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -37,6 +43,18 @@ public class Flywheel extends SubsystemBase implements Loggable {
   // Software
   private final BangBangController flywheelBangBang;
   private final SimpleMotorFeedforward flywheelFeedforward;
+  private final LinearSystem<N1, N1, N1> flywheelPlant = LinearSystemId.identifyVelocitySystem(
+    flywheelkV, 
+    flywheelkA
+  );
+  private final KalmanFilter<N1, N1, N1> observer =new KalmanFilter<>(
+    Nat.N1(), 
+    Nat.N1(), 
+    flywheelPlant, 
+    VecBuilder.fill(3.0),
+    VecBuilder.fill(0.01), 
+    0.020
+  );
   private boolean flywheelActive;
   
   public double flywheelSpeedSetpoint;
