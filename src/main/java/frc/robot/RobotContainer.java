@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.commands.DriveArcadeOpenLoop;
 import frc.robot.commands.TurretHoming;
+import frc.robot.lib.OI.CommandXboxController;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Conveyor;
 import frc.robot.subsystems.Drivetrain;
@@ -78,6 +79,8 @@ public class RobotContainer {
   @Log(tabName = "SmartDashboard")
   SendableChooser<Command> autoSelector = new SendableChooser<>();
 
+  CommandXboxController driverCmd = new CommandXboxController(0);
+  CommandXboxController operatorCmd = new CommandXboxController(1);
   JoystickButton driver_rbumper = new JoystickButton(driver, Button.kRightBumper.value);
   JoystickButton driver_a = new JoystickButton(driver, Button.kA.value);
   JoystickButton driver_b = new JoystickButton(driver, Button.kB.value);
