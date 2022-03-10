@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.commands.DriveArcadeOpenLoop;
+import frc.robot.commands.TurretHoming;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Conveyor;
 import frc.robot.subsystems.Drivetrain;
@@ -131,12 +132,14 @@ public class RobotContainer {
 
     SequentialCommandGroup turretCmd = 
       new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.HOMING))
-      .andThen(new RunCommand(() -> turret.openLoop(0.1), turret))
-      .until(() -> { return turret.getFwdLimit() || turret.getRevLimit(); })
+      .andThen(turret::setForward)
+      .andThen(new RunCommand(() -> turret.openLoop(-0.1), turret))
+      .until(() -> turret.getRevLimit() )
+      //.andThen(turret::setInverted)
       .andThen(
         new InstantCommand(turret::resetSensor, turret)
         //new RunCommand(() -> turret.openLoop(0), turret),
-      ).andThen(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(7.221)));
+      ).andThen(new RunCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(17.221))));
       //.andThen(next);
   @Log
   double turretInput;

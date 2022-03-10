@@ -36,8 +36,7 @@ import java.util.function.DoubleSupplier;
 public class Turret extends SubsystemBase implements Loggable {
   WPI_TalonFX bearing;
   TalonFXConfiguration bearingConfig;
-  PIDController pid;
-  boolean homed;
+  public boolean homed;
   @Log.Graph(name = "Yaw Angle (deg.)")
   double visionDegrees;
   @Log.Graph
@@ -57,18 +56,16 @@ public class Turret extends SubsystemBase implements Loggable {
     bearingConfig = new TalonFXConfiguration();
     bearingConfig.peakOutputForward = 0.2;
     bearingConfig.peakOutputReverse = -0.2;
-    bearingConfig.slot0.kP = TurretConstants.turretYaw_kP;
+    bearingConfig.slot0.kP = TurretConstants.kP;
     bearingConfig.slot0.kI = 0;
-    bearingConfig.slot0.kD = TurretConstants.turretYaw_kD;
+    bearingConfig.slot0.kD = TurretConstants.kD;
     bearingConfig.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
     bearingConfig.forwardLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
     bearingConfig.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
     bearingConfig.reverseLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
     bearing.configAllSettings(bearingConfig);
     bearing.setNeutralMode(NeutralMode.Brake);
-    pid = new PIDController(TurretConstants.turretYaw_kP, 0, TurretConstants.turretYaw_kD);
     // set position tolerance to 1 degree
-    pid.setTolerance(TurretConstants.turretPositionToleranceDegrees);
     turretFeedforward = new SimpleMotorFeedforward(TurretConstants.kS, TurretConstants.kV, TurretConstants.kA);
     turretCurrentPosition = Rotation2d.fromDegrees(0);
     turretPositionSetpoint = Rotation2d.fromDegrees(0);
@@ -78,12 +75,8 @@ public class Turret extends SubsystemBase implements Loggable {
     visionDegrees = setpoint;
   }
 
-  public boolean atSetpoint() {
-    return pid.atSetpoint();
-  }
-
   private void useOutput() {
-    bearing.set(TalonFXControlMode.Position, rotation2dToNativeUnits(turretPositionSetpoint));
+    bearing.set(TalonFXControlMode.Position, -rotation2dToNativeUnits(turretPositionSetpoint), DemandType.ArbitraryFeedForward, turretFeedforward.calculate(turretPositionSetpoint.getDegrees()));
   }
 
   private double rotation2dToNativeUnits(Rotation2d rotation) {
@@ -100,6 +93,10 @@ public class Turret extends SubsystemBase implements Loggable {
     bearing.set(0);
   }
 
+  public boolean atSetpoint() {
+    return nativeUnitsToRotation2d(bearing.getClosedLoopError()).getDegrees() < 1;
+  }
+
   public boolean getActive() {
     // return mode < 2
     return mode != ShooterMode.DUMP || mode != ShooterMode.DISABLED;
@@ -108,6 +105,7 @@ public class Turret extends SubsystemBase implements Loggable {
   @Override
   public void periodic() {
     turretCurrentPosition = nativeUnitsToRotation2d(bearing.getSelectedSensorPosition());
+    NTHelper.setString("turret_shooter_mode", mode.toString());
     NTHelper.setDouble("turret_position_deg", turretCurrentPosition.getDegrees());
     NTHelper.setDouble("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
     switch (mode) {
@@ -142,8 +140,16 @@ public class Turret extends SubsystemBase implements Loggable {
     this.mode = mode;
   }
 
+  public void setInverted() {
+    bearing.setInverted(true);
+  }
+
+  public void setForward() {
+    bearing.setInverted(false);
+  }
+
   public void resetSensor() {
-    bearing.setSelectedSensorPosition(rotation2dToNativeUnits(TurretConstants.maxClockwise));
+    bearing.setSelectedSensorPosition(rotation2dToNativeUnits(TurretConstants.maxCounterClockwise));
   }
 
   public void setAngleRelative(double degrees) {

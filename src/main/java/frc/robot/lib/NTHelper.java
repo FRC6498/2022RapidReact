@@ -22,4 +22,8 @@ public class NTHelper {
     public static void setDouble(String entry, double value) {
         table.getEntry(entry).setDouble(value);
     }
+
+    public static void setString(String entry, String value) {
+        table.getEntry(entry).setString(value);
+    }
 }

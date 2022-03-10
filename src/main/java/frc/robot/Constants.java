@@ -68,8 +68,8 @@ public final class Constants {
     public static final class TurretConstants {
         public static final int yawMotorCANId = 12;
         public static final double turretPositionToleranceDegrees = 1;
-        public static final double turretYaw_kP = 0.3;
-        public static final double turretYaw_kD = 0;
+        public static final double kP = 0.00036974;
+        public static final double kD = 0.11797;
         public static final double turretTicksPerRotation = 2048.0*(40.0/10.0)*(40.0/20.0)*(314.0/40.0);
         public static final double turretMaxPosition = 135+13.25;
         public static final double turretMinPosition = -135-13.25;
@@ -78,10 +78,10 @@ public final class Constants {
         public static final double kS = 0.89326;
         public static final double kV =  0.020207;
         public static final double kA =  0.00072803;
-        public static final Rotation2d maxClockwise = Rotation2d.fromDegrees(-30);
-        public static final Rotation2d maxCounterClockwise = Rotation2d.fromDegrees(210);
+        public static final Rotation2d maxClockwise = Rotation2d.fromDegrees(10);
+        public static final Rotation2d maxCounterClockwise = Rotation2d.fromDegrees(250);
         // encoder pos associated with dump
-		public static final Rotation2d turretDumpModePos = Rotation2d.fromDegrees(0);
+		public static final Rotation2d turretDumpModePos = Rotation2d.fromDegrees(10);
         public static final double turretRampRate = 0;
         public static final int turretMaxOutput = 0;
         public static final double turretTicksPerDegree = 254.7;

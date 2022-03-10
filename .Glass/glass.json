@@ -6,6 +6,7 @@
     "types": {
       "/FMSInfo": "FMSInfo",
       "/LiveWindow/Conveyor": "Subsystem",
+      "/LiveWindow/Intake": "Subsystem",
       "/LiveWindow/Ungrouped/DifferentialDrive[1]": "DifferentialDrive",
       "/LiveWindow/Ungrouped/DigitalInput[1]": "Digital Input",
       "/LiveWindow/Ungrouped/PIDController[1]": "PIDController",
@@ -31,7 +32,7 @@
     "Plot <0>": {
       "plots": [
         {
-          "height": 653,
+          "height": 612,
           "series": [
             {
               "color": [
