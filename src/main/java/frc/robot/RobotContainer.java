@@ -202,6 +202,16 @@ public class RobotContainer {
     ));
     //driver_a.whenActive(new InstantCommand(climber::toggleClimber, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
+    driverCmd.b().whileActiveOnce(
+      new InstantCommand(frontConveyor::setReversed)
+      .andThen(new WaitCommand(0.5))
+      .andThen(new StartEndCommand(
+        superstructure::runFeeder, 
+        superstructure::stopFeeder, 
+        superstructure
+        ).alongWith(new InstantCommand(frontConveyor::setForward, frontConveyor))
+      )
+    );
     driver_b.whileActiveOnce(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
     operator_a.whileActiveOnce(new StartEndCommand(
       () -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelHighRPM), 

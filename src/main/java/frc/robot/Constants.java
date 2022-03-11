@@ -70,7 +70,7 @@ public final class Constants {
         public static final double turretPositionToleranceDegrees = 1;
         public static final double kP = 0.00036974;
         public static final double kD = 0.11797;
-        public static final double ticksPerDegree = 302.4;
+        public static final double ticksPerDegree = 297.7;
         public static final double turretTicksPerRotation = 2048.0*(40.0/10.0)*(40.0/20.0)*(314.0/40.0);
         public static final Rotation2d offset = Rotation2d.fromDegrees(13.30);
         public static final double turretSoftLimitOffset = 20;
