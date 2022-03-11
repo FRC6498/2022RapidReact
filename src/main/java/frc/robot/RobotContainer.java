@@ -28,9 +28,7 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.TurretConstants;
 import frc.robot.commands.DriveArcadeOpenLoop;
-import frc.robot.commands.TurretHoming;
 import frc.robot.lib.OI.CommandXboxController;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Conveyor;
@@ -133,17 +131,14 @@ public class RobotContainer {
       new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain).withTimeout(1.5)
     ).andThen(drivetrain::stop);
 
-    SequentialCommandGroup turretCmd = 
-      new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.HOMING))
-      .andThen(turret::setForward)
-      .andThen(new RunCommand(() -> turret.openLoop(-0.1), turret))
-      .until(() -> turret.getRevLimit() )
-      //.andThen(turret::setInverted)
-      .andThen(
-        new InstantCommand(turret::resetSensor, turret)
-        //new RunCommand(() -> turret.openLoop(0), turret),
-      ).andThen(new RunCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(17.221))));
-      //.andThen(next);
+  SequentialCommandGroup turretCmd = 
+    new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.HOMING))
+    .andThen(new InstantCommand(turret::startHome, turret)) 
+    .andThen(new RunCommand(turret::home, turret))
+    .until(() -> turret.homed)
+    .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(-90)), turret))
+    .andThen(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.FULL_AUTO)));
+    //.andThen(next);
   @Log
   double turretInput;
   /** The container for the robot. Contains subsystems, OI devices, and commands. */

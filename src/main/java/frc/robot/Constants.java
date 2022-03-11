@@ -70,21 +70,23 @@ public final class Constants {
         public static final double turretPositionToleranceDegrees = 1;
         public static final double kP = 0.00036974;
         public static final double kD = 0.11797;
+        public static final double ticksPerDegree = 302.4;
         public static final double turretTicksPerRotation = 2048.0*(40.0/10.0)*(40.0/20.0)*(314.0/40.0);
-        public static final double turretMaxPosition = 135+13.25;
-        public static final double turretMinPosition = -135-13.25;
+        public static final Rotation2d offset = Rotation2d.fromDegrees(13.30);
         public static final double turretSoftLimitOffset = 20;
         public static final double turretHomingVelocityStopThreshold = 0.1;
         public static final double kS = 0.89326;
         public static final double kV =  0.020207;
         public static final double kA =  0.00072803;
-        public static final Rotation2d maxClockwise = Rotation2d.fromDegrees(10);
-        public static final Rotation2d maxCounterClockwise = Rotation2d.fromDegrees(250);
+        public static final double maxClockwiseAngle = 0;
+        public static final double maxCounterClockwiseAngle = 240;
         // encoder pos associated with dump
-		public static final Rotation2d turretDumpModePos = Rotation2d.fromDegrees(10);
+		public static final double turretDumpModeAngle = 0;
         public static final double turretRampRate = 0;
         public static final int turretMaxOutput = 0;
         public static final double turretTicksPerDegree = 254.7;
+        public static final double hardForwardAngle = maxCounterClockwiseAngle;
+        public static final double hardReverseAngle = maxClockwiseAngle;
     }
 
     public static final class ConveyorConstants {
@@ -125,9 +127,5 @@ public final class Constants {
         public static final int redBallPipelineID = 1;
         public static final int blueBallPipelineID = 2;
         public static final double lifecamPitch = Units.degreesToRadians(limelightPitch+180);
-    }
-    public static final class TickTock{
-        public static final int seesawForwardChannel = 6;
-        public static final int seesawReverseChannel = 7;
     }
 }

@@ -5,6 +5,7 @@
     },
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/LiveWindow/Climber": "Subsystem",
       "/LiveWindow/Conveyor": "Subsystem",
       "/LiveWindow/Intake": "Subsystem",
       "/LiveWindow/Ungrouped/DifferentialDrive[1]": "DifferentialDrive",
@@ -32,7 +33,7 @@
     "Plot <0>": {
       "plots": [
         {
-          "height": 612,
+          "height": 606,
           "series": [
             {
               "color": [
@@ -55,6 +56,11 @@
           ]
         }
       ]
+    },
+    "Plot <1>": {
+      "window": {
+        "visible": false
+      }
     }
   }
 }

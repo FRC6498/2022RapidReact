@@ -49,7 +49,6 @@ public class Flywheel extends SubsystemBase implements Loggable {
   private double controllerOutput;
   double lastPosition = 0.0;
   double distanceToHub = 0.0;
-  private NetworkTableEntry flywheelSparkMAXSpeedEntry, flywheelSpeedPositionDifferenceEntry;
   @Log.ToString(name = "Flywheel Mode", tabName = "SmartDashboard")
   private ShooterMode mode;
   ShotMap flywheelTable = new ShotMap();
@@ -80,9 +79,6 @@ public class Flywheel extends SubsystemBase implements Loggable {
     pid.setFF(0);
     flywheelActive = true;
     flywheelSpeedSetpoint = 1.5;
-    NetworkTable teamtable = NetworkTableInstance.getDefault().getTable("team6498");
-    flywheelSparkMAXSpeedEntry = teamtable.getEntry("flywheelSpeedEncoderVelocity");
-    flywheelSpeedPositionDifferenceEntry = teamtable.getEntry("flywheelSpeedPositionDifference");
   } 
   
   /**
@@ -127,8 +123,6 @@ public class Flywheel extends SubsystemBase implements Loggable {
   
   @Override
   public void periodic() {
-    flywheelSparkMAXSpeedEntry.setDouble(getFlywheelSpeed());
-    flywheelSpeedPositionDifferenceEntry.setDouble((encoder.getPosition() - lastPosition) / 0.02);
     // set setpoint based on mode
     switch (mode) {
       case DISABLED:

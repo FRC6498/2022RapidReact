@@ -26,4 +26,8 @@ public class NTHelper {
     public static void setString(String entry, String value) {
         table.getEntry(entry).setString(value);
     }
+
+    public static void setBoolean(String entry, boolean value) {
+        table.getEntry(entry).setBoolean(value);
+    }
 }

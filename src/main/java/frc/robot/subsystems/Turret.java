@@ -18,6 +18,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
@@ -65,6 +66,7 @@ public class Turret extends SubsystemBase implements Loggable {
     bearingConfig.reverseLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
     bearing.configAllSettings(bearingConfig);
     bearing.setNeutralMode(NeutralMode.Brake);
+    bearing.setInverted(TalonFXInvertType.Clockwise);
     // set position tolerance to 1 degree
     turretFeedforward = new SimpleMotorFeedforward(TurretConstants.kS, TurretConstants.kV, TurretConstants.kA);
     turretCurrentPosition = Rotation2d.fromDegrees(0);
@@ -81,12 +83,12 @@ public class Turret extends SubsystemBase implements Loggable {
 
   private double rotation2dToNativeUnits(Rotation2d rotation) {
     double degrees = rotation.getDegrees();
-    return degrees * -254.7;
+    return degrees * -TurretConstants.ticksPerDegree;
   }
 
   private Rotation2d nativeUnitsToRotation2d(double units) {
     //254.7 ticks / 1 degree
-    return Rotation2d.fromDegrees(units / -254.7);
+    return Rotation2d.fromDegrees(units / -TurretConstants.ticksPerDegree);
   }
 
   public void stop() {
@@ -108,6 +110,8 @@ public class Turret extends SubsystemBase implements Loggable {
     NTHelper.setString("turret_shooter_mode", mode.toString());
     NTHelper.setDouble("turret_position_deg", turretCurrentPosition.getDegrees());
     NTHelper.setDouble("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
+    NTHelper.setDouble("turret_controller_error", bearing.getClosedLoopError());
+    NTHelper.setDouble("turret_controller_target_deg", nativeUnitsToRotation2d(bearing.getClosedLoopTarget()).getDegrees());
     switch (mode) {
       case FULL_AUTO:
       case MANUAL_FIRE:
@@ -117,10 +121,26 @@ public class Turret extends SubsystemBase implements Loggable {
         //bearing.setVoltage(0);
         break;
       case HOMING:
-        useOutput();
+        home();
         break;
       default:
         break;
+    }
+    checkLimits();
+  }
+
+  public void startHome() {
+    homed = false;
+    // counter clockwise, this is positive if motor is uninverted
+    openLoop(-0.1);
+    bearing.overrideSoftLimitsEnable(false);
+  }
+
+  public void home() {
+    if (checkLimits()) {
+      openLoop(0);
+      homed = true;
+      bearing.overrideSoftLimitsEnable(false);
     }
   }
 
@@ -136,6 +156,28 @@ public class Turret extends SubsystemBase implements Loggable {
     return bearing.isRevLimitSwitchClosed() == 1;
   }
 
+  public boolean checkLimits() {
+    if (getFwdLimit()) {
+      //reset(Rotation2d.fromDegrees(TurretConstants.maxCounterClockwiseAngle));
+      NTHelper.setBoolean("forward_limit", true);
+      NTHelper.setBoolean("reverse_limit", false);
+      return true;
+    } else if (getRevLimit()) {
+      //reset(Rotation2d.fromDegrees(TurretConstants.maxClockwiseAngle));
+      NTHelper.setBoolean("reverse_limit", true);
+      NTHelper.setBoolean("forward_limit", false);
+      return true;
+    } else {
+      NTHelper.setBoolean("forward_limit", false);
+      NTHelper.setBoolean("reverse_limit", false);
+      return false;
+    }
+  }
+
+  private void reset(Rotation2d angle) {
+    bearing.setSelectedSensorPosition(rotation2dToNativeUnits(angle));
+  }
+
   public void setShooterMode(ShooterMode mode) {
     this.mode = mode;
   }
@@ -146,10 +188,6 @@ public class Turret extends SubsystemBase implements Loggable {
 
   public void setForward() {
     bearing.setInverted(false);
-  }
-
-  public void resetSensor() {
-    bearing.setSelectedSensorPosition(rotation2dToNativeUnits(TurretConstants.maxCounterClockwise));
   }
 
   public void setAngleRelative(double degrees) {
