@@ -8,12 +8,20 @@ import java.util.function.Consumer;
 
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import com.fasterxml.jackson.annotation.JsonCreator.Mode;
 
 import org.photonvision.common.hardware.VisionLEDMode;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
@@ -23,6 +31,8 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import frc.robot.lib.GoalTrack;
+import frc.robot.lib.NTHelper;
 //import frc.robot.lib.PicoColorSensor;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -51,6 +61,7 @@ public class Superstructure extends SubsystemBase {
   // Feeder
   //climber
   public final Climber climber;
+  public final Drivetrain drivetrain;
   // Triggers
   // Superstructure
   public Trigger shooterReady;
@@ -78,6 +89,7 @@ public class Superstructure extends SubsystemBase {
   WPI_TalonFX feederA;
   WPI_TalonFX feederB;
   DoubleSolenoid merger;
+  GoalTrack goalTrack;
 
   @Log.BooleanBox(name = "Active Conveyor", colorWhenTrue = "#d6e810", colorWhenFalse = "#1861d6")
   boolean seesawFront = true;
@@ -89,7 +101,7 @@ public class Superstructure extends SubsystemBase {
   ParallelRaceGroup testing;
   Consumer<ShooterMode> shooterModeUpdater;
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater, Drivetrain drivetrain) {
     this.flywheel = flywheel;
     this.frontConveyor = frontConveyor;
     this.backConveyor = backConveyor;
@@ -98,8 +110,10 @@ public class Superstructure extends SubsystemBase {
     this.turret = turret;
     this.vision = vision;
     this.climber = climber;
+    this.drivetrain = drivetrain;
     this.shooterModeUpdater = shooterModeUpdater;
     
+    goalTrack = new GoalTrack(0, new Translation2d());
     //colorSensor = new PicoColorSensor();
     mode = ShooterMode.DISABLED;
     feederA = new WPI_TalonFX(10);
@@ -205,6 +219,22 @@ public class Superstructure extends SubsystemBase {
   public void setShooterMode(ShooterMode mode) {
     this.mode = mode;
     shooterModeUpdater.accept(mode);
+    switch (mode) {
+      case MANUAL_FIRE:
+      case FULL_AUTO:
+        NetworkTableInstance.getDefault().setUpdateRate(0.01);
+        vision.setLED(VisionLEDMode.kOn);
+        break;
+      case DUMP:
+        vision.setLED(VisionLEDMode.kOn);
+        break;
+      case DISABLED:
+        NetworkTableInstance.getDefault().setUpdateRate(0.1);
+        vision.setLED(VisionLEDMode.kOff);
+        break;
+      default:
+        break;
+    }
   }
 
   public ShooterMode getShooterMode() {
@@ -227,20 +257,42 @@ public class Superstructure extends SubsystemBase {
   // setShooterMode method here
   // subsystems check shooter mode, act accordingly
 
+  public void addVisionUpdate(double timestamp, PhotonTrackedTarget target) {
+    //counter clock wise is positivie thats why target yaw is inverted
+    //pretty sure x is positive forward, y is positive left
+        
+    double yaw = -target.getYaw();
+  
+    double distance = vision.getTargetDistance(target);
+    Rotation2d angle = turret.getCurrentPosition().plus(Rotation2d.fromDegrees(yaw)).plus(drivetrain.getGyroAngle());
+    Translation2d field_to_goal=new Translation2d(distance * angle.getCos(), distance * angle.getSin());
+    goalTrack.tryUpdate(timestamp, field_to_goal);
+    // System.out.println("time: "+timestamp+ " x: "+field_to_goal.getX()+" y: "+field_to_goal.getY());
+    
+
+}
+
+  public void updateVision() {
+    if (vision.hasTargets()) {
+      addVisionUpdate(Timer.getFPGATimestamp(), vision.getBestTarget());
+    }
+  }
+
   @Override
   public void periodic() {
+    Translation2d smoothedPos = goalTrack.getSmoothedPosition();
+    //NTHelper.setDouble("smooth_pos_deg", value);
     switch (mode) {
       case MANUAL_FIRE:
       case FULL_AUTO:
-        vision.setLED(VisionLEDMode.kOn);
+        turret.setPositionSetpoint(new Rotation2d(smoothedPos.getX(), smoothedPos.getY()).minus(drivetrain.getGyroAngle()));
         break;
       case DUMP:
       case DISABLED:
-        vision.setLED(VisionLEDMode.kOn);
-        break;
       default:
         break;
     }
+    
   }
   
 }

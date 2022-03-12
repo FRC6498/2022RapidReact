@@ -1,5 +1,18 @@
 {
   "NetworkTables": {
+    "LiveWindow": {
+      "Climber": {
+        "open": true
+      }
+    },
+    "Shuffleboard": {
+      "Turret": {
+        "open": true
+      },
+      "Vision": {
+        "open": true
+      }
+    },
     "team6498": {
       "open": true
     },
@@ -8,6 +21,7 @@
       "/LiveWindow/Climber": "Subsystem",
       "/LiveWindow/Conveyor": "Subsystem",
       "/LiveWindow/Intake": "Subsystem",
+      "/LiveWindow/Turret": "Subsystem",
       "/LiveWindow/Ungrouped/DifferentialDrive[1]": "DifferentialDrive",
       "/LiveWindow/Ungrouped/DigitalInput[1]": "Digital Input",
       "/LiveWindow/Ungrouped/PIDController[1]": "PIDController",
@@ -22,6 +36,7 @@
       "/LiveWindow/Ungrouped/Talon FX [8]": "Motor Controller",
       "/LiveWindow/Ungrouped/Talon FX [9]": "Motor Controller",
       "/LiveWindow/Ungrouped/navX-Sensor[4]": "Gyro",
+      "/LiveWindow/Vision": "Subsystem",
       "/Shuffleboard/SmartDashboard/autoSelector": "String Chooser"
     }
   },

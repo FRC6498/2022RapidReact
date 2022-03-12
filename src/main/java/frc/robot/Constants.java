@@ -110,7 +110,7 @@ public final class Constants {
         public static final String limelightCameraName = "limelight";
         public static final double limelightHeightFromField = Units.inchesToMeters(27);
         public static final int upperHubPipelineID = 0;
-        public static final double limelightPitch = Units.degreesToRadians(33);
+        public static final double limelightPitch = Units.degreesToRadians(40);
         public static final double[] comparisonConstants = new double[] {
             limelightHeightFromField,
             upperHubTargetHeight,
@@ -124,4 +124,6 @@ public final class Constants {
         public static final int blueBallPipelineID = 2;
         public static final double lifecamPitch = Units.degreesToRadians(limelightPitch+180);
     }
+
+    public static final double kMaxGoalTrackAge = 0.05;
 }

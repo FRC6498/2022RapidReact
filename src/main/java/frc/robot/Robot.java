@@ -45,6 +45,8 @@ public class Robot extends TimedRobot {
     frontCamera = CameraServer.startAutomaticCapture();
     frontCamera.setResolution(320, 240);
     setNetworkTablesFlushEnabled(true);
+    m_robotContainer.drivetrain.resetSensors();
+    addPeriodic(() -> m_robotContainer.superstructure.updateVision(), 0.01);
     //DataLogManager.start();
   }
 
@@ -84,6 +86,7 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
+    m_robotContainer.drivetrain.resetSensors();
   }
 
   /** This function is called periodically during autonomous. */
@@ -99,6 +102,7 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+    m_robotContainer.drivetrain.resetSensors();
   }
 
   /** This function is called periodically during operator control. */

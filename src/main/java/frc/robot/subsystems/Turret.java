@@ -103,7 +103,6 @@ public class Turret extends SubsystemBase implements Loggable {
 
   @Override
   public void periodic() {
-    turretCurrentPosition = nativeUnitsToRotation2d(bearing.getSelectedSensorPosition());
     NTHelper.setString("turret_shooter_mode", mode.toString());
     NTHelper.setDouble("turret_position_deg", turretCurrentPosition.getDegrees());
     NTHelper.setDouble("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
@@ -196,6 +195,7 @@ public class Turret extends SubsystemBase implements Loggable {
   }
 
   public Rotation2d getCurrentPosition() {
+    turretCurrentPosition = nativeUnitsToRotation2d(bearing.getSelectedSensorPosition());
     return turretCurrentPosition;
   }
 }

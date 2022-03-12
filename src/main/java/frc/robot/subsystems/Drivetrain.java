@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.lib.NTHelper;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -58,7 +59,6 @@ public class Drivetrain extends SubsystemBase implements Loggable {
       Constants.DriveConstants.kV,
       Constants.DriveConstants.kA
     );
-
   public Drivetrain()
   {
     leftLeader = new WPI_TalonFX(leftLeaderCANId);
@@ -81,7 +81,6 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     diffDrive.setSafetyEnabled(false);
 
     gyro = new AHRS(Port.kMXP);
-    gyro.reset();
     odometry = new DifferentialDriveOdometry(gyro.getRotation2d());
     kinematics = new DifferentialDriveKinematics(Constants.DriveConstants.trackWidthMeters);
 
@@ -113,7 +112,7 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   public Rotation2d getGyroAngle()
   {
     // negative angle because of the direction the gyro is mounted
-    return Rotation2d.fromDegrees(gyro.getAngle());
+    return gyro.getRotation2d();
   }
 
   @Log
@@ -185,7 +184,8 @@ public class Drivetrain extends SubsystemBase implements Loggable {
 
   @Log(name = "Yaw (deg.)")
   public double getGyroAngleDegrees() {
-    return getGyroAngle().getDegrees();
+    double deg = gyro.getRotation2d().getDegrees() % 360;
+    return deg;
   }
 
   @Override
@@ -203,6 +203,9 @@ public class Drivetrain extends SubsystemBase implements Loggable {
         )
       ).vxMetersPerSecond
     );
+
+    
+    NTHelper.setDouble("yaw_deg", getGyroAngleDegrees());
   }
 
   public boolean getStopped() {

@@ -68,7 +68,7 @@ public class RobotContainer {
     flywheel.setShooterMode(mode);
     turret.setShooterMode(mode);
   };
-  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, shooterModeUpdater);
+  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, shooterModeUpdater, drivetrain);
 
   XboxController driver = new XboxController(0);
   XboxController operator = new XboxController(1);
@@ -162,7 +162,7 @@ public class RobotContainer {
   double turretInput;
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    vision.setLED(VisionLEDMode.kOff);
+    //vision.setLED(VisionLEDMode.kOff);
     drivetrain.setDefaultCommand(
       new DriveArcadeOpenLoop(
         driver::getRightTriggerAxis, 
@@ -234,15 +234,10 @@ public class RobotContainer {
       )
     );
     //driverCmd.b().whileActiveOnce(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
-    operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)).andThen(turretV));
+    operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
     operatorCmd.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
-    operatorCmd.x().whileActiveOnce(
-      new StartEndCommand(
-        () -> superstructure.setShooterMode(ShooterMode.DUMP), 
-        () -> superstructure.setShooterMode(ShooterMode.DISABLED), 
-        superstructure
-      )
-    );
+    operatorCmd.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP)));
+
   }
 
 

@@ -20,6 +20,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.lib.NTHelper;
 import frc.robot.lib.SortByDistance;
@@ -57,6 +58,7 @@ public class Vision extends SubsystemBase implements Loggable {
   public void setLED(VisionLEDMode ledMode)
   {
     CAM_limelight.setLED(ledMode);
+    System.out.println(CAM_limelight.getLEDMode().toString());
   }
 
   public boolean hasTargets() {
@@ -71,7 +73,7 @@ public class Vision extends SubsystemBase implements Loggable {
     return PhotonUtils.calculateDistanceToTargetMeters(
       Units.inchesToMeters(29), 
       2.64, // 264cm from floor->ring
-      Units.degreesToRadians(20), 
+      Units.degreesToRadians(40), 
       Units.degreesToRadians(target.getPitch())
     );
   }
@@ -89,6 +91,7 @@ public class Vision extends SubsystemBase implements Loggable {
     } else {
       CAM_limelight.setLED(VisionLEDMode.kOn);
     }
+    
   }
 
   public int getTargetCount() {
@@ -101,6 +104,10 @@ public class Vision extends SubsystemBase implements Loggable {
     } else {
       return 0;
     }
+  }
+
+  public VisionLEDMode getLED() {
+    return CAM_limelight.getLEDMode();
   }
 
   @Override
