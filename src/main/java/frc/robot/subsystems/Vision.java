@@ -21,6 +21,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.lib.NTHelper;
 import frc.robot.lib.SortByDistance;
 import io.github.oblarg.oblog.Loggable;
 
@@ -99,6 +100,11 @@ public class Vision extends SubsystemBase implements Loggable {
     // This method will be called once per robot loop; before triggered commands are scheduled and before any commands are run
     if (active) {
       currentResult = CAM_limelight.getLatestResult();
+    }
+    if (currentResult.hasTargets()) {
+      NTHelper.setDouble("target_distance", getTargetDistance(getBestTarget()));
+    } else {
+      NTHelper.setDouble("target_distance", -1.0);
     }
   }
 }
