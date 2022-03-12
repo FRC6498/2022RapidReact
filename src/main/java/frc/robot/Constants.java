@@ -68,7 +68,7 @@ public final class Constants {
     public static final class TurretConstants {
         public static final int yawMotorCANId = 12;
         public static final double turretPositionToleranceDegrees = 1;
-        public static final double kP = 0.00036974;
+        public static final double kP = 0.1;
         public static final double kD = 0.11797;
         public static final double ticksPerDegree = 297.7;
         public static final double turretTicksPerRotation = 2048.0*(40.0/10.0)*(40.0/20.0)*(314.0/40.0);
@@ -81,7 +81,7 @@ public final class Constants {
         public static final double maxClockwiseAngle = 0;
         public static final double maxCounterClockwiseAngle = 240;
         // encoder pos associated with dump
-		public static final double turretDumpModeAngle = 0;
+		public static final double turretDumpModeAngle = 71684;
         public static final double turretRampRate = 0;
         public static final int turretMaxOutput = 0;
         public static final double turretTicksPerDegree = 254.7;

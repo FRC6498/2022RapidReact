@@ -10,8 +10,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -20,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
@@ -28,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.TurretConstants;
 import frc.robot.commands.DriveArcadeOpenLoop;
 import frc.robot.lib.OI.CommandXboxController;
 import frc.robot.subsystems.Climber;
@@ -145,9 +145,12 @@ public class RobotContainer {
     new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.HOMING))
     .andThen(new InstantCommand(turret::startHome, turret)) 
     .andThen(new RunCommand(turret::home, turret))
-    .until(() -> turret.homed)
-    .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(-90)), turret))
-    .andThen(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.FULL_AUTO)));
+    .until(() -> turret.homed == true)
+    .andThen(() -> superstructure.setShooterMode(ShooterMode.DUMP))
+    .andThen(new RunCommand(() -> turret.setPositionSetpoint(TurretConstants.turretDumpModeAngle), turret))
+    .andThen(new PrintCommand("done"));
+    //.andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(-90)), turret))
+    //.andThen(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.FULL_AUTO)));
     //.andThen(next);
   @Log
   double turretInput;
@@ -166,7 +169,7 @@ public class RobotContainer {
     drivetrain.setInverted(true);
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
     frontIntake.setDefaultCommand(new RunCommand(() -> frontIntake.setMotorSetpoint(0.0), frontIntake));
-    turret.setDefaultCommand(new RunCommand(turret::stop, turret));
+    turret.setDefaultCommand(turretCmd);//new RunCommand(turret::stop, turret));
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -223,12 +226,8 @@ public class RobotContainer {
       )
     );
     //driverCmd.b().whileActiveOnce(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
-    operatorCmd.a().whileActiveOnce(new StartEndCommand(
-      () -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelHighRPM), 
-      () -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), 
-      flywheel
-    ));
-
+    operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
+    operatorCmd.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
     operatorCmd.x().whileActiveOnce(
       new StartEndCommand(
         () -> superstructure.setShooterMode(ShooterMode.DUMP), 

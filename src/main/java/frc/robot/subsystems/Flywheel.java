@@ -144,7 +144,8 @@ public class Flywheel extends SubsystemBase implements Loggable {
       feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);
       controllerOutput = bangBangOutput + 0.9 * feedforwardOutput;
       neo.setVoltage(controllerOutput);*/
-      pid.setReference(flywheelSpeedSetpoint, ControlType.kVelocity, 0, flywheelFeedforward.calculate(flywheelSpeedSetpoint), ArbFFUnits.kVoltage);
+      if (mode == ShooterMode.FULL_AUTO || mode == ShooterMode.MANUAL_FIRE ) { pid.setReference(flywheelSpeedSetpoint, ControlType.kVelocity, 0, flywheelFeedforward.calculate(flywheelSpeedSetpoint), ArbFFUnits.kVoltage); }
+      else { pid.setReference(0, ControlType.kDutyCycle);}
     } else {
       setFlywheelIdle();
     }

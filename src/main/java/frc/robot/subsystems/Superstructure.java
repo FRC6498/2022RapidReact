@@ -69,7 +69,7 @@ public class Superstructure extends SubsystemBase {
   //TODO: Create Driver Dashboard
   //TODO: make sure back intake/conveyor operates normally
   //TODO: program merger
-  ShooterMode shooterMode;
+  ShooterMode mode;
   @Config
   double flywheelRPM = 0.0;
   public boolean isForward;
@@ -101,7 +101,7 @@ public class Superstructure extends SubsystemBase {
     this.shooterModeUpdater = shooterModeUpdater;
     
     //colorSensor = new PicoColorSensor();
-
+    mode = ShooterMode.DISABLED;
     feederA = new WPI_TalonFX(10);
     feederA.setInverted(true);
     feederB = new WPI_TalonFX(11);
@@ -149,8 +149,8 @@ public class Superstructure extends SubsystemBase {
     }, flywheel));
 
     //frontConveyorFull.whileActiveOnce(new StartEndCommand(this::runFeeder, this::stopFeeder, this));
-    vision.setLED(VisionLEDMode.kOff);
-    turret.setDefaultCommand(new RunCommand(() -> { turret.setSetpointDegrees(0); }, turret));
+    //vision.setLED(VisionLEDMode.kOff);
+    //turret.setDefaultCommand(new RunCommand(() -> { turret.setSetpointDegrees(0); }, turret));
 
   }
 
@@ -195,12 +195,12 @@ public class Superstructure extends SubsystemBase {
   } 
 
   public void setShooterMode(ShooterMode mode) {
-    shooterMode = mode;
+    mode = mode;
     shooterModeUpdater.accept(mode);
   }
 
   public ShooterMode getShooterMode() {
-    return shooterMode;
+    return mode;
   }
 
   public boolean getShooterReady() {
@@ -218,5 +218,21 @@ public class Superstructure extends SubsystemBase {
   }
   // setShooterMode method here
   // subsystems check shooter mode, act accordingly
+
+  @Override
+  public void periodic() {
+    switch (mode) {
+      case MANUAL_FIRE:
+      case FULL_AUTO:
+        vision.setLED(VisionLEDMode.kOn);
+        break;
+      case DUMP:
+      case DISABLED:
+        vision.setLED(VisionLEDMode.kOff);
+        break;
+      default:
+        break;
+    }
+  }
   
 }

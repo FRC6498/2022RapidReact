@@ -45,8 +45,11 @@ public class Turret extends SubsystemBase implements Loggable {
   SimpleMotorFeedforward turretFeedforward;
   @Log.ToString(name = "Turret Mode", tabName = "SmartDashboard")
   ShooterMode mode;
+  double minDeg = 0;
+  double maxDeg = 0;
   private Rotation2d turretPositionSetpoint;
   private Rotation2d turretCurrentPosition;
+  private double turretRotationSetpointTicks=0;
 
   public Turret() {
     mode = ShooterMode.DISABLED;
@@ -78,17 +81,22 @@ public class Turret extends SubsystemBase implements Loggable {
   }
 
   private void useOutput() {
-    bearing.set(TalonFXControlMode.Position, -rotation2dToNativeUnits(turretPositionSetpoint), DemandType.ArbitraryFeedForward, turretFeedforward.calculate(turretPositionSetpoint.getDegrees()));
+    if (mode == ShooterMode.DUMP) {
+      bearing.set(ControlMode.Position, turretRotationSetpointTicks);
+    } else {
+      bearing.set(TalonFXControlMode.Position, -rotation2dToNativeUnits(turretPositionSetpoint), DemandType.ArbitraryFeedForward, turretFeedforward.calculate(turretPositionSetpoint.getDegrees()));
+    }
+    
   }
 
   private double rotation2dToNativeUnits(Rotation2d rotation) {
     double degrees = rotation.getDegrees();
-    return degrees * -TurretConstants.ticksPerDegree;
+    return degrees * TurretConstants.ticksPerDegree;
   }
 
   private Rotation2d nativeUnitsToRotation2d(double units) {
     //254.7 ticks / 1 degree
-    return Rotation2d.fromDegrees(units / -TurretConstants.ticksPerDegree);
+    return Rotation2d.fromDegrees(units / TurretConstants.ticksPerDegree);
   }
 
   public void stop() {
@@ -110,15 +118,18 @@ public class Turret extends SubsystemBase implements Loggable {
     NTHelper.setString("turret_shooter_mode", mode.toString());
     NTHelper.setDouble("turret_position_deg", turretCurrentPosition.getDegrees());
     NTHelper.setDouble("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
-    NTHelper.setDouble("turret_controller_error", bearing.getClosedLoopError());
+    NTHelper.setDouble("turret_encoder_value", bearing.getSelectedSensorPosition());
+    NTHelper.setDouble("turret_encoder_target", turretRotationSetpointTicks);
+    /*NTHelper.setDouble("turret_controller_error", bearing.getClosedLoopError());
     if (bearing.getControlMode() == ControlMode.Position) { 
       NTHelper.setDouble("turret_controller_target_deg", nativeUnitsToRotation2d(bearing.getClosedLoopTarget()).getDegrees());
-    }
+    }*/
     switch (mode) {
       case FULL_AUTO:
       case MANUAL_FIRE:
         useOutput();
       case DUMP:
+      useOutput();
       case DISABLED:
         //bearing.setVoltage(0);
         break;
@@ -134,7 +145,7 @@ public class Turret extends SubsystemBase implements Loggable {
   public void startHome() {
     homed = false;
     // counter clockwise, this is positive if motor is uninverted
-    openLoop(0.1);
+    openLoop(-0.1);
     bearing.overrideSoftLimitsEnable(false);
   }
 
@@ -159,13 +170,14 @@ public class Turret extends SubsystemBase implements Loggable {
   }
 
   public boolean checkLimits() {
+    NTHelper.setBoolean("homed", homed);
     if (getFwdLimit()) {
-      reset(Rotation2d.fromDegrees(TurretConstants.maxCounterClockwiseAngle));
+      //reset(Rotation2d.fromDegrees(TurretConstants.maxCounterClockwiseAngle));
       NTHelper.setBoolean("forward_limit", true);
       NTHelper.setBoolean("reverse_limit", false);
       return true;
     } else if (getRevLimit()) {
-      reset(Rotation2d.fromDegrees(TurretConstants.maxClockwiseAngle));
+      reset(Rotation2d.fromDegrees(0));
       NTHelper.setBoolean("reverse_limit", true);
       NTHelper.setBoolean("forward_limit", false);
       return true;
@@ -178,6 +190,7 @@ public class Turret extends SubsystemBase implements Loggable {
 
   private void reset(Rotation2d angle) {
     bearing.setSelectedSensorPosition(rotation2dToNativeUnits(angle));
+    turretCurrentPosition = angle;
   }
 
   public void setShooterMode(ShooterMode mode) {
@@ -200,5 +213,9 @@ public class Turret extends SubsystemBase implements Loggable {
 
   public void setPositionSetpoint(Rotation2d setpoint) {
     turretPositionSetpoint = setpoint;
+  }
+
+  public void setPositionSetpoint(double ticks) {
+    turretRotationSetpointTicks = ticks;
   }
 }
