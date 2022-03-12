@@ -95,6 +95,14 @@ public class Vision extends SubsystemBase implements Loggable {
     return currentResult.getTargets().size();
   }
 
+  public double getTargetYaw(PhotonTrackedTarget target) {
+    if (hasTargets()) {
+      return -target.getYaw();
+    } else {
+      return 0;
+    }
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per robot loop; before triggered commands are scheduled and before any commands are run

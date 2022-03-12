@@ -138,7 +138,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
       default:
         break;
     }
-    flywheelActive = true;
+    flywheelActive = false;
     if (flywheelActive) {
       /*bangBangOutput = flywheelBangBang.calculate(getFlywheelSpeed(), flywheelSpeedSetpoint);
       feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);

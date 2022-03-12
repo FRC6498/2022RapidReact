@@ -10,6 +10,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -149,11 +150,14 @@ public class RobotContainer {
     .andThen(new RunCommand(turret::home, turret))
     .until(() -> turret.homed == true)
     .andThen(() -> superstructure.setShooterMode(ShooterMode.DUMP))
-    .andThen(new RunCommand(() -> turret.setPositionSetpoint(TurretConstants.turretDumpModeAngle), turret))
+    .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.dumpAngle)), turret))
+    .andThen(new RunCommand(() -> {}, turret))
     .andThen(new PrintCommand("done"));
     //.andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(-90)), turret))
     //.andThen(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.FULL_AUTO)));
     //.andThen(next);
+
+  RunCommand turretV = new RunCommand(() -> turret.setPositionSetpoint(turret.getCurrentPosition().plus(Rotation2d.fromDegrees(vision.getTargetYaw(vision.getBestTarget())))), turret);
   @Log
   double turretInput;
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -230,7 +234,7 @@ public class RobotContainer {
       )
     );
     //driverCmd.b().whileActiveOnce(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
-    operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
+    operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)).andThen(turretV));
     operatorCmd.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
     operatorCmd.x().whileActiveOnce(
       new StartEndCommand(

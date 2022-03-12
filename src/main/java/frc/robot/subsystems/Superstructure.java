@@ -203,7 +203,7 @@ public class Superstructure extends SubsystemBase {
   } 
 
   public void setShooterMode(ShooterMode mode) {
-    mode = mode;
+    this.mode = mode;
     shooterModeUpdater.accept(mode);
   }
 
@@ -236,7 +236,7 @@ public class Superstructure extends SubsystemBase {
         break;
       case DUMP:
       case DISABLED:
-        vision.setLED(VisionLEDMode.kOff);
+        vision.setLED(VisionLEDMode.kOn);
         break;
       default:
         break;

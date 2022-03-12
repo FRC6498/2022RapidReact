@@ -78,15 +78,11 @@ public final class Constants {
         public static final double kS = 0.89326;
         public static final double kV =  0.020207;
         public static final double kA =  0.00072803;
-        public static final double maxClockwiseAngle = 0;
-        public static final double maxCounterClockwiseAngle = 240;
-        // encoder pos associated with dump
-		public static final double turretDumpModeAngle = 71684;
-        public static final double turretRampRate = 0;
-        public static final int turretMaxOutput = 0;
-        public static final double turretTicksPerDegree = 254.7;
-        public static final double hardForwardAngle = maxCounterClockwiseAngle;
-        public static final double hardReverseAngle = maxClockwiseAngle;
+        public static final double turretTicksPerDegree = turretTicksPerRotation / 360;//254.7;
+        public static final double center = 246;
+        public static final double hardForwardAngle = 278.47-center;
+        public static final double hardReverseAngle = 0-center;
+        public static final double dumpAngle = 0;
     }
 
     public static final class ConveyorConstants {
