@@ -43,7 +43,9 @@ public class Intake extends SubsystemBase {
   public void setReverse() {
     motor.setInverted(true);
   }
-
+  public void runMotor() {
+    motor.set(0.1);
+  }
   public void setForward() {
     motor.setInverted(false);
   }

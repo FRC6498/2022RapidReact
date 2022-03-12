@@ -84,6 +84,8 @@ public class RobotContainer {
   JoystickButton driver_b = new JoystickButton(driver, Button.kB.value);
   JoystickButton operator_a = new JoystickButton(operator, Button.kA.value);
   JoystickButton operator_x = new JoystickButton(operator, Button.kX.value);
+  JoystickButton operator_b = new JoystickButton(operator, Button.kB.value);
+  JoystickButton operator_y = new JoystickButton(operator, Button.kY.value);
   POVButton op_up = new POVButton(operator, 0);
   POVButton op_left = new POVButton(operator, 270);
   POVButton op_down = new POVButton(operator, 180);
@@ -202,6 +204,8 @@ public class RobotContainer {
       new InstantCommand(backIntake::lowerIntake, backIntake), // intake up, so lower it
       backIntake::isExtended)
     );
+    operator_x.whenActive(new InstantCommand(superstructure::runFeederA, superstructure));
+    operator_y.whenActive(new InstantCommand(superstructure::runFeederB, superstructure));
     operatorCmd.pov.down().whileActiveOnce(
       new StartEndCommand(
         backIntake::setReverse, // invert 
