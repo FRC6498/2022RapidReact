@@ -170,13 +170,13 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    driver_rbumper.whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
-    op_up.whenActive(new ConditionalCommand(
+    driverCmd.rightBumper().whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
+    operatorCmd.pov.up().whenActive(new ConditionalCommand(
       new InstantCommand(frontIntake::raiseIntake, frontIntake), // intake down, so raise it
       new InstantCommand(frontIntake::lowerIntake, frontIntake), // intake up, so lower it
       frontIntake::isExtended)
     );
-    op_left.whileActiveOnce(new StartEndCommand(
+    operatorCmd.pov.left().whileActiveOnce(new StartEndCommand(
       frontIntake::setReverse, // inverted, so go forward
       frontIntake::setForward, // forward up, so invert it
       frontIntake
@@ -186,14 +186,14 @@ public class RobotContainer {
         frontConveyor
         )
       ));
-    op_right.whenActive(new ConditionalCommand(
+    operatorCmd.pov.right().whenActive(new ConditionalCommand(
       new InstantCommand(backIntake::raiseIntake, backIntake), // intake down, so raise it
       new InstantCommand(backIntake::lowerIntake, backIntake), // intake up, so lower it
       backIntake::isExtended)
     );
     operator_x.whenActive(new InstantCommand(superstructure::runFeederA, superstructure));
     operator_y.whenActive(new InstantCommand(superstructure::runFeederB, superstructure));
-    op_down.whileActiveOnce(
+    operatorCmd.pov.down().whileActiveOnce(
       new StartEndCommand(
         backIntake::setReverse, // invert 
         backIntake::setForward, // uninvert
@@ -206,14 +206,24 @@ public class RobotContainer {
     ));
     //driver_a.whenActive(new InstantCommand(climber::toggleClimber, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
-    driver_b.whileActiveOnce(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
-    operator_a.whileActiveOnce(new StartEndCommand(
+    driverCmd.b().whileActiveOnce(
+      new InstantCommand(frontConveyor::setReversed)
+      .andThen(new WaitCommand(0.5))
+      .andThen(new StartEndCommand(
+        superstructure::runFeeder, 
+        superstructure::stopFeeder, 
+        superstructure
+        ).alongWith(new InstantCommand(frontConveyor::setForward, frontConveyor))
+      )
+    );
+    //driverCmd.b().whileActiveOnce(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
+    operatorCmd.a().whileActiveOnce(new StartEndCommand(
       () -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelHighRPM), 
       () -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), 
       flywheel
     ));
 
-    operator_x.whileActiveOnce(
+    operatorCmd.x().whileActiveOnce(
       new StartEndCommand(
         () -> superstructure.setShooterMode(ShooterMode.DUMP), 
         () -> superstructure.setShooterMode(ShooterMode.DISABLED), 

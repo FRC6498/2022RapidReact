@@ -59,6 +59,8 @@ public class Superstructure extends SubsystemBase {
   public Trigger frontConveyorFull;
   public Trigger backConveyorFull;
   public Trigger flyWheelAtSetpoint;
+  @Log.BooleanBox(methodName = "get")
+  public Trigger robotLinedUp;
   // Intakes
   // Flywheel
   public Trigger flywheelEnabled;
@@ -118,7 +120,8 @@ public class Superstructure extends SubsystemBase {
     backConveyorFull = new Trigger(backConveyor::isBallPresent);
     flywheelEnabled = new Trigger(flywheel::getActive);
     turretEnabled = new Trigger(turret::getActive);
-    flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});    
+    flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
+    robotLinedUp = new Trigger(() -> vision.getBestTarget().getYaw() < 1);    
 
     setupConveyorCommands();
     setupShooterCommands();

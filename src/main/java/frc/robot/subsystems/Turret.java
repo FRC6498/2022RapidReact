@@ -66,7 +66,7 @@ public class Turret extends SubsystemBase implements Loggable {
     bearingConfig.reverseLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
     bearing.configAllSettings(bearingConfig);
     bearing.setNeutralMode(NeutralMode.Brake);
-    bearing.setInverted(TalonFXInvertType.Clockwise);
+    bearing.setInverted(TalonFXInvertType.CounterClockwise);
     // set position tolerance to 1 degree
     turretFeedforward = new SimpleMotorFeedforward(TurretConstants.kS, TurretConstants.kV, TurretConstants.kA);
     turretCurrentPosition = Rotation2d.fromDegrees(0);
@@ -132,7 +132,7 @@ public class Turret extends SubsystemBase implements Loggable {
   public void startHome() {
     homed = false;
     // counter clockwise, this is positive if motor is uninverted
-    openLoop(-0.1);
+    openLoop(0.1);
     bearing.overrideSoftLimitsEnable(false);
   }
 
@@ -158,12 +158,12 @@ public class Turret extends SubsystemBase implements Loggable {
 
   public boolean checkLimits() {
     if (getFwdLimit()) {
-      //reset(Rotation2d.fromDegrees(TurretConstants.maxCounterClockwiseAngle));
+      reset(Rotation2d.fromDegrees(TurretConstants.maxCounterClockwiseAngle));
       NTHelper.setBoolean("forward_limit", true);
       NTHelper.setBoolean("reverse_limit", false);
       return true;
     } else if (getRevLimit()) {
-      //reset(Rotation2d.fromDegrees(TurretConstants.maxClockwiseAngle));
+      reset(Rotation2d.fromDegrees(TurretConstants.maxClockwiseAngle));
       NTHelper.setBoolean("reverse_limit", true);
       NTHelper.setBoolean("forward_limit", false);
       return true;
