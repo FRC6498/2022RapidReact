@@ -151,6 +151,14 @@ public class Superstructure extends SubsystemBase {
 
   }
 
+  public void runFeederA() {
+    feederA.set(feederSpeedRunning);
+    feederA.setNeutralMode(NeutralMode.Coast);
+  }
+  public void runFeederB() {
+    feederB.set(feederSpeedRunning);
+    feederB.setNeutralMode(NeutralMode.Coast);
+  }
   public void runFeeder() {
     feederA.set(feederSpeedRunning);
     feederB.set(feederSpeedRunning);
