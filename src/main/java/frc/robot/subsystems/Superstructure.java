@@ -111,7 +111,7 @@ public class Superstructure extends SubsystemBase {
     flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(0.0), flywheel));
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
     turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
-    backConveyor.setDefaultCommand(new RunCommand(backConveyor::stop, backConveyor));
+    backConveyor.setDefaultCommand(new RunCommand(backConveyor::start, backConveyor));
 
     
     shooterReady = new Trigger(this::getShooterReady);

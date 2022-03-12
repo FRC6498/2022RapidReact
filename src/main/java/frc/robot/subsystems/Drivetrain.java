@@ -12,6 +12,7 @@ import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.math.controller.RamseteController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -46,6 +47,7 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   private final AHRS gyro;
   
   private LinearFilter velAvg = LinearFilter.movingAverage(5);
+  private RamseteController ramsete;
   public static boolean isHighGear = false;
   private boolean driveInverted;
   private NeutralMode currentBrakeMode = NeutralMode.Coast;

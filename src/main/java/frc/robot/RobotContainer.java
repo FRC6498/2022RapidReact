@@ -131,6 +131,16 @@ public class RobotContainer {
       new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain).withTimeout(1.5)
     ).andThen(drivetrain::stop);
 
+  SequentialCommandGroup odometryAuto =
+    new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelHighRPM), flywheel)
+    .andThen(new WaitUntilCommand(flywheel::atSetpoint))
+    .andThen(new StartEndCommand(
+      superstructure::runFeeder, 
+      superstructure::stopFeeder, 
+      superstructure
+    )
+  ).andThen(new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain));
+
   SequentialCommandGroup turretCmd = 
     new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.HOMING))
     .andThen(new InstantCommand(turret::startHome, turret)) 
@@ -152,11 +162,11 @@ public class RobotContainer {
         drivetrain
       )
     );
-    flywheel.setDefaultCommand(new RunCommand(flywheel::setFlywheelIdle, flywheel));
+    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(0.7), flywheel));
     drivetrain.setInverted(true);
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
     frontIntake.setDefaultCommand(new RunCommand(() -> frontIntake.setMotorSetpoint(0.0), frontIntake));
-    turret.setDefaultCommand(turretCmd);//new RunCommand(turret::stop, turret));
+    turret.setDefaultCommand(new RunCommand(turret::stop, turret));
     // Configure the button bindings
     configureButtonBindings();
   }

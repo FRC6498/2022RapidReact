@@ -111,7 +111,9 @@ public class Turret extends SubsystemBase implements Loggable {
     NTHelper.setDouble("turret_position_deg", turretCurrentPosition.getDegrees());
     NTHelper.setDouble("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
     NTHelper.setDouble("turret_controller_error", bearing.getClosedLoopError());
-    NTHelper.setDouble("turret_controller_target_deg", nativeUnitsToRotation2d(bearing.getClosedLoopTarget()).getDegrees());
+    if (bearing.getControlMode() == ControlMode.Position) { 
+      NTHelper.setDouble("turret_controller_target_deg", nativeUnitsToRotation2d(bearing.getClosedLoopTarget()).getDegrees());
+    }
     switch (mode) {
       case FULL_AUTO:
       case MANUAL_FIRE:
