@@ -26,10 +26,10 @@ import frc.robot.lib.SortByDistance;
 import io.github.oblarg.oblog.Loggable;
 
 public class Vision extends SubsystemBase implements Loggable {
-  PhotonCamera CAM_limelight, CAM_lifecam;
+  PhotonCamera CAM_limelight;
   PhotonPipelineResult currentResult;
   boolean active = true;
-  NetworkTable NT_photonvision, NT_limelight, NT_lifecam;
+  NetworkTable NT_photonvision, NT_limelight;
   /** Creates a new VisionSystem. */
   public Vision() {
     CAM_limelight = new PhotonCamera(limelightCameraName);
@@ -37,16 +37,12 @@ public class Vision extends SubsystemBase implements Loggable {
     CAM_limelight.setPipelineIndex(upperHubPipelineID);
     CAM_limelight.setLED(VisionLEDMode.kOn);
 
-    CAM_lifecam = new PhotonCamera(lifecamCameraName);
-    CAM_lifecam.setDriverMode(true);
-
     NT_photonvision = NetworkTableInstance.getDefault().getTable("photonvision");
     // THIS IS THE COPROCESSOR NOT FOUND FIX
     NetworkTableEntry photonVersionEntry = NT_photonvision.getEntry("version");
     photonVersionEntry.setString("v2022.1.4");
 
     NT_limelight = NT_photonvision.getSubTable("limelight");
-    NT_lifecam = NT_photonvision.getSubTable("Microsoft_LifeCam_HD-3000");
   }
 
   public PhotonTrackedTarget getBestTarget()
