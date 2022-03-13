@@ -4,7 +4,7 @@
 
 package frc.robot.subsystems;
 
-import static frc.robot.Constants.DriveConstants.*;
+import frc.robot.Constants.DriveConstants;
 
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
@@ -20,9 +20,8 @@ import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.Compressor;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
@@ -42,7 +41,7 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   private final DifferentialDrive diffDrive;
   // 
   @Log
-  private final DoubleSolenoid  shifter; // gear shifter
+  private final Solenoid shifter; // gear shifter
   private final Compressor compressor;
   // imu
   private final AHRS gyro;
@@ -61,15 +60,15 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     );
   public Drivetrain()
   {
-    leftLeader = new WPI_TalonFX(leftLeaderCANId);
-    leftFollower = new WPI_TalonFX(leftFollowerCANId);
-    rightLeader = new WPI_TalonFX(rightLeaderCANId);
-    rightFollower = new WPI_TalonFX(rightFollowerCANId);
+    leftLeader = new WPI_TalonFX(DriveConstants.leftLeaderCANId);
+    leftFollower = new WPI_TalonFX(DriveConstants.leftFollowerCANId);
+    rightLeader = new WPI_TalonFX(DriveConstants.rightLeaderCANId);
+    rightFollower = new WPI_TalonFX(DriveConstants.rightFollowerCANId);
 
-    leftLeader.configOpenloopRamp(driveRampRate);
-    leftFollower.configOpenloopRamp(driveRampRate);
-    rightLeader.configOpenloopRamp(driveRampRate);
-    rightFollower.configOpenloopRamp(driveRampRate);
+    leftLeader.configOpenloopRamp(DriveConstants.driveRampRate);
+    leftFollower.configOpenloopRamp(DriveConstants.driveRampRate);
+    rightLeader.configOpenloopRamp(DriveConstants.driveRampRate);
+    rightFollower.configOpenloopRamp(DriveConstants.driveRampRate);
 
     leftFollower.follow(leftLeader);
     rightFollower.follow(rightLeader);
@@ -85,7 +84,7 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     kinematics = new DifferentialDriveKinematics(Constants.DriveConstants.trackWidthMeters);
 
     compressor = new Compressor(PneumaticsModuleType.CTREPCM);
-    shifter = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, shifterForwardChannelId, shifterReverseChannelId);
+    shifter = new Solenoid(PneumaticsModuleType.CTREPCM, DriveConstants.shifterChannelId);
 
     // engage brakes when neutral input
     setBrakeMode(NeutralMode.Brake);
@@ -98,6 +97,8 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     rightFollower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 199);
     leftFollower.setStatusFramePeriod(StatusFrame.Status_1_General, 201);
     rightFollower.setStatusFramePeriod(StatusFrame.Status_1_General, 202);
+
+    ramsete = new RamseteController();
   }
 
   // hardware methods
@@ -154,10 +155,10 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   public void toggleGear()
   {
     if (isHighGear) {
-      shifter.set(Value.kReverse);
+      shifter.set(false);
       isHighGear = false;
     } else {
-      shifter.set(Value.kForward);
+      shifter.set(true);
       isHighGear = true;
     }
   }
@@ -192,14 +193,14 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   public void periodic() {
     odometry.update(
       gyro.getRotation2d(), 
-      leftLeader.getSelectedSensorPosition() * driveDistancePerTickMeters, 
-      rightLeader.getSelectedSensorPosition() * driveDistancePerTickMeters
+      leftLeader.getSelectedSensorPosition() * DriveConstants.driveDistancePerTickMeters, 
+      rightLeader.getSelectedSensorPosition() * DriveConstants.driveDistancePerTickMeters
     );
     currentSpeedMetersPerSecond = velAvg.calculate(
       kinematics.toChassisSpeeds(
         new DifferentialDriveWheelSpeeds(
-          leftLeader.getSelectedSensorVelocity() * driveDistancePerTickMeters, 
-          rightLeader.getSelectedSensorVelocity() * driveDistancePerTickMeters
+          leftLeader.getSelectedSensorVelocity() * DriveConstants.driveDistancePerTickMeters, 
+          rightLeader.getSelectedSensorVelocity() * DriveConstants.driveDistancePerTickMeters
         )
       ).vxMetersPerSecond
     );

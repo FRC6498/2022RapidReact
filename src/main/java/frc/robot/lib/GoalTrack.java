@@ -74,7 +74,7 @@ public class GoalTrack {
      //   if (distance < Constants.kMaxTrackerDistance) {
             mObservedPositions.put(timestamp, new_observation);
             pruneByTime();
-            System.out.println(mObservedPositions);
+            //System.out.println(mObservedPositions);
             return true;
      //   } else {
      //       emptyUpdate();
@@ -117,12 +117,12 @@ public class GoalTrack {
             for (Map.Entry<Double, Translation2d> entry : mObservedPositions.entrySet()) {
                 x += entry.getValue().getX();
                 y += entry.getValue().getY();
-                System.out.print("(" + x + ", " + y + ") ");
+                //System.out.print("(" + x + ", " + y + ") ");
             }
             x /= mObservedPositions.size();
             y /= mObservedPositions.size();
             mSmoothedPosition = new Translation2d(x, y);
-            System.out.print("/n");
+            //System.out.print("\n");
         }
     }
 

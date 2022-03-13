@@ -147,22 +147,26 @@ public class Conveyor extends SubsystemBase {
     return sensorSmoother.calculate(sensorOutliers.calculate(rangeMilliMeters));
   }
 
+  private void updateOutput() {
+    if (running) {
+        if (reversed) {
+          if (driver.get() > 0) { // we are going forwards, reverse it
+            driver.set(-Constants.ConveyorConstants.conveyorNominalSpeed);
+          }
+        } else { 
+          if (driver.get() < 0) { // going backwards, forwards it
+            driver.set(Constants.ConveyorConstants.conveyorNominalSpeed);
+          }
+        }
+      }
+    }
+
   @Override
   public void periodic() {
     // are we empty
     empty = !isBallPresent();
     empty = false;
-    if (running) {
-      if (empty) {
-        driver.set(0);
-      } else {
-        if (reversed) {
-          driver.set(-Constants.ConveyorConstants.conveyorNominalSpeed);
-        } else {
-          driver.set(Constants.ConveyorConstants.conveyorNominalSpeed);
-        }
-      }
-    }
+    updateOutput();
   }
 }
 

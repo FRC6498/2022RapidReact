@@ -41,7 +41,7 @@ public final class Constants {
         public static final int rightFollowerCANId = 4;
         public static final int driveRampRate = 1;
         public static final int shifterForwardChannelId = 0;
-        public static final int shifterReverseChannelId = 1;
+        public static final int shifterChannelId = 1;
         public static final double kS = 0;
         public static final double kV = 0;
         public static final double kA = 0;
@@ -82,7 +82,7 @@ public final class Constants {
         public static final double center = 246;
         public static final double hardForwardAngle = 278.47-center;
         public static final double hardReverseAngle = 0-center;
-        public static final double dumpAngle = 0;
+        public static final double dumpAngle = -90;
     }
 
     public static final class ConveyorConstants {

@@ -141,8 +141,8 @@ public class Superstructure extends SubsystemBase {
   }
   
   private void setupShooterCommands() {
-    frontConveyorFull.whenActive(new InstantCommand(this::seesawToFront));
-    backConveyorFull.and(frontConveyorFull.negate()).whenActive(new InstantCommand(this::seesawToRear));
+    //frontConveyorFull.whenActive(new InstantCommand(this::seesawToFront));
+    //backConveyorFull.and(frontConveyorFull.negate()).whenActive(new InstantCommand(this::seesawToRear));
 
     // set speed
     turretEnabled.whileActiveOnce(new RunCommand(() -> { 

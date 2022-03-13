@@ -53,11 +53,13 @@ public class Vision extends SubsystemBase implements Loggable {
   public void setLED(VisionLEDMode ledMode)
   {
     CAM_limelight.setLED(ledMode);
-    System.out.println(CAM_limelight.getLEDMode().toString());
+    //System.out.println(CAM_limelight.getLEDMode().toString());
   }
 
   public boolean hasTargets() {
-    return currentResult.hasTargets();
+    if (currentResult != null) {
+      return currentResult.hasTargets();
+    } else { return false; }
   }
   /**
    * 
@@ -105,16 +107,20 @@ public class Vision extends SubsystemBase implements Loggable {
     return CAM_limelight.getLEDMode();
   }
 
+  public void updatePhotonResult() {
+    if (active) {
+      currentResult = CAM_limelight.getLatestResult();
+
+      if (currentResult.hasTargets() && currentResult != null) {
+        NTHelper.setDouble("target_distance", getTargetDistance(getBestTarget()));
+      } else {
+        NTHelper.setDouble("target_distance", -1.0);
+      }
+    }
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per robot loop; before triggered commands are scheduled and before any commands are run
-    if (active) {
-      currentResult = CAM_limelight.getLatestResult();
-    }
-    if (currentResult.hasTargets()) {
-      NTHelper.setDouble("target_distance", getTargetDistance(getBestTarget()));
-    } else {
-      NTHelper.setDouble("target_distance", -1.0);
-    }
   }
 }

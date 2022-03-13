@@ -50,7 +50,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   
   public Flywheel() {
     mode = ShooterMode.DISABLED;
-    flywheelTable.put(0, 0.8);
+    flywheelTable.put(0, 0.7);
     flywheelTable.put(Units.feetToMeters(9), 1.6);
     flywheelTable.put(Units.inchesToMeters(10*12+4), 1.8);
     neo = new CANSparkMax(rightFlywheelCANId, MotorType.kBrushless);
@@ -72,8 +72,6 @@ public class Flywheel extends SubsystemBase implements Loggable {
     pid.setI(0);
     pid.setD(0);
     pid.setFF(0);
-    flywheelActive = true;
-    flywheelSpeedSetpoint = 1.5;
   } 
   
   /**
@@ -82,7 +80,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
    */
   @Config
   public void setFlywheelSpeed(double velocity) {
-    flywheelSpeedSetpoint = -velocity * 60;
+    flywheelSpeedSetpoint = -velocity;
   }
 
   public void setFlywheelDistance(double distance) {
@@ -119,33 +117,13 @@ public class Flywheel extends SubsystemBase implements Loggable {
   @Override
   public void periodic() {
     // set setpoint based on mode
-    switch (mode) {
-      case DISABLED:
-        flywheelSpeedSetpoint = 0;
-        flywheelActive = false;
-        break;
-      case DUMP:
-        flywheelSpeedSetpoint = flywheelTable.getRPM(0);
-        flywheelActive = true;
-      break;
-      case FULL_AUTO:
-      flywheelSpeedSetpoint = flywheelTable.getRPM(distanceToHub);
-      default:
-        break;
-    }
-    flywheelActive = false;
+    
     if (flywheelActive) {
-      /*bangBangOutput = flywheelBangBang.calculate(getFlywheelSpeed(), flywheelSpeedSetpoint);
-      feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);
-      controllerOutput = bangBangOutput + 0.9 * feedforwardOutput;
-      neo.setVoltage(controllerOutput);*/
       if (mode == ShooterMode.FULL_AUTO || mode == ShooterMode.MANUAL_FIRE ) { pid.setReference(flywheelSpeedSetpoint, ControlType.kVelocity, 0, flywheelFeedforward.calculate(flywheelSpeedSetpoint), ArbFFUnits.kVoltage); }
       else { pid.setReference(0, ControlType.kDutyCycle);}
     } else {
       setFlywheelIdle();
     }
-
-    lastPosition = encoder.getPosition();
   }
 
 }

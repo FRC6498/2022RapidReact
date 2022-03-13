@@ -29,7 +29,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public class Turret extends SubsystemBase implements Loggable {
   WPI_TalonFX bearing;
   TalonFXConfiguration bearingConfig;
-  public boolean homed;
+  private boolean homed;
   @Log.Graph(name = "Yaw Angle (deg.)")
   double visionDegrees;
   @Log.Graph
@@ -48,8 +48,8 @@ public class Turret extends SubsystemBase implements Loggable {
     homed = false;
     bearing = new WPI_TalonFX(TurretConstants.yawMotorCANId);
     bearingConfig = new TalonFXConfiguration();
-    bearingConfig.peakOutputForward = 0.2;
-    bearingConfig.peakOutputReverse = -0.2;
+    bearingConfig.peakOutputForward = 0.5;
+    bearingConfig.peakOutputReverse = -0.5;
     bearingConfig.slot0.kP = TurretConstants.kP;
     bearingConfig.slot0.kI = 0;
     bearingConfig.slot0.kD = TurretConstants.kD;
@@ -117,6 +117,10 @@ public class Turret extends SubsystemBase implements Loggable {
     // counter clockwise, this is positive if motor is uninverted
     openLoop(-0.1);
     bearing.overrideSoftLimitsEnable(false);
+  }
+
+  public boolean getHomed() {
+    return homed;
   }
 
   public void home() {

@@ -14,6 +14,7 @@ import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
@@ -21,6 +22,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public class Climber extends SubsystemBase implements Loggable{
   /** Creates a new Climber. */
   WPI_TalonFX climberMotor;
+  Solenoid pinPull;
   TalonFXConfiguration config;
   double climberMotorSetpoint;
   public boolean isDown = false;

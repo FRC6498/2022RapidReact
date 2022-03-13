@@ -45,6 +45,7 @@ public class Robot extends TimedRobot {
     setNetworkTablesFlushEnabled(true);
     m_robotContainer.drivetrain.resetSensors();
     addPeriodic(() -> m_robotContainer.superstructure.updateVision(), 0.01);
+    addPeriodic(() -> m_robotContainer.vision.updatePhotonResult(), 0.01);
     //DataLogManager.start();
   }
 
