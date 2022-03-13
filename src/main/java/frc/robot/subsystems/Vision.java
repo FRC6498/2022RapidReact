@@ -20,7 +20,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.lib.NTHelper;
 import frc.robot.lib.SortByDistance;

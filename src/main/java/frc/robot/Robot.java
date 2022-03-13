@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import org.photonvision.common.hardware.VisionLEDMode;
-
 import edu.wpi. first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
 //import edu.wpi.first.wpilibj.DataLogManager;

@@ -14,12 +14,7 @@ import com.revrobotics.SparkMaxPIDController;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import frc.robot.lib.ShotMap;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
