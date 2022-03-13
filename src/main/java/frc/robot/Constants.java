@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -28,9 +27,6 @@ public final class Constants {
 
     public static final class ClimberConstants{
         public static final int climberMotorCANId = 7;
-        public static final double climber_kS = 0.0;
-        public static final double climber_kG = 0.0;
-        public static final double climber_kV = 0.0;
         public static final double climber_kP = 0.1;
         public static final double climber_kD = 0.0;
     }
@@ -68,19 +64,18 @@ public final class Constants {
     public static final class TurretConstants {
         public static final int yawMotorCANId = 12;
         public static final double turretPositionToleranceDegrees = 1;
-        public static final double kP = 0.1;
-        public static final double kD = 0.11797;
-        public static final double ticksPerDegree = 297.7;
-        public static final double turretTicksPerRotation = 2048.0*(40.0/10.0)*(40.0/20.0)*(314.0/40.0);
-        public static final Rotation2d offset = Rotation2d.fromDegrees(13.30);
+        public static final double kP = 0.25;
+        public static final double kI = 0.0005;
+        public static final double kD = 0;
+        public static final double turretTicksPerRotation = 2048*(40/10)*(40/20)*(314.0/40.0);
         public static final double turretSoftLimitOffset = 20;
         public static final double turretHomingVelocityStopThreshold = 0.1;
         public static final double kS = 0.89326;
         public static final double kV =  0.020207;
         public static final double kA =  0.00072803;
         public static final double turretTicksPerDegree = turretTicksPerRotation / 360;//254.7;
-        public static final double center = 246;
-        public static final double hardForwardAngle = 278.47-center;
+        public static final double center = 203.31;
+        public static final double hardForwardAngle = 231.236;
         public static final double hardReverseAngle = 0-center;
         public static final double dumpAngle = -90;
     }

@@ -19,7 +19,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
-import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.SPI.Port;
@@ -42,7 +41,6 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   // 
   @Log
   private final Solenoid shifter; // gear shifter
-  private final Compressor compressor;
   // imu
   private final AHRS gyro;
   
@@ -83,7 +81,6 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     odometry = new DifferentialDriveOdometry(gyro.getRotation2d());
     kinematics = new DifferentialDriveKinematics(Constants.DriveConstants.trackWidthMeters);
 
-    compressor = new Compressor(PneumaticsModuleType.CTREPCM);
     shifter = new Solenoid(PneumaticsModuleType.CTREPCM, DriveConstants.shifterChannelId);
 
     // engage brakes when neutral input

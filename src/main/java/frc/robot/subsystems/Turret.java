@@ -30,6 +30,7 @@ public class Turret extends SubsystemBase implements Loggable {
   WPI_TalonFX bearing;
   TalonFXConfiguration bearingConfig;
   private boolean homed;
+  private boolean isHoming;
   @Log.Graph(name = "Yaw Angle (deg.)")
   double visionDegrees;
   @Log.Graph
@@ -39,24 +40,27 @@ public class Turret extends SubsystemBase implements Loggable {
   ShooterMode mode;
   private Rotation2d turretPositionSetpoint;
   private Rotation2d turretCurrentPosition;
-  private double turretRotationSetpointTicks=0;
 
   public Turret() {
     mode = ShooterMode.DISABLED;
     visionDegrees = 0.0;
     pidOutput = 0.0;
     homed = false;
+    isHoming = false;
     bearing = new WPI_TalonFX(TurretConstants.yawMotorCANId);
     bearingConfig = new TalonFXConfiguration();
-    bearingConfig.peakOutputForward = 0.5;
-    bearingConfig.peakOutputReverse = -0.5;
+    bearingConfig.peakOutputForward = 0.3;
+    bearingConfig.peakOutputReverse = -0.3;
     bearingConfig.slot0.kP = TurretConstants.kP;
-    bearingConfig.slot0.kI = 0;
+    bearingConfig.slot0.kI = TurretConstants.kI;
     bearingConfig.slot0.kD = TurretConstants.kD;
     bearingConfig.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
     bearingConfig.forwardLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
     bearingConfig.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
     bearingConfig.reverseLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
+    bearingConfig.slot0.allowableClosedloopError = 80;
+    bearingConfig.slot0.integralZone = 1023/bearingConfig.slot0.kP;
+    bearingConfig.closedloopRamp = 0.1;
     bearing.configAllSettings(bearingConfig);
     bearing.setNeutralMode(NeutralMode.Brake);
     bearing.setInverted(TalonFXInvertType.CounterClockwise);
@@ -72,12 +76,12 @@ public class Turret extends SubsystemBase implements Loggable {
 
   private double rotation2dToNativeUnits(Rotation2d rotation) {
     double degrees = rotation.getDegrees();
-    return degrees * TurretConstants.ticksPerDegree;
+    return degrees * TurretConstants.turretTicksPerDegree;
   }
 
   private Rotation2d nativeUnitsToRotation2d(double units) {
     //254.7 ticks / 1 degree
-    return Rotation2d.fromDegrees(units / TurretConstants.ticksPerDegree);
+    return Rotation2d.fromDegrees(units / TurretConstants.turretTicksPerDegree);
   }
 
   public void stop() {
@@ -95,15 +99,18 @@ public class Turret extends SubsystemBase implements Loggable {
 
   @Override
   public void periodic() {
+    getCurrentPosition();
     NTHelper.setString("turret_shooter_mode", mode.toString());
     NTHelper.setDouble("turret_position_deg", turretCurrentPosition.getDegrees());
     NTHelper.setDouble("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
-    NTHelper.setDouble("turret_encoder_value", bearing.getSelectedSensorPosition());
-    NTHelper.setDouble("turret_encoder_target", turretRotationSetpointTicks);
+    NTHelper.setBoolean("turret_at_setpoint", atSetpoint());
     /*NTHelper.setDouble("turret_controller_error", bearing.getClosedLoopError());
     if (bearing.getControlMode() == ControlMode.Position) { 
       NTHelper.setDouble("turret_controller_target_deg", nativeUnitsToRotation2d(bearing.getClosedLoopTarget()).getDegrees());
     }*/
+    if (!homed && !isHoming) {
+      startHome();
+    }
     if (!homed) {
       home();
     }
@@ -114,6 +121,7 @@ public class Turret extends SubsystemBase implements Loggable {
 
   public void startHome() {
     homed = false;
+    isHoming = true;
     // counter clockwise, this is positive if motor is uninverted
     openLoop(-0.1);
     bearing.overrideSoftLimitsEnable(false);

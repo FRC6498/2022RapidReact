@@ -102,16 +102,7 @@
                 0.3764706254005432,
                 1.0
               ],
-              "id": "NT:/team6498/turret_encoder_value"
-            },
-            {
-              "color": [
-                0.8549020290374756,
-                0.545098066329956,
-                0.7647059559822083,
-                1.0
-              ],
-              "id": "NT:/team6498/turret_encoder_target"
+              "id": "NT:/team6498/turret_at_setpoint"
             }
           ]
         }
