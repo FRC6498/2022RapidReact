@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
-import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 /**
  * THIS SUBSYSTEM IS WIP AND CURRENTLY UNUSED BY THE MAIN ROBOT CODE. IT WILL REMAIN SO UNTIL IT IS FINISHED.<p>
@@ -26,7 +25,7 @@ import io.github.oblarg.oblog.annotations.Log;
  * Position is measured in Degrees, which is obtained from encoder ticks as soon as position is read off.
  */
 // turret clockwise = forward 
-public class Turret extends SubsystemBase implements Loggable {
+public class Turret extends SubsystemBase {
   WPI_TalonFX bearing;
   TalonFXConfiguration bearingConfig;
   private boolean homed;

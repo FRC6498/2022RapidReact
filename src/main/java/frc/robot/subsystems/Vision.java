@@ -23,9 +23,8 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.lib.NTHelper;
 import frc.robot.lib.SortByDistance;
-import io.github.oblarg.oblog.Loggable;
 
-public class Vision extends SubsystemBase implements Loggable {
+public class Vision extends SubsystemBase {
   PhotonCamera CAM_limelight;
   PhotonPipelineResult currentResult;
   boolean active = true;
@@ -61,6 +60,7 @@ public class Vision extends SubsystemBase implements Loggable {
       return currentResult.hasTargets();
     } else { return false; }
   }
+
   /**
    * 
    * @return Distance to the current pipeline's best target, for input to a PID controller (for shooting)
