@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi. first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -39,6 +40,7 @@ public class Robot extends TimedRobot {
     //addPeriodic(() -> m_robotContainer.superstructure.getBallColors(), 0.5);
     
     Logger.configureLoggingAndConfig(m_robotContainer, false);
+    DataLogManager.logNetworkTables(false);
     frontCamera = CameraServer.startAutomaticCapture();
     frontCamera.setResolution(320, 240);
     setNetworkTablesFlushEnabled(true);
