@@ -235,7 +235,7 @@ public class RobotContainer {
     operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
     operatorCmd.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
     operatorCmd.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP)));
-
+    operatorCmd.rightBumper().whenActive(new InstantCommand(superstructure::recordShot));
   }
 
 

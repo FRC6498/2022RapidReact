@@ -15,6 +15,9 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.DoubleLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -74,7 +77,7 @@ public class Superstructure extends SubsystemBase {
   //TODO: Log conveyor/intake states in superstructure separately to avoid collisions
   //TODO: Create Driver Dashboard
   //TODO: make sure back intake/conveyor operates normally
-  //TODO: program merger
+  //TODO: code the seesaw
   ShooterMode mode;
   @Config
   double flywheelRPM = 0.0;
@@ -85,6 +88,8 @@ public class Superstructure extends SubsystemBase {
   WPI_TalonFX feederB;
   DoubleSolenoid merger;
   GoalTrack goalTrack;
+  DataLog log;
+  DoubleLogEntry distanceLog, speedLog;
 
   @Log.BooleanBox(name = "Active Conveyor", colorWhenTrue = "#d6e810", colorWhenFalse = "#1861d6")
   boolean seesawFront = true;
@@ -108,12 +113,17 @@ public class Superstructure extends SubsystemBase {
     this.drivetrain = drivetrain;
     this.shooterModeUpdater = shooterModeUpdater;
     
+    log = DataLogManager.getLog();
+    speedLog = new DoubleLogEntry(log, "flywheelSpeedRPM");
+    distanceLog = new DoubleLogEntry(log, "cameraDistanceMeters");
+
     goalTrack = new GoalTrack(0, new Translation2d());
     //colorSensor = new PicoColorSensor();
     mode = ShooterMode.DISABLED;
     feederA = new WPI_TalonFX(10);
     feederA.setInverted(true);
     feederB = new WPI_TalonFX(11);
+
 
     merger = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.ConveyorConstants.seesawForwardPCMId, Constants.ConveyorConstants.seesawReversePCMId);
 
@@ -132,11 +142,18 @@ public class Superstructure extends SubsystemBase {
     flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
     robotLinedUp = new Trigger(() -> vision.getBestTarget().getYaw() < 1);    
 
-    setupConveyorCommands();
     setupShooterCommands();
   }
 
-  private void setupConveyorCommands() {
+  public void recordShot() {
+    if (vision.hasTargets()) {
+      distanceLog.append(vision.getTargetDistance(vision.getBestTarget()));
+      speedLog.append(flywheel.getFlywheelSpeed());
+    } else {
+      distanceLog.append(-1, 0);
+      speedLog.append(-1, 0);
+      DataLogManager.log("No PhotonVision Targets Found");
+    }
   }
   
   private void setupShooterCommands() {
