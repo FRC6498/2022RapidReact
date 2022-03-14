@@ -94,12 +94,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   // input -> rpm conversion rate is approx. 1 : 3000
 
   public void setFlywheelIdle() {
-    neo.set(0.0);
-  }
-
-  @Config.ToggleButton
-  public void setFlywheelActive(boolean active) {
-    flywheelActive = active;
+    pid.setReference(0, ControlType.kDutyCycle);
   }
 
   public boolean getActive() {
@@ -120,7 +115,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     
     if (flywheelActive) {
       if (mode == ShooterMode.FULL_AUTO || mode == ShooterMode.MANUAL_FIRE ) { pid.setReference(flywheelSpeedSetpoint, ControlType.kVelocity, 0, flywheelFeedforward.calculate(flywheelSpeedSetpoint), ArbFFUnits.kVoltage); }
-      else { pid.setReference(0, ControlType.kDutyCycle);}
+      else { setFlywheelIdle();}
     } else {
       setFlywheelIdle();
     }
