@@ -13,9 +13,7 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.lib.ShotMap;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
@@ -46,13 +44,9 @@ public class Flywheel extends SubsystemBase implements Loggable {
   double distanceToHub = 0.0;
   @Log.ToString(name = "Flywheel Mode", tabName = "SmartDashboard")
   private ShooterMode mode;
-  ShotMap flywheelTable = new ShotMap();
   
   public Flywheel() {
     mode = ShooterMode.DISABLED;
-    flywheelTable.put(0, 0.7);
-    flywheelTable.put(Units.feetToMeters(9), 1.6);
-    flywheelTable.put(Units.inchesToMeters(10*12+4), 1.8);
     neo = new CANSparkMax(rightFlywheelCANId, MotorType.kBrushless);
     encoder = neo.getEncoder();
     //flywheelBangBang = new BangBangController(Constants.ShooterConstants.flywheelSetpointToleranceRPM);

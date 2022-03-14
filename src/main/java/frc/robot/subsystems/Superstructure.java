@@ -74,8 +74,11 @@ public class Superstructure extends SubsystemBase {
   // Flywheel
   public Trigger flywheelEnabled;
   public Trigger turretEnabled;
-  //TODO: Log conveyor/intake states in superstructure separately to avoid collisions
   //TODO: Create Driver Dashboard
+  // active intake
+  // camera
+  // turret lined up
+  // flywheel at speed
   //TODO: make sure back intake/conveyor operates normally
   //TODO: code the seesaw
   ShooterMode mode;
