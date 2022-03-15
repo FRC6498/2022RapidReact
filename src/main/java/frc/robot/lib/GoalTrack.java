@@ -63,18 +63,18 @@ public class GoalTrack {
        //     return false;
        // }
       /* if(new_observation==null) {
-           System.out.println("new ob null");
+           //System.out.println("new ob null");
            return false;
        }
        if(mSmoothedPosition==null) {
-           System.out.println("smooth null");
+           //System.out.println("smooth null");
            return false;
        }*/
       //  double distance = mSmoothedPosition.inverse().translateBy(new_observation).norm(); //I believe this is distance apart from previous targets (won't count if not close enough)
      //   if (distance < Constants.kMaxTrackerDistance) {
             mObservedPositions.put(timestamp, new_observation);
             pruneByTime();
-            //System.out.println(mObservedPositions);
+           // System.out.println(mObservedPositions);
             return true;
      //   } else {
      //       emptyUpdate();
@@ -117,16 +117,16 @@ public class GoalTrack {
             for (Map.Entry<Double, Translation2d> entry : mObservedPositions.entrySet()) {
                 x += entry.getValue().getX();
                 y += entry.getValue().getY();
-                //System.out.print("(" + x + ", " + y + ") ");
+            
             }
             x /= mObservedPositions.size();
             y /= mObservedPositions.size();
             mSmoothedPosition = new Translation2d(x, y);
-            //System.out.print("\n");
         }
     }
 
     public Translation2d getSmoothedPosition() {
+        //System.out.println("(" + mSmoothedPosition.getX() + ", " + mSmoothedPosition.getY() + ")\n");
         return mSmoothedPosition;
     }
 

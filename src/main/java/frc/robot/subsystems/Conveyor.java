@@ -33,7 +33,7 @@ public class Conveyor extends SubsystemBase {
   private final MedianFilter sensorOutliers;
   //private final NetworkTableEntry sensorDistanceEntry;
   private Color cargoColor;
-  public boolean running;
+  public boolean running = true;
   boolean reversed;
   //@Log
   public boolean empty;
@@ -154,7 +154,7 @@ public class Conveyor extends SubsystemBase {
             driver.set(-Constants.ConveyorConstants.conveyorNominalSpeed);
           }
         } else { 
-          if (driver.get() < 0) { // going backwards, forwards it
+          if (driver.get() <= 0) { // going backwards, forwards it
             driver.set(Constants.ConveyorConstants.conveyorNominalSpeed);
           }
         }

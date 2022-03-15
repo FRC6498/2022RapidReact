@@ -57,8 +57,8 @@ public final class Constants {
         public static final double flywheelkA = 0.018595;
         public static final double flywheelVelocityRampRateSeconds = 0.5;
         public static final double flywheelSetpointToleranceRPM = 10;
-        public static final double flywheelDumpRPM = 0.7;
-        public static final double flywheelHighRPM = 1.25;
+        public static final double flywheelDumpRPM = 500;
+        public static final double flywheelHighRPM = 4000;
     }
 
     public static final class TurretConstants {
@@ -77,7 +77,7 @@ public final class Constants {
         public static final double center = 203.31;
         public static final double hardForwardAngle = 231.236;
         public static final double hardReverseAngle = 0-center;
-        public static final double dumpAngle = -90;
+        public static final double dumpAngle = 0;
     }
 
     public static final class ConveyorConstants {

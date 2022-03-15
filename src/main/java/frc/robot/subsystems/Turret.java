@@ -26,24 +26,16 @@ import io.github.oblarg.oblog.annotations.Log;
  */
 // turret clockwise = forward 
 public class Turret extends SubsystemBase {
-  WPI_TalonFX bearing;
-  TalonFXConfiguration bearingConfig;
+  private WPI_TalonFX bearing;
+  private TalonFXConfiguration bearingConfig;
   private boolean homed;
   private boolean isHoming;
-  @Log.Graph(name = "Yaw Angle (deg.)")
-  double visionDegrees;
-  @Log.Graph
-  double pidOutput;
-  SimpleMotorFeedforward turretFeedforward;
-  @Log.ToString(name = "Turret Mode", tabName = "SmartDashboard")
-  ShooterMode mode;
+  private ShooterMode mode;
   private Rotation2d turretPositionSetpoint;
   private Rotation2d turretCurrentPosition;
 
   public Turret() {
     mode = ShooterMode.DISABLED;
-    visionDegrees = 0.0;
-    pidOutput = 0.0;
     homed = false;
     isHoming = false;
     bearing = new WPI_TalonFX(TurretConstants.yawMotorCANId);
@@ -57,20 +49,16 @@ public class Turret extends SubsystemBase {
     bearingConfig.forwardLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
     bearingConfig.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
     bearingConfig.reverseLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
-    bearingConfig.slot0.allowableClosedloopError = 80;
+    // set position tolerance to 200 ticks (1 deg ~ 359)
+    bearingConfig.slot0.allowableClosedloopError = 200;
     bearingConfig.slot0.integralZone = 1023/bearingConfig.slot0.kP;
     bearingConfig.closedloopRamp = 0.1;
     bearing.configAllSettings(bearingConfig);
     bearing.setNeutralMode(NeutralMode.Brake);
     bearing.setInverted(TalonFXInvertType.CounterClockwise);
-    // set position tolerance to 1 degree
-    turretFeedforward = new SimpleMotorFeedforward(TurretConstants.kS, TurretConstants.kV, TurretConstants.kA);
+    
     turretCurrentPosition = Rotation2d.fromDegrees(0);
     turretPositionSetpoint = Rotation2d.fromDegrees(0);
-  }
-
-  public void setSetpointDegrees(double setpoint) {
-    visionDegrees = setpoint;
   }
 
   private double rotation2dToNativeUnits(Rotation2d rotation) {
@@ -122,7 +110,7 @@ public class Turret extends SubsystemBase {
     homed = false;
     isHoming = true;
     // counter clockwise, this is positive if motor is uninverted
-    openLoop(-0.1);
+    openLoop(0.15);
     bearing.overrideSoftLimitsEnable(false);
   }
 
@@ -193,6 +181,7 @@ public class Turret extends SubsystemBase {
   }
 
   public void setPositionSetpoint(Rotation2d setpoint) {
+    //System.out.println(setpoint.getDegrees());
     turretPositionSetpoint = setpoint;
     bearing.set(ControlMode.Position, rotation2dToNativeUnits(setpoint));
   }

@@ -34,7 +34,7 @@ public class Vision extends SubsystemBase {
     CAM_limelight = new PhotonCamera(limelightCameraName);
     CAM_limelight.setDriverMode(false);
     CAM_limelight.setPipelineIndex(upperHubPipelineID);
-    CAM_limelight.setLED(VisionLEDMode.kOff);
+    //CAM_limelight
 
     NT_photonvision = NetworkTableInstance.getDefault().getTable("photonvision");
     // THIS IS THE COPROCESSOR NOT FOUND FIX
@@ -62,6 +62,7 @@ public class Vision extends SubsystemBase {
   }
 
   /**
+   * 
    * 
    * @return Distance to the current pipeline's best target, for input to a PID controller (for shooting)
    */

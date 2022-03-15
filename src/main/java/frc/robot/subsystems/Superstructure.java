@@ -127,11 +127,15 @@ public class Superstructure extends SubsystemBase {
     feederA = new WPI_TalonFX(10);
     feederA.setInverted(true);
     feederB = new WPI_TalonFX(11);
+    feederA.enableVoltageCompensation(true);
+    feederA.configVoltageCompSaturation(12);
+    feederB.enableVoltageCompensation(true);
+    feederB.configVoltageCompSaturation(12);
 
 
     merger = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.ConveyorConstants.seesawForwardPCMId, Constants.ConveyorConstants.seesawReversePCMId);
 
-    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(NTHelper.getDouble("flywheel_speed_target")), flywheel));
+    //flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(NTHelper.getDouble("flywheel_speed_target")), flywheel));
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
     turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
     backConveyor.setDefaultCommand(new RunCommand(backConveyor::start, backConveyor));
@@ -144,7 +148,8 @@ public class Superstructure extends SubsystemBase {
     flywheelEnabled = new Trigger(flywheel::getActive);
     turretEnabled = new Trigger(turret::getActive);
     flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
-    robotLinedUp = new Trigger(() -> vision.getBestTarget().getYaw() < 1);    
+    robotLinedUp = new Trigger(() -> vision.getBestTarget().getYaw() < 1);
+    
 
     setupShooterCommands();
     setShooterMode(ShooterMode.DISABLED);
@@ -166,18 +171,7 @@ public class Superstructure extends SubsystemBase {
     //backConveyorFull.and(frontConveyorFull.negate()).whenActive(new InstantCommand(this::seesawToRear));
 
     // set speed
-    turretEnabled.whileActiveOnce(new RunCommand(() -> { 
-      if (vision.hasTargets()) 
-      { 
-        flywheel.setFlywheelDistance(vision.getTargetDistance(vision.getBestTarget()));
-        turret.setSetpointDegrees(vision.getClosestTarget().getYaw());
-      } 
-    }, flywheel, turret));
-    flywheelEnabled.and(turretEnabled.negate()).whileActiveOnce(new RunCommand(() -> {
-      if (vision.hasTargets()) {
-        flywheel.setFlywheelDistance(vision.getTargetDistance(vision.getBestTarget()));
-      }
-    }, flywheel));
+   
 
     //frontConveyorFull.whileActiveOnce(new StartEndCommand(this::runFeeder, this::stopFeeder, this));
     //vision.setLED(VisionLEDMode.kOff);
@@ -297,12 +291,20 @@ public class Superstructure extends SubsystemBase {
 
   @Override
   public void periodic() {
+    
     Translation2d smoothedPos = goalTrack.getSmoothedPosition();
+    // ALWAYS MAKE A NEW VARIABLE, OTHERWISE IT WILL JITTER DANGEROUSLY!!!
+    Rotation2d smoothedRotation = new Rotation2d(smoothedPos.getX(), smoothedPos.getY());
+    NTHelper.setDouble("smoothed_pos_angle", smoothedRotation.getDegrees());
     //NTHelper.setDouble("smooth_pos_deg", value);
     switch (mode) {
       case MANUAL_FIRE:
       case FULL_AUTO:
-        turret.setPositionSetpoint(new Rotation2d(smoothedPos.getX(), smoothedPos.getY()).minus(drivetrain.getGyroAngle()));
+          if (vision.hasTargets()) {
+            turret.setPositionSetpoint(smoothedRotation.minus(drivetrain.getGyroAngle()));
+          } else {
+            turret.setPositionSetpoint(turret.getCurrentPosition());
+          }
         break;
       case DUMP:
       case DISABLED:
