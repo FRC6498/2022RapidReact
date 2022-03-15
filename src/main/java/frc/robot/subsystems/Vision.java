@@ -34,7 +34,7 @@ public class Vision extends SubsystemBase {
     CAM_limelight = new PhotonCamera(limelightCameraName);
     CAM_limelight.setDriverMode(false);
     CAM_limelight.setPipelineIndex(upperHubPipelineID);
-    CAM_limelight.setLED(VisionLEDMode.kOn);
+    CAM_limelight.setLED(VisionLEDMode.kOff);
 
     NT_photonvision = NetworkTableInstance.getDefault().getTable("photonvision");
     // THIS IS THE COPROCESSOR NOT FOUND FIX

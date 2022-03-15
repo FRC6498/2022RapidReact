@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.lib.GoalTrack;
+import frc.robot.lib.NTHelper;
 //import frc.robot.lib.PicoColorSensor;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -130,7 +131,7 @@ public class Superstructure extends SubsystemBase {
 
     merger = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.ConveyorConstants.seesawForwardPCMId, Constants.ConveyorConstants.seesawReversePCMId);
 
-    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(0.0), flywheel));
+    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(NTHelper.getDouble("flywheel_speed_target")), flywheel));
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
     turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
     backConveyor.setDefaultCommand(new RunCommand(backConveyor::start, backConveyor));
@@ -146,6 +147,7 @@ public class Superstructure extends SubsystemBase {
     robotLinedUp = new Trigger(() -> vision.getBestTarget().getYaw() < 1);    
 
     setupShooterCommands();
+    setShooterMode(ShooterMode.DISABLED);
   }
 
   public void recordShot() {

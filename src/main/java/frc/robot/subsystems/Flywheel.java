@@ -14,6 +14,7 @@ import com.revrobotics.SparkMaxPIDController;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
@@ -31,7 +32,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   private final SimpleMotorFeedforward flywheelFeedforward;
   private boolean flywheelActive;
   
-  public double flywheelSpeedSetpoint;
+  public double flywheelSpeedSetpoint = 0.0;
   //@Log
   //private double bangBangOutput;
   @Log
@@ -72,7 +73,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
    * 
    * @param velocity Desired velocity in rpm
    */
-  @Config
+  //@Config
   public void setFlywheelSpeed(double velocity) {
     flywheelSpeedSetpoint = -velocity;
   }
@@ -92,7 +93,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   }
 
   public boolean getActive() {
-    return flywheelActive;
+    return mode != ShooterMode.DISABLED || mode != ShooterMode.HOMING;
   }
 
   public boolean atSetpoint() {
@@ -101,15 +102,15 @@ public class Flywheel extends SubsystemBase implements Loggable {
 
   public void setShooterMode(ShooterMode mode) {
     this.mode = mode;
+    
   }
   
   @Override
   public void periodic() {
-    // set setpoint based on mode
-    
+    NTHelper.setDouble("flywheel_speed_target", flywheelSpeedSetpoint);
+    NTHelper.setDouble("flywheel_speed_actual", getFlywheelSpeed());
     if (flywheelActive) {
-      if (mode == ShooterMode.FULL_AUTO || mode == ShooterMode.MANUAL_FIRE ) { pid.setReference(flywheelSpeedSetpoint, ControlType.kVelocity, 0, flywheelFeedforward.calculate(flywheelSpeedSetpoint), ArbFFUnits.kVoltage); }
-      else { setFlywheelIdle();}
+      pid.setReference(flywheelSpeedSetpoint, ControlType.kVelocity, 0, flywheelFeedforward.calculate(flywheelSpeedSetpoint), ArbFFUnits.kVoltage);
     } else {
       setFlywheelIdle();
     }
