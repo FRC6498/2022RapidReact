@@ -181,7 +181,7 @@ public class Drivetrain extends SubsystemBase {
 
   @Log(name = "Yaw (deg.)")
   public double getGyroAngleDegrees() {
-    double deg = gyro.getRotation2d().getDegrees() % 360;
+    double deg = getGyroAngle().getDegrees() % 360;
     return deg;
   }
 
