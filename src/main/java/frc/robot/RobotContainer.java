@@ -10,8 +10,10 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -91,6 +93,8 @@ public class RobotContainer {
   POVButton op_right = new POVButton(operator, 90);
   JoystickButton driver_lBumper = new JoystickButton(driver, Button.kLeftBumper.value);
   public boolean feederRunning;
+  Trigger turretLocked = new Trigger(turret::atSetpoint);
+  Trigger flywheelReady = new Trigger(flywheel::atSetpoint);
 
   SequentialCommandGroup lowAuto = new ParallelCommandGroup(
     // flywheel ALWAYS spinning
@@ -179,7 +183,37 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    // driver
     driverCmd.rightBumper().whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
+    driverCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP), superstructure));
+    driverCmd.b().whileActiveOnce(
+      new InstantCommand(frontConveyor::setReversed)
+      .andThen(new WaitCommand(0.5))
+      .andThen(new StartEndCommand(
+        superstructure::runFeeder, 
+        superstructure::stopFeeder, 
+        superstructure
+        ).alongWith(new InstantCommand(frontConveyor::setForward, frontConveyor))
+      )
+    );
+    //driverCmd.pov.up().whenActive(new InstantCommand(() -> flywheel.setFlywheelSpeed(flywheel.getFlywheelSpeed()+10), flywheel));
+    //driverCmd.pov.down().whenActive(new InstantCommand(() -> flywheel.setFlywheelSpeed(flywheel.getFlywheelSpeed()-10), flywheel));
+    driverCmd.rightStick().debounce(0.5).whenActive(
+      new InstantCommand(climber::releaseClimber, climber)
+      .andThen(new WaitCommand(0.5))
+      .andThen(() -> climber.setEnabled(true))
+    );
+    // operator
+    operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
+    operatorCmd.b().whileActiveOnce(
+      new InstantCommand(frontConveyor::setReversed)
+      .andThen(new WaitCommand(0.5))
+      .andThen(new StartEndCommand(
+        superstructure::runFeeder, 
+        superstructure::stopFeeder, 
+        superstructure
+      ).alongWith(new InstantCommand(frontConveyor::setForward, frontConveyor))
+    ));
     operatorCmd.pov.up().whenActive(new ConditionalCommand(
       new InstantCommand(frontIntake::raiseIntake, frontIntake), // intake down, so raise it
       new InstantCommand(frontIntake::lowerIntake, frontIntake), // intake up, so lower it
@@ -215,24 +249,19 @@ public class RobotContainer {
     ));
     //driver_a.whenActive(new InstantCommand(climber::toggleClimber, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
-    driverCmd.b().whileActiveOnce(
-      new InstantCommand(frontConveyor::setReversed)
-      .andThen(new WaitCommand(0.5))
-      .andThen(new StartEndCommand(
-        superstructure::runFeeder, 
-        superstructure::stopFeeder, 
-        superstructure
-        ).alongWith(new InstantCommand(frontConveyor::setForward, frontConveyor))
-      )
-    );
-    //driverCmd.b().whileActiveOnce(new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure));
     operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
     operatorCmd.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
     operatorCmd.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP)));
     operatorCmd.rightBumper().whenActive(new InstantCommand(superstructure::recordShot));
 
-    driverCmd.pov.up().whenActive(new InstantCommand(() -> flywheel.setFlywheelSpeed(flywheel.getFlywheelSpeed()+10), flywheel));
-    driverCmd.pov.down().whenActive(new InstantCommand(() -> flywheel.setFlywheelSpeed(flywheel.getFlywheelSpeed()-10), flywheel));
+    
+    turretLocked.and(flywheelReady).whileActiveOnce(
+      new StartEndCommand(
+        () -> operatorCmd.setRumble(RumbleType.kLeftRumble, 0.5),
+        () -> operatorCmd.setRumble(RumbleType.kRightRumble, 0.5), 
+        vision // vision never has any commands, so this is effectively a no-op
+      )
+    );
   }
 
 

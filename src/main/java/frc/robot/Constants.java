@@ -47,7 +47,7 @@ public final class Constants {
     }
 
     public static final class ShooterConstants {        
-        public static final int rightFlywheelCANId = 14;
+        public static final int flywheelCANId = 14;
         public static final int feederACANId = 10;
         public static final int feederBCANId = 11;     
         public static final double flywheelkP = 0.1782;

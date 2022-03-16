@@ -14,6 +14,7 @@ import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import io.github.oblarg.oblog.annotations.Log;
@@ -58,13 +59,26 @@ public class Climber extends SubsystemBase {
     this.input = input;
   }
 
+  public void releaseClimber() {
+    lock.set(false);
+    climberMotor.setNeutralMode(NeutralMode.Coast);
+    climberMotor.neutralOutput();
+  }
+
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+    if (enabled) {
+      climberMotor.setNeutralMode(NeutralMode.Brake);
+    }
+  }
+
   @Override
   public void periodic() {
     if (enabled) {
       climberMotor.set(ControlMode.PercentOutput, input);
     } else {
       if (climberMotor.get() > 0) {
-        climberMotor.set(0);
+        climberMotor.neutralOutput();
       }
     }
     

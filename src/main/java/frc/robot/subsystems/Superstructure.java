@@ -135,7 +135,7 @@ public class Superstructure extends SubsystemBase {
 
     merger = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.ConveyorConstants.seesawForwardPCMId, Constants.ConveyorConstants.seesawReversePCMId);
 
-    //flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(NTHelper.getDouble("flywheel_speed_target")), flywheel));
+    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(NTHelper.getDouble("flywheel_speed_target")), flywheel));
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
     turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
     backConveyor.setDefaultCommand(new RunCommand(backConveyor::start, backConveyor));
