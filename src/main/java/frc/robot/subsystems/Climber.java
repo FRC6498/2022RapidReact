@@ -48,6 +48,7 @@ public class Climber extends SubsystemBase {
     //climberMotor.configForwardSoftLimitEnable(true);
     //climberMotor.setSelectedSensorPosition(0);
     climberMotor.setNeutralMode(NeutralMode.Brake);
+    lock.set(true);
     configStatusFrames();
   }
   @Log
@@ -77,7 +78,7 @@ public class Climber extends SubsystemBase {
     if (enabled) {
       climberMotor.set(ControlMode.PercentOutput, input);
     } else {
-      if (climberMotor.get() > 0) {
+      if (climberMotor.getControlMode() != ControlMode.Disabled) {
         climberMotor.neutralOutput();
       }
     }
@@ -91,4 +92,3 @@ public class Climber extends SubsystemBase {
     climberMotor.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 250);
   }
 }
-//TODO: remove all periodic motor sets
