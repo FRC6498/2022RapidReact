@@ -30,8 +30,6 @@ public class Flywheel extends SubsystemBase implements Loggable {
   private final CANSparkMax neo;
   private final RelativeEncoder encoder;
   private final SparkMaxPIDController pid;
-  //private final WPI_TalonFX falcon;
-  private TalonFXConfiguration config;
   // Software
   private final SimpleMotorFeedforward flywheelFeedforward;
   private boolean flywheelActive;
@@ -45,7 +43,6 @@ public class Flywheel extends SubsystemBase implements Loggable {
   public Flywheel() {
     mode = ShooterMode.DISABLED;
     neo = new CANSparkMax(flywheelCANId, MotorType.kBrushless);
-    config.closedloopRamp = 0.5;
     encoder = neo.getEncoder();
     flywheelFeedforward = new SimpleMotorFeedforward(
       flywheelkS, 
@@ -55,7 +52,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     pid = neo.getPIDController();
     
     //neo.restoreFactoryDefaults(true);
-    neo.setIdleMode(IdleMode.kCoast);
+    //neo.setIdleMode(IdleMode.kCoast);
   } 
   
   /**
@@ -95,7 +92,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
       case FULL_AUTO:
       case MANUAL_FIRE:
       case DUMP:
-        flywheelActive = true;
+        flywheelActive = false;
         break;
       case DISABLED:
         flywheelActive = false;
@@ -107,11 +104,11 @@ public class Flywheel extends SubsystemBase implements Loggable {
   
   @Override
   public void periodic() {
-    flywheelSpeedSetpoint = MathUtil.clamp(flywheelSpeedSetpoint, 2000, 6000);
+    flywheelSpeedSetpoint = MathUtil.clamp(flywheelSpeedSetpoint, -2000, -6000);
     NTHelper.setDouble("flywheel_speed_target", flywheelSpeedSetpoint);
     NTHelper.setDouble("flywheel_speed_actual", getFlywheelSpeed());
     if (flywheelActive) {
-      pid.setReference(flywheelSpeedSetpoint, ControlType.kVelocity, 0, flywheelFeedforward.calculate(flywheelSpeedSetpoint), ArbFFUnits.kVoltage);
+      pid.setReference(flywheelSpeedSetpoint, ControlType.kVelocity);
     } else {
       setFlywheelIdle();
     }

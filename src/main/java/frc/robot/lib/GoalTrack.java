@@ -126,7 +126,7 @@ public class GoalTrack {
     }
 
     public Translation2d getSmoothedPosition() {
-        //System.out.println("(" + mSmoothedPosition.getX() + ", " + mSmoothedPosition.getY() + ")\n");
+        System.out.println("(" + mSmoothedPosition.getX() + ", " + mSmoothedPosition.getY() + ")\n");
         return mSmoothedPosition;
     }
 

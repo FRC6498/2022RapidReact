@@ -156,7 +156,7 @@ public class Superstructure extends SubsystemBase {
   }
 
   public void recordShot() {
-    if (vision.hasTargets()) {
+    if (goalTrack.hasData()) {
       distanceLog.append(vision.getTargetDistance(vision.getBestTarget()));
       speedLog.append(flywheel.getFlywheelSpeed());
     } else {
@@ -300,11 +300,7 @@ public class Superstructure extends SubsystemBase {
     switch (mode) {
       case MANUAL_FIRE:
       case FULL_AUTO:
-          if (vision.hasTargets()) {
-            turret.setPositionSetpoint(smoothedRotation.minus(drivetrain.getGyroAngle()));
-          } else {
-            turret.setPositionSetpoint(turret.getCurrentPosition());
-          }
+          turret.setPositionSetpoint(smoothedRotation.minus(drivetrain.getGyroAngle()));
         break;
       case DUMP:
       case DISABLED:

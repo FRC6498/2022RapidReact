@@ -153,10 +153,9 @@ public class RobotContainer {
     .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.dumpAngle)), turret))
     //.andThen(new WaitCommand(500))
     //.andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(100)), turret))
-    //.andThen(new RunCommand(() -> {}, turret))
-    .andThen(new PrintCommand("done"));
+    .andThen(new RunCommand(() -> {}, turret));
+    //.andThen(new PrintCommand("done"));
 
-  RunCommand turretV = new RunCommand(() -> turret.setPositionSetpoint(turret.getCurrentPosition().plus(Rotation2d.fromDegrees(vision.getTargetYaw(vision.getBestTarget())))), turret);
   @Log
   double turretInput;
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -196,8 +195,8 @@ public class RobotContainer {
         ).alongWith(new InstantCommand(frontConveyor::setForward, frontConveyor))
       )
     );
-    //driverCmd.pov.up().whenActive(new InstantCommand(() -> flywheel.setFlywheelSpeed(flywheel.getFlywheelSpeed()+10), flywheel));
-    //driverCmd.pov.down().whenActive(new InstantCommand(() -> flywheel.setFlywheelSpeed(flywheel.getFlywheelSpeed()-10), flywheel));
+    driverCmd.pov.up().whenActive(new InstantCommand(() -> flywheel.setFlywheelSpeed(flywheel.getFlywheelSpeed()-10), flywheel));
+    driverCmd.pov.down().whenActive(new InstantCommand(() -> flywheel.setFlywheelSpeed(flywheel.getFlywheelSpeed()+10), flywheel));
     driverCmd.rightStick().debounce(0.5).whenActive(
       new InstantCommand(climber::releaseClimber, climber)
       .andThen(new WaitCommand(0.5))
