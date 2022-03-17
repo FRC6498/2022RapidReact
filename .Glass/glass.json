@@ -19,8 +19,7 @@
       },
       "limelight": {
         "open": true
-      },
-      "open": true
+      }
     },
     "team6498": {
       "open": true
@@ -121,6 +120,15 @@
                 1.0
               ],
               "id": "NT:/team6498/yaw_deg"
+            },
+            {
+              "color": [
+                0.5490196347236633,
+                0.5490196347236633,
+                0.5490196347236633,
+                1.0
+              ],
+              "id": "NT:/team6498/target_distance"
             }
           ]
         }

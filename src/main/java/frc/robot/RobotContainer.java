@@ -152,7 +152,8 @@ public class RobotContainer {
     .andThen(() -> superstructure.setShooterMode(ShooterMode.DUMP))
     .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.dumpAngle)), turret))
     //.andThen(new WaitCommand(500))
-    //.andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(100)), turret))
+    //.andThen(new InstantCommand(() -> turret.
+    //
     .andThen(new RunCommand(() -> {}, turret));
     //.andThen(new PrintCommand("done"));
 

@@ -272,7 +272,7 @@ public class Superstructure extends SubsystemBase {
     //counter clock wise is positivie thats why target yaw is inverted
     //pretty sure x is positive forward, y is positive left
         
-    double yaw = target.getYaw();
+    double yaw = -target.getYaw();
   
     double distance = vision.getTargetDistance(target);
     Rotation2d angle = turret.getCurrentPosition().plus(Rotation2d.fromDegrees(yaw)).plus(drivetrain.getGyroAngle());
@@ -301,7 +301,7 @@ public class Superstructure extends SubsystemBase {
       case MANUAL_FIRE:
       case FULL_AUTO:
         if (goalTrack.hasData()) {
-          turret.setPositionSetpoint(smoothedRotation.minus(drivetrain.getGyroAngle()));
+          //turret.setPositionSetpoint(smoothedRotation.minus(drivetrain.getGyroAngle()));
         }
         break;
       case DUMP:
