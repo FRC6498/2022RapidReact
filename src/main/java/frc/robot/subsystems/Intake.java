@@ -4,7 +4,8 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
@@ -14,7 +15,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 //import io.github.oblarg.oblog.annotations.Log;
 
 public class Intake extends SubsystemBase {
-  WPI_TalonFX motor;
+  WPI_TalonSRX motor;
   //@Log
   Double motorSetpoint = 0.0;
   DoubleSolenoid piston;
@@ -22,7 +23,7 @@ public class Intake extends SubsystemBase {
   int reverse = 1;
 
   public Intake(int intakeMotorId, int pistonForwardId, int pistonReverseId) {
-    motor = new WPI_TalonFX(intakeMotorId);
+    motor = new WPI_TalonSRX(intakeMotorId);
     piston = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, pistonForwardId, pistonReverseId);
     motor.configOpenloopRamp(1);
     piston.set(Value.kReverse);
