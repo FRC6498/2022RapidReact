@@ -3,7 +3,7 @@
   "encoder type": "Built-in",
   "encoding": false,
   "gearing denominator": 1.0,
-  "gearing numerator": 12.0,
+  "gearing numerator": 26.0,
   "gyro": "NavX",
   "gyro ctor": "SPI (MXP)",
   "is drivetrain": true,

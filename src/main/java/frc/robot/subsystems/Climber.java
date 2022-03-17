@@ -15,6 +15,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import io.github.oblarg.oblog.annotations.Log;
@@ -38,6 +39,7 @@ public class Climber extends SubsystemBase {
     config.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
     config.clearPositionOnLimitF = true;
 
+    lock = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
     //setup encoders
     config.slot0.kP = climber_kP;
     climberMotor.configAllSettings(config);

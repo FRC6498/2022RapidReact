@@ -36,8 +36,7 @@ public final class Constants {
         public static final int rightLeaderCANId = 3;
         public static final int rightFollowerCANId = 4;
         public static final int driveRampRate = 1;
-        public static final int shifterForwardChannelId = 0;
-        public static final int shifterChannelId = 1;
+        public static final int shifterChannelId = 0;
         public static final double kS = 0;
         public static final double kV = 0;
         public static final double kA = 0;

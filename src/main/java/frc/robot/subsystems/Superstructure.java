@@ -300,7 +300,9 @@ public class Superstructure extends SubsystemBase {
     switch (mode) {
       case MANUAL_FIRE:
       case FULL_AUTO:
-          //turret.setPositionSetpoint(smoothedRotation.minus(drivetrain.getGyroAngle()));
+        if (goalTrack.hasData()) {
+          turret.setPositionSetpoint(smoothedRotation.minus(drivetrain.getGyroAngle()));
+        }
         break;
       case DUMP:
       case DISABLED:
@@ -308,6 +310,11 @@ public class Superstructure extends SubsystemBase {
         break;
     }
     
+    if (frontIntake.isExtended()) {
+      seesawToFront();
+    } else if (backIntake.isExtended()) {
+      seesawToRear();
+    }
   }
   
 }
