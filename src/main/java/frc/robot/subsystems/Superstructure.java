@@ -80,8 +80,6 @@ public class Superstructure extends SubsystemBase {
   // camera
   // turret lined up
   // flywheel at speed
-  //TODO: make sure back intake/conveyor operates normally
-  //TODO: code the seesaw
   ShooterMode mode;
   @Config
   double flywheelRPM = 0.0;

@@ -14,7 +14,6 @@ import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
-import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -39,7 +38,7 @@ public class Climber extends SubsystemBase {
     config.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
     config.clearPositionOnLimitF = true;
 
-    lock = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
+    lock = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
     //setup encoders
     config.slot0.kP = climber_kP;
     climberMotor.configAllSettings(config);
@@ -62,17 +61,19 @@ public class Climber extends SubsystemBase {
     this.input = input;
   }
 
-  public void releaseClimber() {
+  public void lockClimber() {
+    lock.set(true);
+
+  }
+
+  public void toggleClimber() {
     lock.set(false);
-    climberMotor.setNeutralMode(NeutralMode.Coast);
-    climberMotor.neutralOutput();
+    enabled = lock.get();
   }
 
   public void setEnabled(boolean enabled) {
     this.enabled = enabled;
-    if (enabled) {
-      climberMotor.setNeutralMode(NeutralMode.Brake);
-    }
+    climberMotor.setNeutralMode(NeutralMode.Brake);
   }
 
   @Override
