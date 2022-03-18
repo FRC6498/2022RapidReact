@@ -12,9 +12,8 @@ import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
-import edu.wpi.first.math.controller.RamseteController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
@@ -43,18 +42,16 @@ public class Drivetrain extends SubsystemBase {
   // imu
   private final AHRS gyro;
   
-  private LinearFilter velAvg = LinearFilter.movingAverage(5);
-  private RamseteController ramsete;
   public static boolean isHighGear = false;
   private boolean driveInverted;
   private NeutralMode currentBrakeMode = NeutralMode.Coast;
-  private double currentSpeedMetersPerSecond = 0.0;
   private final SimpleMotorFeedforward drivetrainFeedforward =
     new SimpleMotorFeedforward(
       Constants.DriveConstants.kS,
       Constants.DriveConstants.kV,
       Constants.DriveConstants.kA
     );
+
   public Drivetrain()
   {
     leftLeader = new WPI_TalonFX(DriveConstants.leftLeaderCANId);
@@ -93,15 +90,12 @@ public class Drivetrain extends SubsystemBase {
     rightFollower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 199);
     leftFollower.setStatusFramePeriod(StatusFrame.Status_1_General, 201);
     rightFollower.setStatusFramePeriod(StatusFrame.Status_1_General, 202);
-
-    ramsete = new RamseteController();
   }
 
   // hardware methods
 
   public void resetSensors()
   {
-    gyro.reset();
     leftLeader.setSelectedSensorPosition(0);
     rightLeader.setSelectedSensorPosition(0);
   }
@@ -185,27 +179,64 @@ public class Drivetrain extends SubsystemBase {
     return deg;
   }
 
+  public Pose2d getPose() {
+    return odometry.getPoseMeters();
+  }
+
+  public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+    return new DifferentialDriveWheelSpeeds(getLeftSpeedMetersPerSecond(), getRightSpeedMetersPerSecond());
+  }
+
+  public DifferentialDriveKinematics getKinematics() {
+    return kinematics;
+  }
+
+  public SimpleMotorFeedforward getFeedforward() {
+    return drivetrainFeedforward;
+  }
+
+  /**
+   * Resets odometry to a specified pose.
+   * @param pose The pose to set the odometry pose to.
+   */
+  public void resetOdometry(Pose2d pose) {
+    resetSensors();
+    odometry.resetPosition(pose, gyro.getRotation2d());
+  }
+
+  public void tankDriveVolts(double leftVolts, double rightVolts) {
+    leftMotors.setVoltage(leftVolts);
+    rightMotors.setVoltage(rightVolts);
+  }
+
+  public double getMeanEncoderDistance() {
+    return (getLeftDistanceMeters() + getRightDistanceMeters()) / 2.0;
+  }
+
   @Override
   public void periodic() {
     odometry.update(
       gyro.getRotation2d(), 
-      leftLeader.getSelectedSensorPosition() * DriveConstants.driveDistancePerTickMeters, 
-      rightLeader.getSelectedSensorPosition() * DriveConstants.driveDistancePerTickMeters
-    );
-    currentSpeedMetersPerSecond = velAvg.calculate(
-      kinematics.toChassisSpeeds(
-        new DifferentialDriveWheelSpeeds(
-          leftLeader.getSelectedSensorVelocity() * DriveConstants.driveDistancePerTickMeters, 
-          rightLeader.getSelectedSensorVelocity() * DriveConstants.driveDistancePerTickMeters
-        )
-      ).vxMetersPerSecond
+      getLeftDistanceMeters(), 
+      getRightDistanceMeters()
     );
 
-    
     NTHelper.setDouble("yaw_deg", getGyroAngleDegrees());
   }
 
-  public boolean getStopped() {
-    return currentSpeedMetersPerSecond < 0.1;
+  private double getLeftDistanceMeters() {
+    return leftLeader.getSelectedSensorPosition() * DriveConstants.driveDistancePerTickMeters;
+  }
+
+  private double getRightDistanceMeters() {
+    return rightLeader.getSelectedSensorVelocity() * DriveConstants.driveDistancePerTickMeters;
+  }
+
+  private double getLeftSpeedMetersPerSecond() {
+    return leftLeader.getSelectedSensorVelocity() * DriveConstants.driveDistancePerTickMeters * 10;
+  }
+
+  private double getRightSpeedMetersPerSecond() {
+    return rightLeader.getSelectedSensorVelocity() * DriveConstants.driveDistancePerTickMeters * 10;
   }
 }

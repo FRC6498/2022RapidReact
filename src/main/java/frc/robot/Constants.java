@@ -30,18 +30,24 @@ public final class Constants {
         public static final double climber_kP = 0.1;
         public static final double climber_kD = 0.0;
     }
+    
     public static final class DriveConstants {
         public static final int leftLeaderCANId = 1;
         public static final int leftFollowerCANId = 2;
         public static final int rightLeaderCANId = 3;
         public static final int rightFollowerCANId = 4;
         public static final int driveRampRate = 1;
-        public static final int shifterChannelId = 0;
-        public static final double kS = 0;
-        public static final double kV = 0;
-        public static final double kA = 0;
-        public static final double trackWidthMeters = 0;
-        public static final double driveDistancePerTickMeters = Math.PI * Units.inchesToMeters(4);
+        public static final int shifterChannelId = 1;
+        public static final double kS = 0.56531;
+        public static final double kV = 5.7454;
+        public static final double kA = 0.32964;
+        public static final double kP = 2.4283;
+        public static final double trackWidthMeters = Units.inchesToMeters(28.75);
+        public static final double maxSpeedMetersPerSecond = 1.9467;
+        public static final double maxAccelerationMetersPerSecondSquared = 2;
+        public static final double ramseteB = 2;
+        public static final double ramseteZeta = 0.7;
+        public static final double driveDistancePerTickMeters = Math.PI * Units.inchesToMeters(6);
         
     }
 
