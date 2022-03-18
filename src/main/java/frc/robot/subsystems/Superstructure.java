@@ -289,6 +289,10 @@ public class Superstructure extends SubsystemBase {
     }
   }
 
+  public boolean getSeesawFront() {
+    return merger.get() == Value.kReverse;
+  }
+
   @Override
   public void periodic() {
     

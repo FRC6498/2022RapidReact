@@ -12,10 +12,11 @@ import com.revrobotics.SparkMaxPIDController;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.lib.InterpolatingTable;
 import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log;
+import io.github.oblarg.oblog.annotations.Log ;
 
 import static frc.robot.Constants.ShooterConstants.*;
 
@@ -28,6 +29,9 @@ public class Flywheel extends SubsystemBase implements Loggable {
   //private final SimpleMotorFeedforward flywheelFeedforward;
   private boolean flywheelActive;
   public double flywheelSpeedSetpoint = -3000.0;
+  public double flywheel_speed_target;
+  private int speedOffset = 0;
+
   //private double feedforwardOutput;
   double lastPosition = 0.0;
   double distanceToHub = 0.0;
@@ -56,11 +60,19 @@ public class Flywheel extends SubsystemBase implements Loggable {
    */
   //@Config(name = "Set Flywheel Speed(RPM)")
   public void setFlywheelSpeed(double velocity) {
-    flywheelSpeedSetpoint = -velocity;
+      flywheelSpeedSetpoint = -(velocity + speedOffset);
   }
 
   public void setFlywheelDistance(double distance) {
     distanceToHub = distance;
+  }
+
+  public void incrementOffset() {
+    speedOffset += 100;
+  }
+
+  public void decrementOffset() {
+    speedOffset -= 100;
   }
 
   @Log(name = "Flywheel Velocity (RPM)")
@@ -98,7 +110,15 @@ public class Flywheel extends SubsystemBase implements Loggable {
   
   @Override
   public void periodic() {
-    flywheelSpeedSetpoint = MathUtil.clamp(flywheelSpeedSetpoint, -6500, -5200);
+    if (mode == ShooterMode.MANUAL_FIRE) {
+      setFlywheelSpeed(InterpolatingTable.get(distanceToHub).rpm);
+    } else if (mode == ShooterMode.DUMP) {
+      setFlywheelSpeed(1750); // check this
+    } else if (mode == ShooterMode.DISABLED) {
+      pid.setReference(0.0, ControlType.kDutyCycle);
+    }
+    flywheelSpeedSetpoint = MathUtil.clamp(flywheelSpeedSetpoint, -6500, -1000);
+    flywheel_speed_target = flywheelSpeedSetpoint;
     NTHelper.setDouble("flywheel_speed_target", flywheelSpeedSetpoint);
     NTHelper.setDouble("flywheel_speed_actual", getFlywheelSpeed());
     if (flywheelActive) {

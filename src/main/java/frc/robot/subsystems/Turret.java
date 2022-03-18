@@ -12,17 +12,14 @@ import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
-import io.github.oblarg.oblog.annotations.Log;
 /**
- * THIS SUBSYSTEM IS WIP AND CURRENTLY UNUSED BY THE MAIN ROBOT CODE. IT WILL REMAIN SO UNTIL IT IS FINISHED.<p>
- * Turret subsystem using WPILib controls instead of Phoenix (because its less of a black box and the units are better).
- * Position is measured in Degrees, which is obtained from encoder ticks as soon as position is read off.
+ * 
+ * 
  */
 // turret clockwise = forward 
 public class Turret extends SubsystemBase {

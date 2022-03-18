@@ -17,6 +17,10 @@ public class ShotParameter {
         this.offset = offset;
     }   
 
+    public ShotParameter(double rpm) {
+        this(rpm, 0.0);
+    }   
+
     // Method equals
     public boolean equals(ShotParameter other) {
         return Math.abs(this.rpm - other.rpm) < 0.1 &&
