@@ -13,12 +13,11 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
@@ -65,34 +64,22 @@ public class RobotContainer {
     turret.setShooterMode(mode);
   };
   Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, shooterModeUpdater, drivetrain);
-
+  Field2d field;
   XboxController driver = new XboxController(0);
   XboxController operator = new XboxController(1);
 
   Trigger retractClimb = new Trigger();
   Trigger flyWheelAtSetpoint = new Trigger();
-  @Log(tabName = "SmartDashboard")
-  SendableChooser<Command> autoSelector = new SendableChooser<>();
+  @Log(tabName = "SmartDashboard", name = "Goal Selector")
+  SendableChooser<String> goalSelector = new SendableChooser<>();
+  @Log(tabName = "SmartDashboard", name = "Distance Selector")
+  SendableChooser<Integer> distanceSelector = new SendableChooser<>();
 
   CommandXboxController driverCmd = new CommandXboxController(0);
   CommandXboxController operatorCmd = new CommandXboxController(1);
   public boolean feederRunning;
   Trigger turretLocked = new Trigger(turret::atSetpoint);
   Trigger flywheelReady = new Trigger(flywheel::atSetpoint);
-
-  SequentialCommandGroup lowAuto = new ParallelCommandGroup(
-    // flywheel ALWAYS spinning
-    new RunCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel),
-    //new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP), superstructure),
-    new SequentialCommandGroup(
-      // send balls into shooter until conveyor is empty
-      new ParallelRaceGroup(
-        new StartEndCommand(superstructure::runFeeder, superstructure::stopFeeder, superstructure),
-        new WaitCommand(5)
-      ),
-      new InstantCommand(drivetrain::stop, drivetrain)
-    )
-  ).andThen(() -> drivetrain.stop(), drivetrain);
 
   SequentialCommandGroup lowAutoDecorated = 
     new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel)
@@ -120,26 +107,12 @@ public class RobotContainer {
       new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain).withTimeout(1.5)
     ).andThen(drivetrain::stop);
 
-  SequentialCommandGroup odometryAuto =
-    new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelHighRPM), flywheel)
-    .andThen(new WaitUntilCommand(flywheel::atSetpoint))
-    .andThen(new StartEndCommand(
-      superstructure::runFeeder, 
-      superstructure::stopFeeder, 
-      superstructure
-    )
-  ).andThen(new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain));
-
   SequentialCommandGroup turretCmd = 
     new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.HOMING))
     .andThen(new WaitUntilCommand(turret::getHomed))
     .andThen(() -> superstructure.setShooterMode(ShooterMode.DUMP))
     .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.dumpAngle)), turret))
-    //.andThen(new WaitCommand(500))
-    //.andThen(new InstantCommand(() -> turret.
-    //
     .andThen(new RunCommand(() -> {}, turret));
-    //.andThen(new PrintCommand("done"));
 
   @Log
   double turretInput;
@@ -158,6 +131,9 @@ public class RobotContainer {
     turret.setDefaultCommand(turretCmd);//new RunCommand(turret::stop, turret));
     // Configure the button bindings
     configureButtonBindings();
+    goalSelector.addOption("High", "High");
+    goalSelector.addOption("Low", "Low");
+    distanceSelector.addOption("Tarmac Edge", 1);
   }
 
   /**
@@ -254,6 +230,17 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return new FollowTrajectory(drivetrain, 1).andThen(drivetrain::stop);
+    return 
+      new FollowTrajectory(drivetrain, distanceSelector.getSelected())
+      .andThen(drivetrain::stop)
+      .andThen(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure))
+      .andThen(new WaitUntilCommand(flywheelReady))
+      .andThen(
+        new StartEndCommand(
+          superstructure::runFeeder, 
+          superstructure::stopFeeder, 
+          superstructure
+        )
+      ).withTimeout(5);
   }
 }
