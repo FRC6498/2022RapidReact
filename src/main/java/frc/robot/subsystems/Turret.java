@@ -187,4 +187,12 @@ public class Turret extends SubsystemBase {
     turretCurrentPosition = nativeUnitsToRotation2d(bearing.getSelectedSensorPosition());
     return turretCurrentPosition;
   }
+
+  public void togglePosition() {
+    if (getCurrentPosition().getDegrees() > -10) {
+      setPositionSetpoint(Rotation2d.fromDegrees(-180));
+    } else {
+      setPositionSetpoint(Rotation2d.fromDegrees(0));
+    }
+  }
 }

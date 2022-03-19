@@ -49,7 +49,7 @@ public class Climber extends SubsystemBase {
     //climberMotor.configForwardSoftLimitEnable(true);
     //climberMotor.setSelectedSensorPosition(0);
     climberMotor.setNeutralMode(NeutralMode.Brake);
-    lock.set(true);
+    //lock.set(true);
     configStatusFrames();
   }
   @Log
@@ -62,12 +62,12 @@ public class Climber extends SubsystemBase {
   }
 
   public void lockClimber() {
-    lock.set(true);
+    lock.set(false);
 
   }
 
   public void toggleClimber() {
-    lock.set(false);
+    lock.set(true);
     enabled = lock.get();
   }
 
@@ -85,8 +85,6 @@ public class Climber extends SubsystemBase {
         climberMotor.neutralOutput();
       }
     }
-    
-
     //climberMotor.set(ControlMode.Position, climberMotorSetpoint);
     // This method will be called once per scheduler run
   }

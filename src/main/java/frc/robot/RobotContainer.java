@@ -11,6 +11,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -69,11 +70,11 @@ public class RobotContainer {
   XboxController operator = new XboxController(1);
 
   Trigger retractClimb = new Trigger();
-  Trigger flyWheelAtSetpoint = new Trigger();
+  Trigger robotLinedUp = new Trigger(vision::getAligned);
   @Log(tabName = "SmartDashboard", name = "Goal Selector")
   SendableChooser<String> goalSelector = new SendableChooser<>();
   @Log(tabName = "SmartDashboard", name = "Distance Selector")
-  SendableChooser<Integer> distanceSelector = new SendableChooser<>();
+  SendableChooser<Double> distanceSelector = new SendableChooser<>();
 
   CommandXboxController driverCmd = new CommandXboxController(0);
   CommandXboxController operatorCmd = new CommandXboxController(1);
@@ -111,11 +112,11 @@ public class RobotContainer {
     new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.HOMING))
     .andThen(new WaitUntilCommand(turret::getHomed))
     .andThen(() -> superstructure.setShooterMode(ShooterMode.DUMP))
-    .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.dumpAngle)), turret))
+    .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.rearDumpAngle)), turret))
     .andThen(new RunCommand(() -> {}, turret));
 
-  @Log
-  double turretInput;
+  Trigger operatorLeftTrigger = new Trigger(() -> operatorCmd.getLeftTriggerAxis() < 0.05);
+  Trigger operatorRightTrigger = new Trigger(() -> operatorCmd.getRightTriggerAxis() < 0.05);
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     //vision.setLED(VisionLEDMode.kOff);
@@ -133,7 +134,7 @@ public class RobotContainer {
     configureButtonBindings();
     goalSelector.addOption("High", "High");
     goalSelector.addOption("Low", "Low");
-    distanceSelector.addOption("Tarmac Edge", 1);
+    distanceSelector.addOption("Tarmac Edge", Units.inchesToMeters(42));
   }
 
   /**
@@ -165,37 +166,40 @@ public class RobotContainer {
         ).alongWith(new InstantCommand(backConveyor::setForward, backConveyor))), 
       superstructure::getSeesawFront
     ));
-    driverCmd.pov.up().whenActive(new InstantCommand(() -> flywheel.setFlywheelSpeed(flywheel.getFlywheelSpeed()-10), flywheel));
-    driverCmd.pov.down().whenActive(new InstantCommand(() -> flywheel.setFlywheelSpeed(flywheel.getFlywheelSpeed()+10), flywheel));
     driverCmd.rightStick().debounce(0.5).whenActive(
       new InstantCommand(climber::toggleClimber, climber)
       .andThen(new WaitCommand(0.5))
       .andThen(() -> climber.setEnabled(true))
     );
+    driverCmd.leftBumper().whenActive(
+      new InstantCommand(turret::togglePosition, turret)
+    );
+    driverCmd.y().whenActive(new InstantCommand(superstructure::toggleSeesaw));
     // operator
     operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
-    operatorCmd.pov.up().whenActive(new ConditionalCommand(
+    
+    operatorCmd.leftBumper().whenActive(new ConditionalCommand(
       new InstantCommand(frontIntake::raiseIntake, frontIntake), // intake down, so raise it
       new InstantCommand(frontIntake::lowerIntake, frontIntake), // intake up, so lower it
       frontIntake::isExtended)
     );
-    operatorCmd.pov.left().whileActiveOnce(new StartEndCommand(
-      frontIntake::setReverse, // inverted, so go forward
-      frontIntake::setForward, // forward up, so invert it
+    /*operatorLeftTrigger.whileActiveOnce(new StartEndCommand(
+      frontIntake::setForward, // inverted, so go forward
+      frontIntake::setReverse, // forward up, so invert it
       frontIntake
       ).alongWith(new StartEndCommand(
-        frontConveyor::setReversed, 
         frontConveyor::setForward, 
+        frontConveyor::setReversed, 
         frontConveyor
         )
       )
-    );
-    operatorCmd.pov.right().whenActive(new ConditionalCommand(
+    );*/
+    operatorCmd.rightBumper().whenActive(new ConditionalCommand(
       new InstantCommand(backIntake::raiseIntake, backIntake), // intake down, so raise it
       new InstantCommand(backIntake::lowerIntake, backIntake), // intake up, so lower it
       backIntake::isExtended)
     );
-    operatorCmd.pov.down().whileActiveOnce(
+    /*operatorRightTrigger.whileActiveOnce(
       new StartEndCommand(
         backIntake::setReverse, // invert 
         backIntake::setForward, // uninvert
@@ -205,20 +209,26 @@ public class RobotContainer {
         backConveyor::setForward, 
         backConveyor
       )
-    ));
-    operatorCmd.rightBumper().whenActive(new InstantCommand(flywheel::incrementOffset));
-    operatorCmd.leftBumper().whenActive(new InstantCommand(flywheel::decrementOffset));
-    //driverCmd.a().whenActive(new InstantCommand(climber::toggleClimber, climber));
+    ));*/
+    /*operatorCmd.rightBumper().whenActive(new InstantCommand(flywheel::incrementOffset));
+    operatorCmd.leftBumper().whenActive(new InstantCommand(flywheel::decrementOffset));*/
+    driverCmd.a().whenActive(new InstantCommand(climber::toggleClimber, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
     operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
     operatorCmd.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
     operatorCmd.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP)));
 
     
-    turretLocked.and(flywheelReady).whileActiveOnce(
+    robotLinedUp.and(flywheelReady).whileActiveOnce(
       new StartEndCommand(
-        () -> operatorCmd.setRumble(RumbleType.kLeftRumble, 0.5),
-        () -> operatorCmd.setRumble(RumbleType.kRightRumble, 0.5), 
+        () -> { 
+          driverCmd.setRumble(RumbleType.kLeftRumble, 0.5);
+          driverCmd.setRumble(RumbleType.kRightRumble, 0.5); 
+        },
+        () -> { 
+          driverCmd.setRumble(RumbleType.kLeftRumble, 0.0);
+          driverCmd.setRumble(RumbleType.kRightRumble, 0.0); 
+        }, 
         vision // vision never has any commands, so this is effectively a no-op
       )
     );
@@ -231,10 +241,12 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return 
-      new FollowTrajectory(drivetrain, distanceSelector.getSelected())
+      new InstantCommand(frontIntake::lowerIntake)
+      //.andThen(new FollowTrajectory(drivetrain, distanceSelector.getSelected()))
+      .andThen(new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain).withTimeout(0.8))
       .andThen(drivetrain::stop)
       .andThen(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure))
-      .andThen(new WaitUntilCommand(flywheelReady))
+      .andThen(new WaitUntilCommand(flywheelReady.and(new Trigger(turret::atSetpoint))))
       .andThen(
         new StartEndCommand(
           superstructure::runFeeder, 

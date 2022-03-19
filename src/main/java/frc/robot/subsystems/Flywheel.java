@@ -35,7 +35,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   //private double feedforwardOutput;
   double lastPosition = 0.0;
   double distanceToHub = 0.0;
-  @Log.ToString(name = "Flywheel Mode", tabName = "SmartDashboard")
+  //@Log.ToString(name = "Flywheel Mode", tabName = "SmartDashboard")
   private ShooterMode mode;
   
   public Flywheel() {
@@ -75,7 +75,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     speedOffset -= 100;
   }
 
-  @Log(name = "Flywheel Velocity (RPM)")
+  //@Log(name = "Flywheel Velocity (RPM)")
   public double getFlywheelSpeed() {
     return encoder.getVelocity();
   }

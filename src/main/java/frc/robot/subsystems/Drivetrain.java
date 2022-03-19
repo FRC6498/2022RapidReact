@@ -26,9 +26,10 @@ import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.lib.NTHelper;
+import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
-public class Drivetrain extends SubsystemBase {
+public class Drivetrain extends SubsystemBase implements Loggable{
   // motors
   private final WPI_TalonFX leftLeader, rightLeader;
   private final WPI_TalonFX leftFollower, rightFollower;
@@ -36,8 +37,7 @@ public class Drivetrain extends SubsystemBase {
   private final DifferentialDriveOdometry odometry;
   private final DifferentialDriveKinematics kinematics;
   private final DifferentialDrive diffDrive;
-  // 
-  @Log
+  //
   private final Solenoid shifter; // gear shifter
   // imu
   private final AHRS gyro;
@@ -106,7 +106,7 @@ public class Drivetrain extends SubsystemBase {
     return gyro.getRotation2d();
   }
 
-  @Log
+  //@Log
   public double getHeading() {
     return getGyroAngle().getDegrees();
   }
@@ -153,7 +153,7 @@ public class Drivetrain extends SubsystemBase {
     }
   }
 
-  @Log(name="Gear")
+  //@Log(name="Gear", tabName = "SmartDashboard")
   public String getGear()
   {
     if (isHighGear) {
@@ -168,12 +168,12 @@ public class Drivetrain extends SubsystemBase {
     arcadeDrive(0, 0);
   }
 
-  @Log
+  //@Log
   public String getBrakeMode() {
     return currentBrakeMode.toString();
   }
 
-  @Log(name = "Yaw (deg.)")
+  //@Log(name = "Yaw (deg.)")
   public double getGyroAngleDegrees() {
     double deg = getGyroAngle().getDegrees() % 360;
     return deg;
