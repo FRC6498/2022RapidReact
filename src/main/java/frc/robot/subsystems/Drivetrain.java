@@ -12,9 +12,11 @@ import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
@@ -51,6 +53,7 @@ public class Drivetrain extends SubsystemBase {
       Constants.DriveConstants.kV,
       Constants.DriveConstants.kA
     );
+  private final PIDController leftController, rightController;
 
   public Drivetrain()
   {
@@ -85,6 +88,9 @@ public class Drivetrain extends SubsystemBase {
     // setup encoders
     leftLeader.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
     rightLeader.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+
+    leftController = new PIDController(1, 0, 0);
+    rightController = new PIDController(1, 0, 0);
 
     leftFollower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 200);
     rightFollower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 199);
@@ -142,6 +148,10 @@ public class Drivetrain extends SubsystemBase {
     diffDrive.arcadeDrive(throttle, turn, true);
   }
 
+  public void slewRateArcadeDrive(double speedMetersPerSecond, double angularVelocityRadiansPerSecond) {
+    setSpeeds(kinematics.toWheelSpeeds(new ChassisSpeeds(speedMetersPerSecond, 0, angularVelocityRadiansPerSecond)));
+  }
+
   public void toggleGear()
   {
     if (isHighGear) {
@@ -181,6 +191,17 @@ public class Drivetrain extends SubsystemBase {
 
   public Pose2d getPose() {
     return odometry.getPoseMeters();
+  }
+
+  public void setSpeeds(DifferentialDriveWheelSpeeds wheelSpeeds) {
+    final double leftFeedforward = drivetrainFeedforward.calculate(wheelSpeeds.leftMetersPerSecond);
+    final double rightFeedforward = drivetrainFeedforward.calculate(wheelSpeeds.rightMetersPerSecond);
+
+    final double leftOutput = leftController.calculate(getLeftSpeedMetersPerSecond(), wheelSpeeds.leftMetersPerSecond);
+    final double rightOutput = rightController.calculate(getRightSpeedMetersPerSecond(), wheelSpeeds.rightMetersPerSecond);
+
+    leftMotors.setVoltage(leftOutput + leftFeedforward);
+    rightMotors.setVoltage(rightOutput + rightFeedforward);
   }
 
   public DifferentialDriveWheelSpeeds getWheelSpeeds() {

@@ -169,13 +169,3 @@ public class Conveyor extends SubsystemBase {
     updateOutput();
   }
 }
-
-// flow:
-// check if conveyor is empty
-// check ball color if conveyor is full
-// check if shooter is ready
-
-// if the shooter is ready and the conveyor is full and the ball is the correct color
-//    run the conveyor until the feeder takes the ball
-// if the intake is full and the conveyor is empty
-//    run the intake slowly and the conveyor until the conveyor is full
