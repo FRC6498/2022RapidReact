@@ -45,6 +45,8 @@
       "/LiveWindow/Ungrouped/Talon FX [9]": "Motor Controller",
       "/LiveWindow/Ungrouped/navX-Sensor[4]": "Gyro",
       "/LiveWindow/Vision": "Subsystem",
+      "/Shuffleboard/SmartDashboard/Distance Selector": "String Chooser",
+      "/Shuffleboard/SmartDashboard/Goal Selector": "String Chooser",
       "/Shuffleboard/SmartDashboard/autoSelector": "String Chooser"
     }
   },

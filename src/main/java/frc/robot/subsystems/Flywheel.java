@@ -16,7 +16,6 @@ import frc.robot.lib.InterpolatingTable;
 import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log ;
 
 import static frc.robot.Constants.ShooterConstants.*;
 

@@ -15,9 +15,6 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.util.datalog.DataLog;
-import edu.wpi.first.util.datalog.DoubleLogEntry;
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -83,6 +80,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
   // low/high gear DONE
   // robot lined up rumble DONE
   // flywheel at speed DONE
+  
   @Log.BooleanBox(tabName = "SmartDashboard", name = "Turret Position", colorWhenTrue = "yellow", colorWhenFalse = "blue")
   boolean turretAtFront = true;
   ShooterMode mode;
@@ -95,8 +93,8 @@ public class Superstructure extends SubsystemBase implements Loggable {
   WPI_TalonFX feederB;
   DoubleSolenoid merger;
   GoalTrack goalTrack;
-  DataLog log;
-  DoubleLogEntry distanceLog, speedLog;
+  @Log(tabName = "SmartDashboard", name = "Distance to Hub")
+  double distance;
 
   @Log.BooleanBox(name = "Seesaw Position", colorWhenTrue = "yellow", colorWhenFalse = "blue", tabName = "SmartDashboard")
   boolean seesawFront = true;
@@ -120,8 +118,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
     this.drivetrain = drivetrain;
     this.shooterModeUpdater = shooterModeUpdater;
     
-    log = DataLogManager.getLog();
-
     goalTrack = new GoalTrack(0, new Translation2d());
     //colorSensor = new PicoColorSensor();
     mode = ShooterMode.DISABLED;
@@ -271,7 +267,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
         
     double yaw = -target.getYaw();
   
-    double distance = vision.getTargetDistance(target);
+    distance = vision.getTargetDistance(target);
     Rotation2d angle = turret.getCurrentPosition().plus(Rotation2d.fromDegrees(yaw)).plus(drivetrain.getGyroAngle());
     Translation2d field_to_goal=new Translation2d(distance * angle.getCos(), distance * angle.getSin());
     goalTrack.tryUpdate(timestamp, field_to_goal);

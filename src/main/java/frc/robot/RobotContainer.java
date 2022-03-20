@@ -27,7 +27,7 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.commands.DriveArcadeOpenLoop;
-import frc.robot.commands.FollowTrajectory;
+//import frc.robot.commands.FollowTrajectory;
 import frc.robot.lib.OI.CommandXboxController;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Conveyor;
@@ -71,8 +71,8 @@ public class RobotContainer {
 
   Trigger retractClimb = new Trigger();
   Trigger robotLinedUp = new Trigger(vision::getAligned);
-  @Log(tabName = "SmartDashboard", name = "Goal Selector")
-  SendableChooser<String> goalSelector = new SendableChooser<>();
+  @Log(tabName = "SmartDashboard", name = "Time Selector")
+  SendableChooser<Double> timeSelector = new SendableChooser<>();
   @Log(tabName = "SmartDashboard", name = "Distance Selector")
   SendableChooser<Double> distanceSelector = new SendableChooser<>();
 
@@ -112,7 +112,7 @@ public class RobotContainer {
     new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.HOMING))
     .andThen(new WaitUntilCommand(turret::getHomed))
     .andThen(() -> superstructure.setShooterMode(ShooterMode.DUMP))
-    .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.rearDumpAngle)), turret))
+    .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.frontDumpAngle)), turret))
     .andThen(new RunCommand(() -> {}, turret));
 
   Trigger operatorLeftTrigger = new Trigger(() -> operatorCmd.getLeftTriggerAxis() < 0.05);
@@ -132,8 +132,8 @@ public class RobotContainer {
     turret.setDefaultCommand(turretCmd);//new RunCommand(turret::stop, turret));
     // Configure the button bindings
     configureButtonBindings();
-    goalSelector.addOption("High", "High");
-    goalSelector.addOption("Low", "Low");
+    timeSelector.addOption("Wall", 0.85);
+    timeSelector.addOption("Long", 0.95);
     distanceSelector.addOption("Tarmac Edge", Units.inchesToMeters(42));
   }
 
@@ -241,9 +241,8 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return 
-      new InstantCommand(frontIntake::lowerIntake)
-      //.andThen(new FollowTrajectory(drivetrain, distanceSelector.getSelected()))
-      .andThen(new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain).withTimeout(0.8))
+    new InstantCommand(backIntake::lowerIntake, backIntake)
+      .andThen(new RunCommand(() -> drivetrain.arcadeDrive(1, 0), drivetrain).withTimeout(0.85))
       .andThen(drivetrain::stop)
       .andThen(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure))
       .andThen(new WaitUntilCommand(flywheelReady.and(new Trigger(turret::atSetpoint))))
@@ -253,6 +252,6 @@ public class RobotContainer {
           superstructure::stopFeeder, 
           superstructure
         )
-      ).withTimeout(5);
+      ).withTimeout(10);
   }
 }
