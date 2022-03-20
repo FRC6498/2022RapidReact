@@ -78,7 +78,7 @@ public class Turret extends SubsystemBase {
 
   public boolean getActive() {
     // return mode < 2
-    return mode != ShooterMode.DUMP || mode != ShooterMode.DISABLED;
+    return mode != ShooterMode.DUMP;
   }
 
   @Override

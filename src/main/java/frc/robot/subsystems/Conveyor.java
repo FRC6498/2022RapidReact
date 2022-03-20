@@ -59,8 +59,8 @@ public class Conveyor extends SubsystemBase {
 
     driverConfig = new TalonFXConfiguration();
     driverConfig.openloopRamp = 0.5;
-    driverConfig.peakOutputForward = 0.5;
-    driverConfig.peakOutputReverse = -0.5;
+    driverConfig.peakOutputForward = 1.0;
+    driverConfig.peakOutputReverse = -1.0;
     driverConfig.voltageCompSaturation = 12;
 
     driver.configAllSettings(driverConfig);

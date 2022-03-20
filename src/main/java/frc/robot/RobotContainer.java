@@ -188,8 +188,8 @@ public class RobotContainer {
       frontIntake::setReverse, // forward up, so invert it
       frontIntake
       ).alongWith(new StartEndCommand(
-        frontConveyor::setForward, 
         frontConveyor::setReversed, 
+        frontConveyor::setForward, 
         frontConveyor
         )
       )
@@ -201,18 +201,18 @@ public class RobotContainer {
     );
     /*operatorRightTrigger.whileActiveOnce(
       new StartEndCommand(
-        backIntake::setReverse, // invert 
-        backIntake::setForward, // uninvert
+        backIntake::setForward, // invert 
+        backIntake::setReverse, // uninvert
         backIntake
       ).alongWith(new StartEndCommand(
-        backConveyor::setReversed, 
         backConveyor::setForward, 
+        backConveyor::setReversed, 
         backConveyor
       )
     ));*/
     /*operatorCmd.rightBumper().whenActive(new InstantCommand(flywheel::incrementOffset));
     operatorCmd.leftBumper().whenActive(new InstantCommand(flywheel::decrementOffset));*/
-    driverCmd.a().whenActive(new InstantCommand(climber::toggleClimber, climber));
+    driverCmd.start().whenActive(new InstantCommand(climber::enable, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
     operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
     operatorCmd.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
@@ -244,14 +244,15 @@ public class RobotContainer {
     new InstantCommand(backIntake::lowerIntake, backIntake)
       .andThen(new RunCommand(() -> drivetrain.arcadeDrive(1, 0), drivetrain).withTimeout(0.85))
       .andThen(drivetrain::stop)
-      .andThen(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure))
-      .andThen(new WaitUntilCommand(flywheelReady.and(new Trigger(turret::atSetpoint))))
+      .andThen(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED), superstructure))
+      .andThen(new WaitCommand(4))
       .andThen(
         new StartEndCommand(
           superstructure::runFeeder, 
           superstructure::stopFeeder, 
           superstructure
         )
-      ).withTimeout(10);
+      ).withTimeout(10)
+      .andThen(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP)));
   }
 }

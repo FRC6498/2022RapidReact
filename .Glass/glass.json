@@ -47,6 +47,7 @@
       "/LiveWindow/Vision": "Subsystem",
       "/Shuffleboard/SmartDashboard/Distance Selector": "String Chooser",
       "/Shuffleboard/SmartDashboard/Goal Selector": "String Chooser",
+      "/Shuffleboard/SmartDashboard/Time Selector": "String Chooser",
       "/Shuffleboard/SmartDashboard/autoSelector": "String Chooser"
     }
   },

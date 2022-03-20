@@ -84,7 +84,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   }
 
   public boolean getActive() {
-    return mode != ShooterMode.DISABLED || mode != ShooterMode.HOMING;
+    return mode != ShooterMode.HOMING;
   }
 
   public boolean atSetpoint() {
@@ -100,7 +100,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
         flywheelActive = true;
         break;
       case DISABLED:
-        flywheelActive = false;
+        flywheelActive = true;
         break;
       default:
         break;
@@ -112,9 +112,9 @@ public class Flywheel extends SubsystemBase implements Loggable {
     if (mode == ShooterMode.MANUAL_FIRE) {
       setFlywheelSpeed(InterpolatingTable.get(distanceToHub).rpm);
     } else if (mode == ShooterMode.DUMP) {
-      setFlywheelSpeed(1750); // check this
+      setFlywheelSpeed(1750); // dump = 1750
     } else if (mode == ShooterMode.DISABLED) {
-      pid.setReference(0.0, ControlType.kDutyCycle);
+      setFlywheelSpeed(3500);
     }
     flywheelSpeedSetpoint = MathUtil.clamp(flywheelSpeedSetpoint, -6500, -1000);
     flywheel_speed_target = flywheelSpeedSetpoint;

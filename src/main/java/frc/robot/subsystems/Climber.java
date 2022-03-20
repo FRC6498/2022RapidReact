@@ -67,8 +67,14 @@ public class Climber extends SubsystemBase {
   }
 
   public void toggleClimber() {
-    lock.set(true);
+    lock.set(!lock.get());
     enabled = lock.get();
+  }
+
+  public void enable() {
+    if (this.enabled == true) {
+      this.enabled = false;
+    } else this.enabled = true;
   }
 
   public void setEnabled(boolean enabled) {
