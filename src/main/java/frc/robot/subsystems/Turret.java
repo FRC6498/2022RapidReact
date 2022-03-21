@@ -4,87 +4,195 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
+import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.TurretConstants;
+import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
-import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log;
-
-import static frc.robot.Constants.TurretConstants.*;
 /**
- * THIS SUBSYSTEM IS WIP AND CURRENTLY UNUSED BY THE MAIN ROBOT CODE. IT WILL REMAIN SO UNTIL IT IS FINISHED.<p>
- * Turret subsystem using WPILib controls instead of Phoenix (because its less of a black box and the units are better).
- * Position is measured in Degrees, which is obtained from encoder ticks as soon as position is read off.
+ * 
+ * 
  */
-public class Turret extends SubsystemBase implements Loggable {
-  WPI_TalonFX bearing;
-  TalonFXConfiguration bearingConfig;
-  PIDController pid;
-  boolean homed;
-  @Log.Graph(name = "Yaw Angle (deg.)")
-  double visionDegrees;
-  @Log.Graph
-  double pidOutput;
-  SimpleMotorFeedforward turretFeedforward;
-  ShooterMode mode;
+// turret clockwise = forward 
+public class Turret extends SubsystemBase {
+  private WPI_TalonFX bearing;
+  private TalonFXConfiguration bearingConfig;
+  private boolean homed;
+  private boolean isHoming;
+  private ShooterMode mode;
+  private Rotation2d turretPositionSetpoint;
+  private Rotation2d turretCurrentPosition;
 
   public Turret() {
-    mode = ShooterMode.DISABLED;
-    visionDegrees = 0.0;
-    pidOutput = 0.0;
+    mode = ShooterMode.AUTON;
     homed = false;
+    isHoming = false;
+    bearing = new WPI_TalonFX(TurretConstants.yawMotorCANId);
     bearingConfig = new TalonFXConfiguration();
-    bearingConfig.peakOutputForward = 0.2;
-    bearingConfig.peakOutputReverse = -0.2;
-    bearing = new WPI_TalonFX(yawMotorCANId);
+    bearingConfig.peakOutputForward = 0.3;
+    bearingConfig.peakOutputReverse = -0.3;
+    bearingConfig.slot0.kP = TurretConstants.kP;
+    bearingConfig.slot0.kI = TurretConstants.kI;
+    bearingConfig.slot0.kD = TurretConstants.kD;
+    bearingConfig.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
+    bearingConfig.forwardLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
+    bearingConfig.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
+    bearingConfig.reverseLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
+    // set position tolerance to 200 ticks (1 deg ~ 359)
+    bearingConfig.slot0.allowableClosedloopError = 200;
+    bearingConfig.slot0.integralZone = 1023/bearingConfig.slot0.kP;
+    bearingConfig.closedloopRamp = 0.1;
     bearing.configAllSettings(bearingConfig);
     bearing.setNeutralMode(NeutralMode.Brake);
-    pid = new PIDController(turretYaw_kP, 0, turretYaw_kD);
-    // set position tolerance to 1 degree
-    pid.setTolerance(turretPositionToleranceDegrees);
-    turretFeedforward = new SimpleMotorFeedforward(turretFeedforward_kA, turretFeedforward_ks, turretFeedforward_kv);
+    bearing.setInverted(TalonFXInvertType.CounterClockwise);
     
+    turretCurrentPosition = Rotation2d.fromDegrees(0);
+    turretPositionSetpoint = Rotation2d.fromDegrees(0);
   }
 
-  public void setSetpointDegrees(double setpoint) {
-    visionDegrees = setpoint;
+  private double rotation2dToNativeUnits(Rotation2d rotation) {
+    double degrees = rotation.getDegrees();
+    return degrees * TurretConstants.turretTicksPerDegree;
   }
 
-  public boolean atSetpoint() {
-    return pid.atSetpoint();
-  }
-
-  private void useOutput() {
-    pidOutput = pid.calculate(visionDegrees, 0);
-    bearing.setVoltage(pidOutput);
+  private Rotation2d nativeUnitsToRotation2d(double units) {
+    //254.7 ticks / 1 degree
+    return Rotation2d.fromDegrees(units / TurretConstants.turretTicksPerDegree);
   }
 
   public void stop() {
     bearing.set(0);
   }
 
-  
+  public boolean atSetpoint() {
+    return nativeUnitsToRotation2d(bearing.getClosedLoopError()).getDegrees() < 1;
+  }
+
+  public boolean getActive() {
+    // return mode < 2
+    return mode != ShooterMode.DUMP;
+  }
+
   @Override
   public void periodic() {
-    switch (mode) {
-      case FULL_AUTO:
-      case MANUAL_FIRE:
-        useOutput();
-      case DUMP:
-      case DISABLED:
-        bearing.setVoltage(0);
-        break;
-      default:
-        break;
+    getCurrentPosition();
+    NTHelper.setString("turret_shooter_mode", mode.toString());
+    NTHelper.setDouble("turret_position_deg", turretCurrentPosition.getDegrees());
+    NTHelper.setDouble("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
+    NTHelper.setBoolean("turret_at_setpoint", atSetpoint());
+    /*NTHelper.setDouble("turret_controller_error", bearing.getClosedLoopError());
+    if (bearing.getControlMode() == ControlMode.Position) { 
+      NTHelper.setDouble("turret_controller_target_deg", nativeUnitsToRotation2d(bearing.getClosedLoopTarget()).getDegrees());
+    }*/
+    if (!homed && !isHoming) {
+      startHome();
     }
+    if (!homed) {
+      home();
+    }
+    
+    checkLimits();
+
+  }
+
+  public void startHome() {
+    homed = false;
+    isHoming = true;
+    // counter clockwise, this is positive if motor is uninverted
+    openLoop(0.15);
+    bearing.overrideSoftLimitsEnable(false);
+  }
+
+  public boolean getHomed() {
+    return homed;
+  }
+
+  public void home() {
+    if (checkLimits()) {
+      openLoop(0);
+      homed = true;
+      bearing.overrideSoftLimitsEnable(false);
+    }
+  }
+
+  public void openLoop(double percent) {
+    bearing.set(ControlMode.PercentOutput, percent);
+  }
+
+  public boolean getFwdLimit() {
+    return bearing.isFwdLimitSwitchClosed() == 1;
+  }
+
+  public boolean getRevLimit() {
+    return bearing.isRevLimitSwitchClosed() == 1;
+  }
+
+  public boolean checkLimits() {
+    NTHelper.setBoolean("homed", homed);
+    if (getFwdLimit()) {
+      reset(Rotation2d.fromDegrees(TurretConstants.hardForwardAngle));
+      NTHelper.setBoolean("forward_limit", true);
+      NTHelper.setBoolean("reverse_limit", false);
+      return true;
+    } else if (getRevLimit()) {
+      reset(Rotation2d.fromDegrees(TurretConstants.hardReverseAngle));
+      NTHelper.setBoolean("reverse_limit", true);
+      NTHelper.setBoolean("forward_limit", false);
+      return true;
+    } else {
+      NTHelper.setBoolean("forward_limit", false);
+      NTHelper.setBoolean("reverse_limit", false);
+      return false;
+    }
+  }
+
+  private void reset(Rotation2d angle) {
+    bearing.setSelectedSensorPosition(rotation2dToNativeUnits(angle));
+    turretCurrentPosition = angle;
   }
 
   public void setShooterMode(ShooterMode mode) {
     this.mode = mode;
+  }
+
+  public void setInverted() {
+    bearing.setInverted(true);
+  }
+
+  public void setForward() {
+    bearing.setInverted(false);
+  }
+
+  public void setAngleRelative(double degrees) {
+    Rotation2d transform = Rotation2d.fromDegrees(degrees);
+    Rotation2d pose = turretPositionSetpoint.plus(transform);
+    setPositionSetpoint(pose);
+  }
+
+  public void setPositionSetpoint(Rotation2d setpoint) {
+    //System.out.println(setpoint.getDegrees());
+    turretPositionSetpoint = setpoint;
+    bearing.set(ControlMode.Position, rotation2dToNativeUnits(setpoint));
+  }
+
+  public Rotation2d getCurrentPosition() {
+    turretCurrentPosition = nativeUnitsToRotation2d(bearing.getSelectedSensorPosition());
+    return turretCurrentPosition;
+  }
+
+  public void togglePosition() {
+    if (getCurrentPosition().getDegrees() > -10) {
+      setPositionSetpoint(Rotation2d.fromDegrees(-180));
+    } else {
+      setPositionSetpoint(Rotation2d.fromDegrees(0));
+    }
   }
 }

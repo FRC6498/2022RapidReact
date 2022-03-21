@@ -10,17 +10,29 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import org.photonvision.common.hardware.VisionLEDMode;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants;
+import frc.robot.lib.GoalTrack;
+import frc.robot.lib.NTHelper;
+import io.github.oblarg.oblog.Loggable;
 //import frc.robot.lib.PicoColorSensor;
 import io.github.oblarg.oblog.annotations.Config;
+import io.github.oblarg.oblog.annotations.Log;
 
 /**
  * Coordinates all subsystems involving cargo
@@ -28,13 +40,15 @@ import io.github.oblarg.oblog.annotations.Config;
  * It makes sure two subsystems are ready for handoff before initiating it
  * Reports Statuses back to the dashboard
  */
-public class Superstructure extends SubsystemBase {
+public class Superstructure extends SubsystemBase implements Loggable {
   // Intake
-  private final Intake intake;
+  private final Intake frontIntake;
+  private final Intake backIntake;
   // Vision
   private final Vision vision;
   // Conveyor
-  private final Conveyor conveyor;
+  private final Conveyor frontConveyor;
+  private final Conveyor backConveyor;
   
   //private final PicoColorSensor colorSensor;
   // Flywheel
@@ -44,22 +58,32 @@ public class Superstructure extends SubsystemBase {
   // Feeder
   //climber
   public final Climber climber;
+  public final Drivetrain drivetrain;
   // Triggers
   // Superstructure
   public Trigger shooterReady;
   public Trigger seesawReady;
   // Conveyors
   public Trigger frontConveyorFull;
-  //public Trigger frontConveyorBallColorCorrect;
   public Trigger backConveyorFull;
-  //public Trigger backConveyorBallColorCorrect;
-  public Trigger inLowGear;
   public Trigger flyWheelAtSetpoint;
+  @Log.BooleanBox(name = "Robot Aligned", methodName = "get", tabName = "SmartDashboard")
+  public Trigger robotLinedUp;
   // Intakes
   // Flywheel
-  public Trigger shooterAutoEnabled;
+  public Trigger flywheelEnabled;
+  public Trigger turretEnabled;
+  //TODO: Create Driver Dashboard
+  // active intake 
+  // camera
+  // turret position DONE
+  // low/high gear DONE
+  // robot lined up rumble DONE
+  // flywheel at speed DONE
   
-  ShooterMode shooterMode;
+  @Log.BooleanBox(tabName = "SmartDashboard", name = "Turret Position", colorWhenTrue = "yellow", colorWhenFalse = "blue")
+  boolean turretAtFront = true;
+  ShooterMode mode;
   @Config
   double flywheelRPM = 0.0;
   public boolean isForward;
@@ -67,6 +91,13 @@ public class Superstructure extends SubsystemBase {
   public double feederSpeedStopped = 0.0; 
   WPI_TalonFX feederA;
   WPI_TalonFX feederB;
+  DoubleSolenoid merger;
+  GoalTrack goalTrack;
+  @Log(tabName = "SmartDashboard", name = "Distance to Hub")
+  double distance;
+
+  @Log.BooleanBox(name = "Seesaw Position", colorWhenTrue = "yellow", colorWhenFalse = "blue", tabName = "SmartDashboard")
+  boolean seesawFront = true;
 
   ParallelRaceGroup fullAuto;
   ParallelRaceGroup manualShoot;
@@ -75,63 +106,71 @@ public class Superstructure extends SubsystemBase {
   ParallelRaceGroup testing;
   Consumer<ShooterMode> shooterModeUpdater;
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Intake intake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater, Drivetrain drivetrain) {
     this.flywheel = flywheel;
-    this.conveyor = frontConveyor;
-    this.intake = intake;
+    this.frontConveyor = frontConveyor;
+    this.backConveyor = backConveyor;
+    this.frontIntake = frontIntake;
+    this.backIntake = backIntake;
     this.turret = turret;
     this.vision = vision;
     this.climber = climber;
+    this.drivetrain = drivetrain;
     this.shooterModeUpdater = shooterModeUpdater;
     
+    goalTrack = new GoalTrack(0, new Translation2d());
     //colorSensor = new PicoColorSensor();
-
+    mode = ShooterMode.AUTON;
     feederA = new WPI_TalonFX(10);
     feederA.setInverted(true);
     feederB = new WPI_TalonFX(11);
+    feederA.enableVoltageCompensation(true);
+    feederA.configVoltageCompSaturation(12);
+    feederB.enableVoltageCompensation(true);
+    feederB.configVoltageCompSaturation(12);
 
-    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(0.7), flywheel));
+
+    merger = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.ConveyorConstants.seesawForwardPCMId, Constants.ConveyorConstants.seesawReversePCMId);
+
+    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(NTHelper.getDouble("flywheel_speed_target")), flywheel));
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
     turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
-
+    backConveyor.setDefaultCommand(new RunCommand(backConveyor::start, backConveyor));
 
     
     shooterReady = new Trigger(this::getShooterReady);
-    seesawReady = new Trigger();
+    robotLinedUp = new Trigger(vision::getAligned);
     frontConveyorFull = new Trigger(frontConveyor::isBallPresent);
-    //frontConveyorBallColorCorrect = new Trigger(() -> {return frontConveyor.getCargoColor() == this.getAllianceColor(); });
-    shooterAutoEnabled = new Trigger(flywheel::getFlywheelActive);
-    inLowGear = new Trigger(() -> {return !Drivetrain.isHighGear;});
-    flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});    
+    backConveyorFull = new Trigger(backConveyor::isBallPresent);
+    flywheelEnabled = new Trigger(flywheel::getActive);
+    turretEnabled = new Trigger(turret::getActive);
+    flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
     
-    setupConveyorCommands();
-    setupShooterCommands();
-  }
 
-  private void setupConveyorCommands() {
-    // move to seesaw
-    //frontConveyorFull.whileActiveOnce(
-    //  new StartEndCommand(
-    //    conveyor::start, 
-    //    conveyor::stop, 
-    //    conveyor
-    //  )
-    //);
+    setupShooterCommands();
+    setShooterMode(ShooterMode.AUTON);
   }
   
   private void setupShooterCommands() {
+    //frontConveyorFull.whenActive(new InstantCommand(this::seesawToFront));
+    //backConveyorFull.and(frontConveyorFull.negate()).whenActive(new InstantCommand(this::seesawToRear));
+
     // set speed
-    shooterAutoEnabled.whileActiveOnce(new RunCommand(() -> { 
-      if (vision.hasTargets()) 
-      { 
-        flywheel.setFlywheelDistance(vision.getTargetDistance(vision.getBestTarget()));
-        turret.setSetpointDegrees(vision.getClosestTarget().getYaw());
-      } 
-    }, flywheel, turret));
+   
 
     //frontConveyorFull.whileActiveOnce(new StartEndCommand(this::runFeeder, this::stopFeeder, this));
-    vision.setLED(VisionLEDMode.kOff);
-    turret.setDefaultCommand(new RunCommand(() -> { turret.setSetpointDegrees(0); }, turret));
+    //vision.setLED(VisionLEDMode.kOff);
+    //turret.setDefaultCommand(new RunCommand(() -> { turret.setSetpointDegrees(0); }, turret));
+
+  }
+
+  public void runFeederA() {
+    feederA.set(feederSpeedRunning);
+    feederA.setNeutralMode(NeutralMode.Coast);
+  }
+  public void runFeederB() {
+    feederB.set(feederSpeedRunning);
+    feederB.setNeutralMode(NeutralMode.Coast);
   }
   public void runFeeder() {
     feederA.set(feederSpeedRunning);
@@ -145,6 +184,14 @@ public class Superstructure extends SubsystemBase {
     feederB.set(feederSpeedStopped);
     feederA.setNeutralMode(NeutralMode.Brake);
     feederB.setNeutralMode(NeutralMode.Brake);
+  }
+
+  public void seesawToRear() {
+    merger.set(Value.kForward);
+  }
+
+  public void seesawToFront() {
+    merger.set(Value.kReverse);
   }
 
   public Color getAllianceColor() {
@@ -163,20 +210,39 @@ public class Superstructure extends SubsystemBase {
   public void getBallColors() {
     //backConveyor.setCargoColor(colorSensor.getColor(backConveyor.colorSensorId));
     //frontConveyor.setCargoColor(colorSensor.getColor(frontConveyor.colorSensorId));
-  }
-
-
-  public boolean getShooterActive() {
-    return shooterAutoEnabled.get();
-  }
+  } 
 
   public void setShooterMode(ShooterMode mode) {
-    shooterMode = mode;
+    this.mode = mode;
     shooterModeUpdater.accept(mode);
+    switch (mode) {
+      case MANUAL_FIRE:
+      case FULL_AUTO:
+        NetworkTableInstance.getDefault().setUpdateRate(0.01);
+        vision.setLED(VisionLEDMode.kOn);
+        break;
+      case DUMP:
+        vision.setLED(VisionLEDMode.kOn);
+        break;
+      case AUTON:
+        NetworkTableInstance.getDefault().setUpdateRate(0.1);
+        vision.setLED(VisionLEDMode.kOff);
+        break;
+      default:
+        break;
+    }
+  }
+
+  public void toggleSeesaw() {
+    if (seesawFront) {
+      seesawToRear();
+    } else {
+      seesawToFront();
+    }
   }
 
   public ShooterMode getShooterMode() {
-    return shooterMode;
+    return mode;
   }
 
   public boolean getShooterReady() {
@@ -189,9 +255,68 @@ public class Superstructure extends SubsystemBase {
     FULL_AUTO, // turret and flywheel track the goal, ball is fired if present as soon as shooter is ready
     MANUAL_FIRE, // turret and flywheel track the goal, ball is fired on operator command if present
     DUMP, // Turret locks to dead ahead but flywheel is set to minimum
-    DISABLED // turret and flywheel do not move, shooting is impossible
+    HOMING,
+    AUTON // turret and flywheel do not move, shooting is impossible
   }
   // setShooterMode method here
   // subsystems check shooter mode, act accordingly
+
+  public void addVisionUpdate(double timestamp, PhotonTrackedTarget target) {
+    //counter clock wise is positivie thats why target yaw is inverted
+    //pretty sure x is positive forward, y is positive left
+        
+    double yaw = -target.getYaw();
+  
+    distance = vision.getTargetDistance(target);
+    Rotation2d angle = turret.getCurrentPosition().plus(Rotation2d.fromDegrees(yaw)).plus(drivetrain.getGyroAngle());
+    Translation2d field_to_goal=new Translation2d(distance * angle.getCos(), distance * angle.getSin());
+    goalTrack.tryUpdate(timestamp, field_to_goal);
+    // System.out.println("time: "+timestamp+ " x: "+field_to_goal.getX()+" y: "+field_to_goal.getY());
+    
+
+}
+
+  public void updateVision() {
+    if (vision.hasTargets()) {
+      addVisionUpdate(Timer.getFPGATimestamp(), vision.getBestTarget());
+    }
+  }
+
+  public boolean getSeesawFront() {
+    return merger.get() == Value.kReverse;
+  }
+
+  @Override
+  public void periodic() {
+    
+    Translation2d smoothedPos = goalTrack.getSmoothedPosition();
+    // ALWAYS MAKE A NEW VARIABLE, OTHERWISE IT WILL JITTER DANGEROUSLY!!!
+    Rotation2d smoothedRotation = new Rotation2d(smoothedPos.getX(), smoothedPos.getY());
+    NTHelper.setDouble("smoothed_pos_angle", smoothedRotation.getDegrees());
+    //NTHelper.setDouble("smooth_pos_deg", value);
+    switch (mode) {
+      case MANUAL_FIRE:
+      case FULL_AUTO:
+        if (goalTrack.hasData()) {
+          //turret.setPositionSetpoint(smoothedRotation.minus(drivetrain.getGyroAngle()));
+        }
+        break;
+      case DUMP:
+      case AUTON:
+      default:
+        break;
+    }
+    if (turret.getCurrentPosition().getDegrees() > -10) { // 0, front
+      turretAtFront = true;
+    } else {
+      turretAtFront = false;
+    }
+    
+    if (frontIntake.isExtended()) {
+      seesawToFront();
+    } else if (backIntake.isExtended()) {
+      seesawToRear();
+    }
+  }
   
 }

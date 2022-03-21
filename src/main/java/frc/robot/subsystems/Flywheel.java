@@ -5,23 +5,17 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMax.IdleMode;
+import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxPIDController;
 
-import edu.wpi.first.math.controller.BangBangController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
-import frc.robot.lib.ShotMap;
+import frc.robot.lib.InterpolatingTable;
+import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Config;
-import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.ShooterConstants.*;
 
@@ -29,80 +23,68 @@ public class Flywheel extends SubsystemBase implements Loggable {
   // Hardware
   private final CANSparkMax neo;
   private final RelativeEncoder encoder;
+  private final SparkMaxPIDController pid;
   // Software
-  private final BangBangController flywheelBangBang;
-  private final SimpleMotorFeedforward flywheelFeedforward;
+  //private final SimpleMotorFeedforward flywheelFeedforward;
   private boolean flywheelActive;
-  
-  public double flywheelSpeedSetpoint;
-  @Log
-  private double bangBangOutput;
-  @Log
-  private double feedforwardOutput;
-  private double controllerOutput;
+  public double flywheelSpeedSetpoint = -3000.0;
+  public double flywheel_speed_target;
+  private int speedOffset = 0;
+
+  //private double feedforwardOutput;
   double lastPosition = 0.0;
   double distanceToHub = 0.0;
-  private NetworkTableEntry flywheelSparkMAXSpeedEntry, flywheelSpeedPositionDifferenceEntry;
+  //@Log.ToString(name = "Flywheel Mode", tabName = "SmartDashboard")
   private ShooterMode mode;
-  ShotMap flywheelTable = new ShotMap();
   
   public Flywheel() {
-    mode = ShooterMode.DISABLED;
-    flywheelTable.put(0, 0.8);
-    flywheelTable.put(Units.feetToMeters(9), 1.6);
-    flywheelTable.put(Units.inchesToMeters(10*12+4), 1.8);
-    neo = new CANSparkMax(rightFlywheelCANId, MotorType.kBrushless);
+    mode = ShooterMode.AUTON;
+    neo = new CANSparkMax(flywheelCANId, MotorType.kBrushless);
     encoder = neo.getEncoder();
-    flywheelBangBang = new BangBangController(Constants.ShooterConstants.flywheelSetpointToleranceRPM);
-    flywheelFeedforward = new SimpleMotorFeedforward(
-      flywheelkS, 
-      flywheelkV, 
-      flywheelkA
-    );
-
+    //flywheelFeedforward = new SimpleMotorFeedforward(
+    //  flywheelkS, 
+    //  flywheelkV, 
+    //  flywheelkA
+    //);
+    pid = neo.getPIDController();
     
-    neo.restoreFactoryDefaults(true);
-    neo.setIdleMode(IdleMode.kCoast);
-    neo.setOpenLoopRampRate(flywheelVelocityRampRateSeconds);
-    neo.setInverted(true);
-    neo.enableVoltageCompensation(12);
-    flywheelActive = true;
-    flywheelSpeedSetpoint = 1.5;
-    NetworkTable teamtable = NetworkTableInstance.getDefault().getTable("team6498");
-    flywheelSparkMAXSpeedEntry = teamtable.getEntry("flywheelSpeedEncoderVelocity");
-    flywheelSpeedPositionDifferenceEntry = teamtable.getEntry("flywheelSpeedPositionDifference");
+    //neo.restoreFactoryDefaults(true);
+    //neo.setIdleMode(IdleMode.kCoast);
+    neo.enableVoltageCompensation(12.3);
   } 
   
   /**
    * 
    * @param velocity Desired velocity in rpm
    */
-  @Config
+  //@Config(name = "Set Flywheel Speed(RPM)")
   public void setFlywheelSpeed(double velocity) {
-    flywheelSpeedSetpoint = -velocity * 60;
+      flywheelSpeedSetpoint = -(velocity + speedOffset);
   }
 
   public void setFlywheelDistance(double distance) {
     distanceToHub = distance;
   }
 
-  @Log(name = "Flywheel Velocity (RPM)")
+  public void incrementOffset() {
+    speedOffset += 100;
+  }
+
+  public void decrementOffset() {
+    speedOffset -= 100;
+  }
+
+  //@Log(name = "Flywheel Velocity (RPM)")
   public double getFlywheelSpeed() {
     return encoder.getVelocity();
   }
-  // input -> rpm conversion rate is approx. 1 : 3000
 
   public void setFlywheelIdle() {
-    neo.set(0.0);
+    pid.setReference(0, ControlType.kDutyCycle);
   }
 
-  @Config.ToggleButton
-  public void setFlywheelActive(boolean active) {
-    flywheelActive = active;
-  }
-
-  public boolean getFlywheelActive() {
-    return flywheelActive;
+  public boolean getActive() {
+    return mode != ShooterMode.HOMING;
   }
 
   public boolean atSetpoint() {
@@ -111,40 +93,38 @@ public class Flywheel extends SubsystemBase implements Loggable {
 
   public void setShooterMode(ShooterMode mode) {
     this.mode = mode;
+    switch (mode) {
+      case FULL_AUTO:
+      case MANUAL_FIRE:
+      case DUMP:
+        flywheelActive = true;
+        break;
+      case AUTON:
+        flywheelActive = true;
+        break;
+      default:
+        break;
+    }
   }
   
   @Override
   public void periodic() {
-    flywheelSparkMAXSpeedEntry.setDouble(getFlywheelSpeed());
-    flywheelSpeedPositionDifferenceEntry.setDouble((encoder.getPosition() - lastPosition) / 0.02);
-    flywheelActive = true;
-    // set setpoint based on mode
-    /*switch (mode) {
-      case DISABLED:
-        flywheelSpeedSetpoint = 0;
-        flywheelActive = true;
-        break;
-      case DUMP:
-        flywheelSpeedSetpoint = flywheelTable.getRPM(0);
-        flywheelActive = true;
-      break;
-      //case FULL_AUTO:
-      //flywheelSpeedSetpoint = flywheelTable.getRPM(distanceToHub);
-      default:
-        break;
-    }*/
-    flywheelActive = true;
+    if (mode == ShooterMode.MANUAL_FIRE) {
+      setFlywheelSpeed(InterpolatingTable.get(distanceToHub).rpm);
+    } else if (mode == ShooterMode.DUMP) {
+      setFlywheelSpeed(1750); // dump = 1750
+    } else if (mode == ShooterMode.AUTON) {
+      setFlywheelSpeed(3500);
+    }
+    flywheelSpeedSetpoint = MathUtil.clamp(flywheelSpeedSetpoint, -6500, -1000);
+    flywheel_speed_target = flywheelSpeedSetpoint;
+    NTHelper.setDouble("flywheel_speed_target", flywheelSpeedSetpoint);
+    NTHelper.setDouble("flywheel_speed_actual", getFlywheelSpeed());
     if (flywheelActive) {
-      //flywheelSpeedSetpoint = 0.7;
-      bangBangOutput = flywheelBangBang.calculate(getFlywheelSpeed(), flywheelSpeedSetpoint);
-      feedforwardOutput = flywheelFeedforward.calculate(flywheelSpeedSetpoint);
-      controllerOutput = bangBangOutput + 0.9 * feedforwardOutput;
-      neo.setVoltage(controllerOutput);
+      pid.setReference(flywheelSpeedSetpoint, ControlType.kVelocity);
     } else {
       setFlywheelIdle();
     }
-
-    lastPosition = encoder.getPosition();
   }
 
 }

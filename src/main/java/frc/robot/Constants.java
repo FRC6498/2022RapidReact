@@ -15,7 +15,6 @@ import edu.wpi.first.math.util.Units;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-    public static final double degreesToTurretTicks = 35.04;
     
     public static final class IntakeConstants {
         public static final int intakeACANId = 6;
@@ -28,35 +27,31 @@ public final class Constants {
 
     public static final class ClimberConstants{
         public static final int climberMotorCANId = 7;
-        public static final double climber_kS = 0.0;
-        public static final double climber_kG = 0.0;
-        public static final double climber_kV = 0.0;
         public static final double climber_kP = 0.1;
         public static final double climber_kD = 0.0;
     }
+    
     public static final class DriveConstants {
         public static final int leftLeaderCANId = 1;
         public static final int leftFollowerCANId = 2;
         public static final int rightLeaderCANId = 3;
         public static final int rightFollowerCANId = 4;
         public static final int driveRampRate = 1;
-        public static final int shifterForwardChannelId = 0;
-        public static final int shifterReverseChannelId = 1;
-        public static final double kS = 0;
-        public static final double kV = 0;
-        public static final double kA = 0;
-        public static final double trackWidthMeters = 0;
-        public static final double driveDistancePerTickMeters = Math.PI * Units.inchesToMeters(4);
-        public static final double kAAngular = 0;
-        public static final double kVAngular = 0;
-        public static final double kALinear = 0;
-        public static final double kVLinear = 0;
-        
+        public static final int shifterChannelId = 1;
+        public static final double kS = 0.56531;
+        public static final double kV = 5.7454;
+        public static final double kA = 0.32964;
+        public static final double kP = 2.4283;
+        public static final double trackWidthMeters = Units.inchesToMeters(28.75);
+        public static final double maxSpeedMetersPerSecond = 1.9467;
+        public static final double maxAccelerationMetersPerSecondSquared = 2;
+        public static final double ramseteB = 2;
+        public static final double ramseteZeta = 0.7;
+        public static final double driveDistancePerTickMeters = Math.PI * Units.inchesToMeters(6);    
     }
 
-    public static final class ShooterConstants {
-        //TODO: perform SysId
-        public static final int rightFlywheelCANId = 14;
+    public static final class ShooterConstants {        
+        public static final int flywheelCANId = 14;
         public static final int feederACANId = 10;
         public static final int feederBCANId = 11;     
         public static final double flywheelkP = 0.1782;
@@ -66,41 +61,43 @@ public final class Constants {
         public static final double flywheelkA = 0.018595;
         public static final double flywheelVelocityRampRateSeconds = 0.5;
         public static final double flywheelSetpointToleranceRPM = 10;
-        public static final double flywheelDumpRPM = 0.8;
+        public static final double flywheelDumpRPM = 500;
+        public static final double flywheelHighRPM = 4000;
     }
 
     public static final class TurretConstants {
         public static final int yawMotorCANId = 12;
         public static final double turretPositionToleranceDegrees = 1;
-        public static final double turretYaw_kP = 0.3;
-        public static final double turretYaw_kD = 0;
-        public static final double turretTicksPerRotation = 2048.0*(40.0/10.0)*(40.0/20.0)*(314.0/40.0);
-        public static final double turretMaxPosition = 135+13.25;
-        public static final double turretMinPosition = -135-13.25;
+        public static final double kP = 0.25;
+        public static final double kI = 0.0005;
+        public static final double kD = 0;
+        public static final double turretTicksPerRotation = 2048*(40/10)*(40/20)*(314.0/40.0);
         public static final double turretSoftLimitOffset = 20;
         public static final double turretHomingVelocityStopThreshold = 0.1;
-        public static final double turretFeedforward_kA = 0.89326;
-        public static final double turretFeedforward_ks =  5.9705;
-        public static final double turretFeedforward_kv =  0.21434;
-        // encoder pos associated with dump
-		public static final double turretDumpModePos = 0.0;
-        public static final double turretRampRate = 0;
-        public static final int turretMaxOutput = 0;
+        public static final double kS = 0.89326;
+        public static final double kV =  0.020207;
+        public static final double kA =  0.00072803;
+        public static final double turretTicksPerDegree = turretTicksPerRotation / 360;//254.7;
+        public static final double center = 203.31;
+        public static final double hardForwardAngle = 231.236-center;
+        public static final double hardReverseAngle = 0-center;
+        public static final double frontDumpAngle = 4;
+        public static final double rearDumpAngle = -178;
     }
 
     public static final class ConveyorConstants {
 
-        public static final int rearDriverCANId = 9;
+        public static final int backDriverCANId = 9;
         public static final int frontDriverCANId = 8;
-        public static final int seesawForwardPCMId = 0;
-        public static final int seesawReversePCMId = 0;
+        public static final int seesawForwardPCMId = 6;
+        public static final int seesawReversePCMId = 7;
         public static final int rearColorSensorId = 0;
         public static final int frontColorSensorId = 1;
         public static final double ballPresentCurrentThreshold = 0;
         public static final int frontConveyorPhotoeyeId = 1;
         public static final int backConveyorPhotoeyeId = 0;
-        public static final double conveyorNominalSpeed = 0.25;
-        public static final double ultrasonicScaleFactor = 1024;//0.000976;
+        public static final double conveyorNominalSpeed = 1.0;
+        public static final double ultrasonicScaleFactor = 1024;
     }
 
     public static final class VisionConstants {
@@ -113,7 +110,7 @@ public final class Constants {
         public static final String limelightCameraName = "limelight";
         public static final double limelightHeightFromField = Units.inchesToMeters(27);
         public static final int upperHubPipelineID = 0;
-        public static final double limelightPitch = Units.degreesToRadians(33);
+        public static final double limelightPitch = Units.degreesToRadians(40);
         public static final double[] comparisonConstants = new double[] {
             limelightHeightFromField,
             upperHubTargetHeight,
@@ -127,8 +124,6 @@ public final class Constants {
         public static final int blueBallPipelineID = 2;
         public static final double lifecamPitch = Units.degreesToRadians(limelightPitch+180);
     }
-    public static final class TickTock{
-        public static final int seesawForwardChannel = 6;
-        public static final int seesawReverseChannel = 7;
-    }
+
+    public static final double kMaxGoalTrackAge = 0.05;
 }

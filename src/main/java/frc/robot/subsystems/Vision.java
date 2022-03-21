@@ -21,23 +21,20 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.lib.NTHelper;
 import frc.robot.lib.SortByDistance;
-import io.github.oblarg.oblog.Loggable;
 
-public class Vision extends SubsystemBase implements Loggable {
-  PhotonCamera CAM_limelight, CAM_lifecam;
+public class Vision extends SubsystemBase {
+  PhotonCamera CAM_limelight;
   PhotonPipelineResult currentResult;
-  boolean active = true;
-  NetworkTable NT_photonvision, NT_limelight, NT_lifecam;
+  boolean enabled = true;
+  NetworkTable NT_photonvision, NT_limelight;
   /** Creates a new VisionSystem. */
   public Vision() {
     CAM_limelight = new PhotonCamera(limelightCameraName);
     CAM_limelight.setDriverMode(false);
     CAM_limelight.setPipelineIndex(upperHubPipelineID);
-    CAM_limelight.setLED(VisionLEDMode.kOn);
-
-    CAM_lifecam = new PhotonCamera(lifecamCameraName);
-    CAM_lifecam.setDriverMode(true);
+    //CAM_limelight
 
     NT_photonvision = NetworkTableInstance.getDefault().getTable("photonvision");
     // THIS IS THE COPROCESSOR NOT FOUND FIX
@@ -45,7 +42,6 @@ public class Vision extends SubsystemBase implements Loggable {
     photonVersionEntry.setString("v2022.1.4");
 
     NT_limelight = NT_photonvision.getSubTable("limelight");
-    NT_lifecam = NT_photonvision.getSubTable("Microsoft_LifeCam_HD-3000");
   }
 
   public PhotonTrackedTarget getBestTarget()
@@ -56,12 +52,17 @@ public class Vision extends SubsystemBase implements Loggable {
   public void setLED(VisionLEDMode ledMode)
   {
     CAM_limelight.setLED(ledMode);
+    //System.out.println(CAM_limelight.getLEDMode().toString());
   }
 
   public boolean hasTargets() {
-    return currentResult.hasTargets();
+    if (currentResult != null) {
+      return currentResult.hasTargets();
+    } else { return false; }
   }
+
   /**
+   * 
    * 
    * @return Distance to the current pipeline's best target, for input to a PID controller (for shooting)
    */
@@ -70,7 +71,7 @@ public class Vision extends SubsystemBase implements Loggable {
     return PhotonUtils.calculateDistanceToTargetMeters(
       Units.inchesToMeters(29), 
       2.64, // 264cm from floor->ring
-      Units.degreesToRadians(20), 
+      Units.degreesToRadians(40), 
       Units.degreesToRadians(target.getPitch())
     );
   }
@@ -81,24 +82,52 @@ public class Vision extends SubsystemBase implements Loggable {
     return targets.get(0);
   }
 
-  public void setActive(boolean active) {
-    this.active = active;
-    if (!active) {
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+    if (!enabled) {
       CAM_limelight.setLED(VisionLEDMode.kOff);
     } else {
       CAM_limelight.setLED(VisionLEDMode.kOn);
     }
+    
   }
 
   public int getTargetCount() {
     return currentResult.getTargets().size();
   }
 
+  public double getTargetYaw(PhotonTrackedTarget target) {
+    if (hasTargets()) {
+      return -target.getYaw();
+    } else {
+      return 0;
+    }
+  }
+
+  public VisionLEDMode getLED() {
+    return CAM_limelight.getLEDMode();
+  }
+
+  public void updatePhotonResult() {
+    if (enabled) {
+      currentResult = CAM_limelight.getLatestResult();
+
+      if (currentResult.hasTargets() && currentResult != null) {
+        NTHelper.setDouble("target_distance", getTargetDistance(getBestTarget()));
+      } else {
+        NTHelper.setDouble("target_distance", -1.0);
+      }
+    }
+  }
+
+  public boolean getAligned() {
+    if (currentResult != null && currentResult.hasTargets() && enabled) {
+      return getBestTarget().getYaw() < 3;
+    } else return false;
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per robot loop; before triggered commands are scheduled and before any commands are run
-    if (active) {
-      currentResult = CAM_limelight.getLatestResult();
-    }
   }
 }

@@ -12,30 +12,30 @@ import com.revrobotics.ColorMatchResult;
 
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.MedianFilter;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
+//import edu.wpi.first.networktables.NetworkTableEntry;
+//import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.AnalogInput;
+//import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log;
+//import io.github.oblarg.oblog.Loggable;
+//import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.ConveyorConstants.*;
 
-import javax.print.attribute.standard.Media;
-
-public class Conveyor extends SubsystemBase implements Loggable {
+public class Conveyor extends SubsystemBase {
 
   private final WPI_TalonFX driver;
   private final AnalogInput ballSensor;
   private final TalonFXConfiguration driverConfig;
   private final LinearFilter sensorSmoother;
   private final MedianFilter sensorOutliers;
-  private final NetworkTableEntry sensorDistanceEntry;
+  //private final NetworkTableEntry sensorDistanceEntry;
   private Color cargoColor;
-  public boolean running;
-  @Log
+  public boolean running = true;
+  boolean reversed;
+  //@Log
   public boolean empty;
   //@Log.BooleanBox(name = "Ball Present (Color)")
   boolean colorEmpty;
@@ -43,14 +43,11 @@ public class Conveyor extends SubsystemBase implements Loggable {
   boolean currentEmpty;
   public int colorSensorId;
   private ColorMatch colorMatch;
-  @Log
-  private double driverOutput;
+  //@Log
+  //private double driverOutput;
 
   private double ballDistanceThresholdMillimeters = 325;
   
-
-  //TODO: What LEDs if any?
-
   /** Commands
    * Start/Stop Front
    * Start/Stop Back
@@ -58,17 +55,17 @@ public class Conveyor extends SubsystemBase implements Loggable {
 
   /** Creates a new Conveyor. */
   public Conveyor(int driverCANId, int ballSensorChannelID) {
-    driver = new WPI_TalonFX(driverCANId);
+    driver = new WPI_TalonFX(driverCANId); 
 
     driverConfig = new TalonFXConfiguration();
     driverConfig.openloopRamp = 0.5;
-    driverConfig.peakOutputForward = 0.5;
-    driverConfig.peakOutputReverse = -0.5;
+    driverConfig.peakOutputForward = 1.0;
+    driverConfig.peakOutputReverse = -1.0;
     driverConfig.voltageCompSaturation = 12;
 
     driver.configAllSettings(driverConfig);
     driver.enableVoltageCompensation(true);
-    driverOutput = 0.0;
+    //driverOutput = 0.0;
 
     cargoColor = Color.kGray;
     running = false;
@@ -82,24 +79,31 @@ public class Conveyor extends SubsystemBase implements Loggable {
 
     sensorSmoother = LinearFilter.singlePoleIIR(0.25, 0.02);
     sensorOutliers = new MedianFilter(5);
-    sensorDistanceEntry = NetworkTableInstance.getDefault().getTable("team6498").getEntry("ballDistance");
+    //sensorDistanceEntry = NetworkTableInstance.getDefault().getTable("team6498").getEntry("ballDistance");
+    if (driverCANId == 9) {
+      driver.setInverted(true);
+    }
   }
 
   public void start() {
-    start(-1);
+    running = true;
   }
 
   public void start(double dutyCycle) {
-    driverOutput = Constants.ConveyorConstants.conveyorNominalSpeed * dutyCycle;
+    //driverOutput = Constants.ConveyorConstants.conveyorNominalSpeed * dutyCycle;
     running = true;
   }
 
   public void stop() {
-    driverOutput = 0;
+    driver.set(0);
   }
 
-  public void reverse() {
-    driverOutput *= -1;
+  public void setForward() {
+    reversed = false;
+  }
+
+  public void setReversed() {
+    reversed = true;
   }
 
   public Color getCargoColor() {
@@ -134,7 +138,7 @@ public class Conveyor extends SubsystemBase implements Loggable {
     return getSonarDistance() < ballDistanceThresholdMillimeters; // 50mm = 5cm
   }
 
-  @Log.Graph(name = "Ball Sensor Distance (mm)")
+  //@Log.Graph(name = "Ball Sensor Distance (mm)")
   private double getSonarDistance() {
     // volts = millivolts / 1000
     double volts = ballSensor.getVoltage();
@@ -143,25 +147,25 @@ public class Conveyor extends SubsystemBase implements Loggable {
     return sensorSmoother.calculate(sensorOutliers.calculate(rangeMilliMeters));
   }
 
+  private void updateOutput() {
+    if (running) {
+        if (reversed) {
+          if (driver.get() > 0) { // we are going forwards, reverse it
+            driver.set(-Constants.ConveyorConstants.conveyorNominalSpeed);
+          }
+        } else { 
+          if (driver.get() <= 0) { // going backwards, forwards it
+            driver.set(Constants.ConveyorConstants.conveyorNominalSpeed);
+          }
+        }
+      }
+    }
+
   @Override
   public void periodic() {
     // are we empty
     empty = !isBallPresent();
     empty = false;
-    if (empty) {
-      driver.set(0);
-    } else {
-      driver.set(0.1);
-    }
+    updateOutput();
   }
 }
-
-// flow:
-// check if conveyor is empty
-// check ball color if conveyor is full
-// check if shooter is ready
-
-// if the shooter is ready and the conveyor is full and the ball is the correct color
-//    run the conveyor until the feeder takes the ball
-// if the intake is full and the conveyor is empty
-//    run the intake slowly and the conveyor until the conveyor is full

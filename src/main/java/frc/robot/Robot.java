@@ -4,14 +4,14 @@
 
 package frc.robot;
 
-import org.photonvision.common.hardware.VisionLEDMode;
-
-import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi. first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.lib.NTHelper;
 import io.github.oblarg.oblog.Logger;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -26,6 +26,7 @@ public class Robot extends TimedRobot {
   private RobotContainer m_robotContainer;
   @Log
   UsbCamera frontCamera;
+  NTHelper nth = new NTHelper();
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -33,15 +34,21 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
+
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+    LiveWindow.disableAllTelemetry();
     //addPeriodic(() -> m_robotContainer.superstructure.getBallColors(), 0.5);
     
     Logger.configureLoggingAndConfig(m_robotContainer, false);
+    DataLogManager.logNetworkTables(false);
     frontCamera = CameraServer.startAutomaticCapture();
-    frontCamera.setResolution(640, 480);
-    //DataLogManager.start();
+    frontCamera.setResolution(320, 240);
+    setNetworkTablesFlushEnabled(true);
+    m_robotContainer.drivetrain.resetSensors();
+    addPeriodic(() -> m_robotContainer.superstructure.updateVision(), 0.01);
+    addPeriodic(() -> m_robotContainer.vision.updatePhotonResult(), 0.01);
   }
 
   /**
@@ -64,7 +71,6 @@ public class Robot extends TimedRobot {
   /** This function is called once each time the robot enters Disabled mode. */
   @Override
   public void disabledInit() {
-    m_robotContainer.vision.setLED(VisionLEDMode.kOff);
   }
 
 
@@ -81,6 +87,7 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
+    m_robotContainer.drivetrain.resetSensors();
   }
 
   /** This function is called periodically during autonomous. */
@@ -96,6 +103,7 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+    m_robotContainer.drivetrain.resetSensors();
   }
 
   /** This function is called periodically during operator control. */

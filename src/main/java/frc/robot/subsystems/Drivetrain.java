@@ -4,7 +4,7 @@
 
 package frc.robot.subsystems;
 
-import static frc.robot.Constants.DriveConstants.*;
+import frc.robot.Constants.DriveConstants;
 
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
@@ -13,10 +13,12 @@ import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
@@ -27,6 +29,7 @@ import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
@@ -35,11 +38,11 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.lib.NTHelper;
 import frc.robot.Robot;
 import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log;
 
-public class Drivetrain extends SubsystemBase implements Loggable {
+public class Drivetrain extends SubsystemBase implements Loggable{
   // motors
   private final WPI_TalonFX leftLeader, rightLeader;
   private final WPI_TalonFX leftFollower, rightFollower;
@@ -53,36 +56,34 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   private final DifferentialDriveOdometry odometry;
   private final DifferentialDriveKinematics kinematics;
   private final DifferentialDrive diffDrive;
-  // 
-  @Log
-  private final DoubleSolenoid  shifter; // gear shifter
-  private final Compressor compressor;
+  //
+  private final Solenoid shifter; // gear shifter
   // imu
   private final AHRS gyro;
   
-  private LinearFilter velAvg = LinearFilter.movingAverage(5);
+  private Pose2d initialPose = new Pose2d(0, 0, Rotation2d.fromDegrees(0));
   public static boolean isHighGear = false;
   private boolean driveInverted;
   private NeutralMode currentBrakeMode = NeutralMode.Coast;
-  private double currentSpeedMetersPerSecond = 0.0;
   private final SimpleMotorFeedforward drivetrainFeedforward =
     new SimpleMotorFeedforward(
       Constants.DriveConstants.kS,
       Constants.DriveConstants.kV,
       Constants.DriveConstants.kA
     );
+  private final PIDController leftController, rightController;
 
   public Drivetrain()
   {
-    leftLeader = new WPI_TalonFX(leftLeaderCANId);
-    leftFollower = new WPI_TalonFX(leftFollowerCANId);
-    rightLeader = new WPI_TalonFX(rightLeaderCANId);
-    rightFollower = new WPI_TalonFX(rightFollowerCANId);
+    leftLeader = new WPI_TalonFX(DriveConstants.leftLeaderCANId);
+    leftFollower = new WPI_TalonFX(DriveConstants.leftFollowerCANId);
+    rightLeader = new WPI_TalonFX(DriveConstants.rightLeaderCANId);
+    rightFollower = new WPI_TalonFX(DriveConstants.rightFollowerCANId);
 
-    leftLeader.configOpenloopRamp(driveRampRate);
-    leftFollower.configOpenloopRamp(driveRampRate);
-    rightLeader.configOpenloopRamp(driveRampRate);
-    rightFollower.configOpenloopRamp(driveRampRate);
+    leftLeader.configOpenloopRamp(DriveConstants.driveRampRate);
+    leftFollower.configOpenloopRamp(DriveConstants.driveRampRate);
+    rightLeader.configOpenloopRamp(DriveConstants.driveRampRate);
+    rightFollower.configOpenloopRamp(DriveConstants.driveRampRate);
 
     leftFollower.follow(leftLeader);
     rightFollower.follow(rightLeader);
@@ -97,12 +98,10 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     diffDrive.setSafetyEnabled(false);
 
     gyro = new AHRS(Port.kMXP);
-    gyro.reset();
     odometry = new DifferentialDriveOdometry(gyro.getRotation2d());
     kinematics = new DifferentialDriveKinematics(Constants.DriveConstants.trackWidthMeters);
 
-    compressor = new Compressor(PneumaticsModuleType.CTREPCM);
-    shifter = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, shifterForwardChannelId, shifterReverseChannelId);
+    shifter = new Solenoid(PneumaticsModuleType.CTREPCM, DriveConstants.shifterChannelId);
 
     // engage brakes when neutral input
     setBrakeMode(NeutralMode.Brake);
@@ -110,6 +109,9 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     // setup encoders
     leftLeader.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
     rightLeader.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+
+    leftController = new PIDController(1, 0, 0);
+    rightController = new PIDController(1, 0, 0);
 
     leftFollower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 200);
     rightFollower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 199);
@@ -136,7 +138,6 @@ public class Drivetrain extends SubsystemBase implements Loggable {
 
   public void resetSensors()
   {
-    gyro.reset();
     leftLeader.setSelectedSensorPosition(0);
     rightLeader.setSelectedSensorPosition(0);
   }
@@ -144,16 +145,28 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   public Rotation2d getGyroAngle()
   {
     // negative angle because of the direction the gyro is mounted
-    return Rotation2d.fromDegrees(gyro.getAngle());
+    return gyro.getRotation2d();
   }
 
-  @Log
+  //@Log
   public double getHeading() {
     return getGyroAngle().getDegrees();
   }
 
   public double getTurnRate() {
     return gyro.getRate();
+  }
+
+  public double getDistance(Pose2d startPose, Pose2d endPose) {
+    return startPose.getTranslation().getDistance(endPose.getTranslation());
+  }
+
+  public double getDistance(Pose2d endPose) {
+    return initialPose.getTranslation().getDistance(endPose.getTranslation());
+  }
+
+  public void getInitialPose() {
+    initialPose = getPose();
   }
 
   public void setBrakeMode(NeutralMode brakeMode)
@@ -183,18 +196,22 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     diffDrive.arcadeDrive(throttle, turn, true);
   }
 
+  public void slewRateArcadeDrive(double speedMetersPerSecond, double angularVelocityRadiansPerSecond) {
+    setSpeeds(kinematics.toWheelSpeeds(new ChassisSpeeds(speedMetersPerSecond, 0, angularVelocityRadiansPerSecond)));
+  }
+
   public void toggleGear()
   {
     if (isHighGear) {
-      shifter.set(Value.kReverse);
+      shifter.set(false);
       isHighGear = false;
     } else {
-      shifter.set(Value.kForward);
+      shifter.set(true);
       isHighGear = true;
     }
   }
 
-  @Log(name="Gear")
+  //@Log(name="Gear", tabName = "SmartDashboard")
   public String getGear()
   {
     if (isHighGear) {
@@ -209,34 +226,86 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     arcadeDrive(0, 0);
   }
 
-  @Log
+  //@Log
   public String getBrakeMode() {
     return currentBrakeMode.toString();
   }
 
-  @Log(name = "Yaw (deg.)")
+  //@Log(name = "Yaw (deg.)")
   public double getGyroAngleDegrees() {
-    return getGyroAngle().getDegrees();
+    double deg = getGyroAngle().getDegrees() % 360;
+    return deg;
+  }
+
+  public Pose2d getPose() {
+    return odometry.getPoseMeters();
+  }
+
+  public void setSpeeds(DifferentialDriveWheelSpeeds wheelSpeeds) {
+    final double leftFeedforward = drivetrainFeedforward.calculate(wheelSpeeds.leftMetersPerSecond);
+    final double rightFeedforward = drivetrainFeedforward.calculate(wheelSpeeds.rightMetersPerSecond);
+
+    final double leftOutput = leftController.calculate(getLeftSpeedMetersPerSecond(), wheelSpeeds.leftMetersPerSecond);
+    final double rightOutput = rightController.calculate(getRightSpeedMetersPerSecond(), wheelSpeeds.rightMetersPerSecond);
+
+    leftMotors.setVoltage(leftOutput + leftFeedforward);
+    rightMotors.setVoltage(rightOutput + rightFeedforward);
+  }
+
+  public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+    return new DifferentialDriveWheelSpeeds(getLeftSpeedMetersPerSecond(), getRightSpeedMetersPerSecond());
+  }
+
+  public DifferentialDriveKinematics getKinematics() {
+    return kinematics;
+  }
+
+  public SimpleMotorFeedforward getFeedforward() {
+    return drivetrainFeedforward;
+  }
+
+  /**
+   * Resets odometry to a specified pose.
+   * @param pose The pose to set the odometry pose to.
+   */
+  public void resetOdometry(Pose2d pose) {
+    resetSensors();
+    odometry.resetPosition(pose, gyro.getRotation2d());
+  }
+
+  public void tankDriveVolts(double leftVolts, double rightVolts) {
+    leftMotors.setVoltage(leftVolts);
+    rightMotors.setVoltage(rightVolts);
+  }
+
+  public double getMeanEncoderDistance() {
+    return (getLeftDistanceMeters() + getRightDistanceMeters()) / 2.0;
   }
 
   @Override
   public void periodic() {
     odometry.update(
       gyro.getRotation2d(), 
-      leftLeader.getSelectedSensorPosition() * driveDistancePerTickMeters, 
-      rightLeader.getSelectedSensorPosition() * driveDistancePerTickMeters
+      getLeftDistanceMeters(), 
+      getRightDistanceMeters()
     );
-    currentSpeedMetersPerSecond = velAvg.calculate(
-      kinematics.toChassisSpeeds(
-        new DifferentialDriveWheelSpeeds(
-          leftLeader.getSelectedSensorVelocity() * driveDistancePerTickMeters, 
-          rightLeader.getSelectedSensorVelocity() * driveDistancePerTickMeters
-        )
-      ).vxMetersPerSecond
-    );
+
+    NTHelper.setDouble("yaw_deg", getGyroAngleDegrees());
   }
 
-  public boolean getStopped() {
-    return currentSpeedMetersPerSecond < 0.1;
+  private double getLeftDistanceMeters() {
+    return leftLeader.getSelectedSensorPosition() * DriveConstants.driveDistancePerTickMeters;
+  }
+
+  private double getRightDistanceMeters() {
+    return rightLeader.getSelectedSensorVelocity() * DriveConstants.driveDistancePerTickMeters;
+  }
+
+  private double getLeftSpeedMetersPerSecond() {
+    return leftLeader.getSelectedSensorVelocity() * DriveConstants.driveDistancePerTickMeters * 10;
+  }
+
+  private double getRightSpeedMetersPerSecond() {
+    return rightLeader.getSelectedSensorVelocity() * DriveConstants.driveDistancePerTickMeters * 10;
   }
 }
