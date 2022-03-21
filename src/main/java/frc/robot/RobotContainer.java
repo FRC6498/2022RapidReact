@@ -11,9 +11,10 @@
 package frc.robot;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
@@ -63,9 +64,7 @@ public class RobotContainer {
     turret.setShooterMode(mode);
   };
   Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, shooterModeUpdater, drivetrain);
-  Field2d field;
-  XboxController driver = new XboxController(0);
-  XboxController operator = new XboxController(1);
+  SlewRateLimiter forwardLimiter;
 
   Trigger retractClimb = new Trigger();
   Trigger robotLinedUp = new Trigger(vision::getAligned);
@@ -87,9 +86,9 @@ public class RobotContainer {
     //vision.setLED(VisionLEDMode.kOff);
     drivetrain.setDefaultCommand(
       new DriveArcadeOpenLoop(
-        driver::getRightTriggerAxis, 
-        driver::getLeftX, 
-        driver::getLeftTriggerAxis, 
+        driverCmd::getRightTriggerAxis, 
+        driverCmd::getLeftX, 
+        driverCmd::getLeftTriggerAxis, 
         drivetrain
       )
     );
