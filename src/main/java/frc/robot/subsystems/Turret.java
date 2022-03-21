@@ -32,7 +32,7 @@ public class Turret extends SubsystemBase {
   private Rotation2d turretCurrentPosition;
 
   public Turret() {
-    mode = ShooterMode.DISABLED;
+    mode = ShooterMode.AUTON;
     homed = false;
     isHoming = false;
     bearing = new WPI_TalonFX(TurretConstants.yawMotorCANId);
@@ -78,7 +78,7 @@ public class Turret extends SubsystemBase {
 
   public boolean getActive() {
     // return mode < 2
-    return mode != ShooterMode.DUMP || mode != ShooterMode.DISABLED;
+    return mode != ShooterMode.DUMP;
   }
 
   @Override
@@ -186,5 +186,13 @@ public class Turret extends SubsystemBase {
   public Rotation2d getCurrentPosition() {
     turretCurrentPosition = nativeUnitsToRotation2d(bearing.getSelectedSensorPosition());
     return turretCurrentPosition;
+  }
+
+  public void togglePosition() {
+    if (getCurrentPosition().getDegrees() > -10) {
+      setPositionSetpoint(Rotation2d.fromDegrees(-180));
+    } else {
+      setPositionSetpoint(Rotation2d.fromDegrees(0));
+    }
   }
 }

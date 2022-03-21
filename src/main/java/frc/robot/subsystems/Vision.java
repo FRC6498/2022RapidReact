@@ -27,7 +27,7 @@ import frc.robot.lib.SortByDistance;
 public class Vision extends SubsystemBase {
   PhotonCamera CAM_limelight;
   PhotonPipelineResult currentResult;
-  boolean active = true;
+  boolean enabled = true;
   NetworkTable NT_photonvision, NT_limelight;
   /** Creates a new VisionSystem. */
   public Vision() {
@@ -82,9 +82,9 @@ public class Vision extends SubsystemBase {
     return targets.get(0);
   }
 
-  public void setActive(boolean active) {
-    this.active = active;
-    if (!active) {
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+    if (!enabled) {
       CAM_limelight.setLED(VisionLEDMode.kOff);
     } else {
       CAM_limelight.setLED(VisionLEDMode.kOn);
@@ -109,7 +109,7 @@ public class Vision extends SubsystemBase {
   }
 
   public void updatePhotonResult() {
-    if (active) {
+    if (enabled) {
       currentResult = CAM_limelight.getLatestResult();
 
       if (currentResult.hasTargets() && currentResult != null) {
@@ -118,6 +118,12 @@ public class Vision extends SubsystemBase {
         NTHelper.setDouble("target_distance", -1.0);
       }
     }
+  }
+
+  public boolean getAligned() {
+    if (currentResult != null && currentResult.hasTargets() && enabled) {
+      return getBestTarget().getYaw() < 3;
+    } else return false;
   }
 
   @Override

@@ -28,9 +28,9 @@ import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.lib.NTHelper;
-import io.github.oblarg.oblog.annotations.Log;
+import io.github.oblarg.oblog.Loggable;
 
-public class Drivetrain extends SubsystemBase {
+public class Drivetrain extends SubsystemBase implements Loggable{
   // motors
   private final WPI_TalonFX leftLeader, rightLeader;
   private final WPI_TalonFX leftFollower, rightFollower;
@@ -38,12 +38,12 @@ public class Drivetrain extends SubsystemBase {
   private final DifferentialDriveOdometry odometry;
   private final DifferentialDriveKinematics kinematics;
   private final DifferentialDrive diffDrive;
-  // 
-  @Log
+  //
   private final Solenoid shifter; // gear shifter
   // imu
   private final AHRS gyro;
   
+  private Pose2d initialPose = new Pose2d(0, 0, Rotation2d.fromDegrees(0));
   public static boolean isHighGear = false;
   private boolean driveInverted;
   private NeutralMode currentBrakeMode = NeutralMode.Coast;
@@ -112,13 +112,25 @@ public class Drivetrain extends SubsystemBase {
     return gyro.getRotation2d();
   }
 
-  @Log
+  //@Log
   public double getHeading() {
     return getGyroAngle().getDegrees();
   }
 
   public double getTurnRate() {
     return gyro.getRate();
+  }
+
+  public double getDistance(Pose2d startPose, Pose2d endPose) {
+    return startPose.getTranslation().getDistance(endPose.getTranslation());
+  }
+
+  public double getDistance(Pose2d endPose) {
+    return initialPose.getTranslation().getDistance(endPose.getTranslation());
+  }
+
+  public void getInitialPose() {
+    initialPose = getPose();
   }
 
   public void setBrakeMode(NeutralMode brakeMode)
@@ -163,7 +175,7 @@ public class Drivetrain extends SubsystemBase {
     }
   }
 
-  @Log(name="Gear")
+  //@Log(name="Gear", tabName = "SmartDashboard")
   public String getGear()
   {
     if (isHighGear) {
@@ -178,12 +190,12 @@ public class Drivetrain extends SubsystemBase {
     arcadeDrive(0, 0);
   }
 
-  @Log
+  //@Log
   public String getBrakeMode() {
     return currentBrakeMode.toString();
   }
 
-  @Log(name = "Yaw (deg.)")
+  //@Log(name = "Yaw (deg.)")
   public double getGyroAngleDegrees() {
     double deg = getGyroAngle().getDegrees() % 360;
     return deg;

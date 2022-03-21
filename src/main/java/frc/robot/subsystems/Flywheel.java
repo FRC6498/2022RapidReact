@@ -16,7 +16,6 @@ import frc.robot.lib.InterpolatingTable;
 import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log ;
 
 import static frc.robot.Constants.ShooterConstants.*;
 
@@ -35,11 +34,11 @@ public class Flywheel extends SubsystemBase implements Loggable {
   //private double feedforwardOutput;
   double lastPosition = 0.0;
   double distanceToHub = 0.0;
-  @Log.ToString(name = "Flywheel Mode", tabName = "SmartDashboard")
+  //@Log.ToString(name = "Flywheel Mode", tabName = "SmartDashboard")
   private ShooterMode mode;
   
   public Flywheel() {
-    mode = ShooterMode.DISABLED;
+    mode = ShooterMode.AUTON;
     neo = new CANSparkMax(flywheelCANId, MotorType.kBrushless);
     encoder = neo.getEncoder();
     //flywheelFeedforward = new SimpleMotorFeedforward(
@@ -75,7 +74,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     speedOffset -= 100;
   }
 
-  @Log(name = "Flywheel Velocity (RPM)")
+  //@Log(name = "Flywheel Velocity (RPM)")
   public double getFlywheelSpeed() {
     return encoder.getVelocity();
   }
@@ -85,7 +84,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   }
 
   public boolean getActive() {
-    return mode != ShooterMode.DISABLED || mode != ShooterMode.HOMING;
+    return mode != ShooterMode.HOMING;
   }
 
   public boolean atSetpoint() {
@@ -100,8 +99,8 @@ public class Flywheel extends SubsystemBase implements Loggable {
       case DUMP:
         flywheelActive = true;
         break;
-      case DISABLED:
-        flywheelActive = false;
+      case AUTON:
+        flywheelActive = true;
         break;
       default:
         break;
@@ -113,9 +112,9 @@ public class Flywheel extends SubsystemBase implements Loggable {
     if (mode == ShooterMode.MANUAL_FIRE) {
       setFlywheelSpeed(InterpolatingTable.get(distanceToHub).rpm);
     } else if (mode == ShooterMode.DUMP) {
-      setFlywheelSpeed(1750); // check this
-    } else if (mode == ShooterMode.DISABLED) {
-      pid.setReference(0.0, ControlType.kDutyCycle);
+      setFlywheelSpeed(1750); // dump = 1750
+    } else if (mode == ShooterMode.AUTON) {
+      setFlywheelSpeed(3500);
     }
     flywheelSpeedSetpoint = MathUtil.clamp(flywheelSpeedSetpoint, -6500, -1000);
     flywheel_speed_target = flywheelSpeedSetpoint;

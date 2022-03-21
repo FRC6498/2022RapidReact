@@ -15,9 +15,6 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.util.datalog.DataLog;
-import edu.wpi.first.util.datalog.DoubleLogEntry;
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -32,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.lib.GoalTrack;
 import frc.robot.lib.NTHelper;
+import io.github.oblarg.oblog.Loggable;
 //import frc.robot.lib.PicoColorSensor;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -42,7 +40,7 @@ import io.github.oblarg.oblog.annotations.Log;
  * It makes sure two subsystems are ready for handoff before initiating it
  * Reports Statuses back to the dashboard
  */
-public class Superstructure extends SubsystemBase {
+public class Superstructure extends SubsystemBase implements Loggable {
   // Intake
   private final Intake frontIntake;
   private final Intake backIntake;
@@ -69,17 +67,22 @@ public class Superstructure extends SubsystemBase {
   public Trigger frontConveyorFull;
   public Trigger backConveyorFull;
   public Trigger flyWheelAtSetpoint;
-  @Log.BooleanBox(methodName = "get")
+  @Log.BooleanBox(name = "Robot Aligned", methodName = "get", tabName = "SmartDashboard")
   public Trigger robotLinedUp;
   // Intakes
   // Flywheel
   public Trigger flywheelEnabled;
   public Trigger turretEnabled;
   //TODO: Create Driver Dashboard
-  // active intake
+  // active intake 
   // camera
-  // turret lined up
-  // flywheel at speed
+  // turret position DONE
+  // low/high gear DONE
+  // robot lined up rumble DONE
+  // flywheel at speed DONE
+  
+  @Log.BooleanBox(tabName = "SmartDashboard", name = "Turret Position", colorWhenTrue = "yellow", colorWhenFalse = "blue")
+  boolean turretAtFront = true;
   ShooterMode mode;
   @Config
   double flywheelRPM = 0.0;
@@ -90,10 +93,10 @@ public class Superstructure extends SubsystemBase {
   WPI_TalonFX feederB;
   DoubleSolenoid merger;
   GoalTrack goalTrack;
-  DataLog log;
-  DoubleLogEntry distanceLog, speedLog;
+  @Log(tabName = "SmartDashboard", name = "Distance to Hub")
+  double distance;
 
-  @Log.BooleanBox(name = "Active Conveyor", colorWhenTrue = "#d6e810", colorWhenFalse = "#1861d6")
+  @Log.BooleanBox(name = "Seesaw Position", colorWhenTrue = "yellow", colorWhenFalse = "blue", tabName = "SmartDashboard")
   boolean seesawFront = true;
 
   ParallelRaceGroup fullAuto;
@@ -115,13 +118,9 @@ public class Superstructure extends SubsystemBase {
     this.drivetrain = drivetrain;
     this.shooterModeUpdater = shooterModeUpdater;
     
-    log = DataLogManager.getLog();
-    speedLog = new DoubleLogEntry(log, "flywheelSpeedRPM");
-    distanceLog = new DoubleLogEntry(log, "cameraDistanceMeters");
-
     goalTrack = new GoalTrack(0, new Translation2d());
     //colorSensor = new PicoColorSensor();
-    mode = ShooterMode.DISABLED;
+    mode = ShooterMode.AUTON;
     feederA = new WPI_TalonFX(10);
     feederA.setInverted(true);
     feederB = new WPI_TalonFX(11);
@@ -140,28 +139,16 @@ public class Superstructure extends SubsystemBase {
 
     
     shooterReady = new Trigger(this::getShooterReady);
-    seesawReady = new Trigger();
+    robotLinedUp = new Trigger(vision::getAligned);
     frontConveyorFull = new Trigger(frontConveyor::isBallPresent);
     backConveyorFull = new Trigger(backConveyor::isBallPresent);
     flywheelEnabled = new Trigger(flywheel::getActive);
     turretEnabled = new Trigger(turret::getActive);
     flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
-    robotLinedUp = new Trigger(() -> vision.getBestTarget().getYaw() < 1);
     
 
     setupShooterCommands();
-    setShooterMode(ShooterMode.DISABLED);
-  }
-
-  public void recordShot() {
-    if (goalTrack.hasData()) {
-      distanceLog.append(vision.getTargetDistance(vision.getBestTarget()));
-      speedLog.append(flywheel.getFlywheelSpeed());
-    } else {
-      distanceLog.append(-1, 0);
-      speedLog.append(-1, 0);
-      DataLogManager.log("No PhotonVision Targets Found");
-    }
+    setShooterMode(ShooterMode.AUTON);
   }
   
   private void setupShooterCommands() {
@@ -237,12 +224,20 @@ public class Superstructure extends SubsystemBase {
       case DUMP:
         vision.setLED(VisionLEDMode.kOn);
         break;
-      case DISABLED:
+      case AUTON:
         NetworkTableInstance.getDefault().setUpdateRate(0.1);
         vision.setLED(VisionLEDMode.kOff);
         break;
       default:
         break;
+    }
+  }
+
+  public void toggleSeesaw() {
+    if (seesawFront) {
+      seesawToRear();
+    } else {
+      seesawToFront();
     }
   }
 
@@ -261,7 +256,7 @@ public class Superstructure extends SubsystemBase {
     MANUAL_FIRE, // turret and flywheel track the goal, ball is fired on operator command if present
     DUMP, // Turret locks to dead ahead but flywheel is set to minimum
     HOMING,
-    DISABLED // turret and flywheel do not move, shooting is impossible
+    AUTON // turret and flywheel do not move, shooting is impossible
   }
   // setShooterMode method here
   // subsystems check shooter mode, act accordingly
@@ -272,7 +267,7 @@ public class Superstructure extends SubsystemBase {
         
     double yaw = -target.getYaw();
   
-    double distance = vision.getTargetDistance(target);
+    distance = vision.getTargetDistance(target);
     Rotation2d angle = turret.getCurrentPosition().plus(Rotation2d.fromDegrees(yaw)).plus(drivetrain.getGyroAngle());
     Translation2d field_to_goal=new Translation2d(distance * angle.getCos(), distance * angle.getSin());
     goalTrack.tryUpdate(timestamp, field_to_goal);
@@ -307,9 +302,14 @@ public class Superstructure extends SubsystemBase {
         }
         break;
       case DUMP:
-      case DISABLED:
+      case AUTON:
       default:
         break;
+    }
+    if (turret.getCurrentPosition().getDegrees() > -10) { // 0, front
+      turretAtFront = true;
+    } else {
+      turretAtFront = false;
     }
     
     if (frontIntake.isExtended()) {

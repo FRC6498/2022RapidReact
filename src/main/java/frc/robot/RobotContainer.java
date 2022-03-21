@@ -10,6 +10,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.XboxController;
@@ -19,14 +20,13 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.TurretConstants;
 import frc.robot.commands.DriveArcadeOpenLoop;
-import frc.robot.commands.FollowTrajectory;
+import frc.robot.commands.TurretStartup;
+import frc.robot.commands.auto.HighGoalOutsideTarmacTimeBased;
+//import frc.robot.commands.FollowTrajectory;
 import frc.robot.lib.OI.CommandXboxController;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Conveyor;
@@ -67,11 +67,11 @@ public class RobotContainer {
   SlewRateLimiter forwardLimiter;
 
   Trigger retractClimb = new Trigger();
-  Trigger flyWheelAtSetpoint = new Trigger();
-  @Log(tabName = "SmartDashboard", name = "Goal Selector")
-  SendableChooser<String> goalSelector = new SendableChooser<>();
+  Trigger robotLinedUp = new Trigger(vision::getAligned);
+  @Log(tabName = "SmartDashboard", name = "Time Selector")
+  SendableChooser<Double> timeSelector = new SendableChooser<>();
   @Log(tabName = "SmartDashboard", name = "Distance Selector")
-  SendableChooser<Integer> distanceSelector = new SendableChooser<>();
+  SendableChooser<Double> distanceSelector = new SendableChooser<>();
 
   CommandXboxController driverCmd = new CommandXboxController(0);
   CommandXboxController operatorCmd = new CommandXboxController(1);
@@ -79,41 +79,8 @@ public class RobotContainer {
   Trigger turretLocked = new Trigger(turret::atSetpoint);
   Trigger flywheelReady = new Trigger(flywheel::atSetpoint);
 
-  SequentialCommandGroup lowAutoDecorated = 
-    new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel)
-    .andThen(
-      new StartEndCommand(
-        superstructure::runFeeder, 
-        superstructure::stopFeeder, 
-        superstructure
-      ).withTimeout(5)
-    ).andThen(
-      new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain).withTimeout(1.5)
-    ).andThen(drivetrain::stop);
-
-  SequentialCommandGroup highAutoDecorated = 
-    new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelHighRPM), flywheel)
-    .andThen(
-      new WaitUntilCommand(flywheel::atSetpoint)
-    ).andThen(
-      new StartEndCommand(
-        superstructure::runFeeder, 
-        superstructure::stopFeeder, 
-        superstructure
-      )
-    ).andThen(
-      new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain).withTimeout(1.5)
-    ).andThen(drivetrain::stop);
-
-  SequentialCommandGroup turretCmd = 
-    new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.HOMING))
-    .andThen(new WaitUntilCommand(turret::getHomed))
-    .andThen(() -> superstructure.setShooterMode(ShooterMode.DUMP))
-    .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.dumpAngle)), turret))
-    .andThen(new RunCommand(() -> {}, turret));
-
-  @Log
-  double turretInput;
+  Trigger operatorLeftTrigger = new Trigger(() -> operatorCmd.getLeftTriggerAxis() < 0.05);
+  Trigger operatorRightTrigger = new Trigger(() -> operatorCmd.getRightTriggerAxis() < 0.05);
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     //vision.setLED(VisionLEDMode.kOff);
@@ -126,12 +93,12 @@ public class RobotContainer {
       )
     );
     drivetrain.setInverted(true);
-    turret.setDefaultCommand(turretCmd);//new RunCommand(turret::stop, turret));
+    turret.setDefaultCommand(new TurretStartup(superstructure, turret));//new RunCommand(turret::stop, turret));
     // Configure the button bindings
     configureButtonBindings();
-    goalSelector.addOption("High", "High");
-    goalSelector.addOption("Low", "Low");
-    distanceSelector.addOption("Tarmac Edge", 1);
+    timeSelector.addOption("Wall", 0.85);
+    timeSelector.addOption("Long", 0.95);
+    distanceSelector.addOption("Tarmac Edge", Units.inchesToMeters(42));
   }
 
   /**
@@ -163,8 +130,6 @@ public class RobotContainer {
         ).alongWith(new InstantCommand(backConveyor::setForward, backConveyor))), 
       superstructure::getSeesawFront
     ));
-    driverCmd.pov.up().whenActive(new InstantCommand(() -> flywheel.setFlywheelSpeed(flywheel.getFlywheelSpeed()-10), flywheel));
-    driverCmd.pov.down().whenActive(new InstantCommand(() -> flywheel.setFlywheelSpeed(flywheel.getFlywheelSpeed()+10), flywheel));
     driverCmd.rightStick().debounce(0.5).whenActive(
       new InstantCommand(climber::toggleClimber, climber)
       .andThen(new WaitCommand(0.5))
@@ -173,16 +138,18 @@ public class RobotContainer {
     driverCmd.leftBumper().whenActive(
       new InstantCommand(turret::togglePosition, turret)
     );
+    driverCmd.y().whenActive(new InstantCommand(superstructure::toggleSeesaw));
     // operator
     operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
-    operatorCmd.pov.up().whenActive(new ConditionalCommand(
+    
+    operatorCmd.leftBumper().whenActive(new ConditionalCommand(
       new InstantCommand(frontIntake::raiseIntake, frontIntake), // intake down, so raise it
       new InstantCommand(frontIntake::lowerIntake, frontIntake), // intake up, so lower it
       frontIntake::isExtended)
     );
-    operatorCmd.pov.left().whileActiveOnce(new StartEndCommand(
-      frontIntake::setReverse, // inverted, so go forward
-      frontIntake::setForward, // forward up, so invert it
+    /*operatorLeftTrigger.whileActiveOnce(new StartEndCommand(
+      frontIntake::setForward, // inverted, so go forward
+      frontIntake::setReverse, // forward up, so invert it
       frontIntake
       ).alongWith(new StartEndCommand(
         frontConveyor::setReversed, 
@@ -190,41 +157,41 @@ public class RobotContainer {
         frontConveyor
         )
       )
-    );
-    operatorCmd.pov.right().whenActive(new ConditionalCommand(
+    );*/
+    operatorCmd.rightBumper().whenActive(new ConditionalCommand(
       new InstantCommand(backIntake::raiseIntake, backIntake), // intake down, so raise it
       new InstantCommand(backIntake::lowerIntake, backIntake), // intake up, so lower it
       backIntake::isExtended)
     );
-    operatorCmd.pov.down().whileActiveOnce(
+    /*operatorRightTrigger.whileActiveOnce(
       new StartEndCommand(
-        backIntake::setReverse, // invert 
-        backIntake::setForward, // uninvert
+        backIntake::setForward, // invert 
+        backIntake::setReverse, // uninvert
         backIntake
       ).alongWith(new StartEndCommand(
-        backConveyor::setReversed, 
         backConveyor::setForward, 
+        backConveyor::setReversed, 
         backConveyor
       )
-    ));
-    operatorCmd.rightBumper().whenActive(new InstantCommand(flywheel::incrementOffset));
-    operatorCmd.leftBumper().whenActive(new InstantCommand(flywheel::decrementOffset));
-    //driverCmd.a().whenActive(new InstantCommand(climber::toggleClimber, climber));
-    climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driverCmd.getRightY() * 0.75), climber));
+    ));*/
+    /*operatorCmd.rightBumper().whenActive(new InstantCommand(flywheel::incrementOffset));
+    operatorCmd.leftBumper().whenActive(new InstantCommand(flywheel::decrementOffset));*/
+    driverCmd.start().whenActive(new InstantCommand(climber::enable, climber));
+    climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
     operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
-    operatorCmd.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
+    operatorCmd.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.AUTON)));
     operatorCmd.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP)));
 
     
-    turretLocked.and(flywheelReady).whileActiveOnce(
+    robotLinedUp.and(flywheelReady).whileActiveOnce(
       new StartEndCommand(
-        () ->  { 
-          operatorCmd.setRumble(RumbleType.kLeftRumble, 0.5);
-          operatorCmd.setRumble(RumbleType.kRightRumble, 0.5); 
+        () -> { 
+          driverCmd.setRumble(RumbleType.kLeftRumble, 0.5);
+          driverCmd.setRumble(RumbleType.kRightRumble, 0.5); 
         },
-        () -> {
-          operatorCmd.setRumble(RumbleType.kLeftRumble, 0);
-          operatorCmd.setRumble(RumbleType.kRightRumble, 0); 
+        () -> { 
+          driverCmd.setRumble(RumbleType.kLeftRumble, 0.0);
+          driverCmd.setRumble(RumbleType.kRightRumble, 0.0); 
         }, 
         vision // vision never has any commands, so this is effectively a no-op
       )
@@ -237,17 +204,6 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return 
-      new FollowTrajectory(drivetrain, distanceSelector.getSelected())
-      .andThen(drivetrain::stop)
-      .andThen(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure))
-      .andThen(new WaitUntilCommand(flywheelReady))
-      .andThen(
-        new StartEndCommand(
-          superstructure::runFeeder, 
-          superstructure::stopFeeder, 
-          superstructure
-        )
-      ).withTimeout(5);
+    return new HighGoalOutsideTarmacTimeBased(superstructure, drivetrain, backIntake);
   }
 }
