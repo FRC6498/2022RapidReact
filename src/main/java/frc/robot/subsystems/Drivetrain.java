@@ -41,6 +41,7 @@ public class Drivetrain extends SubsystemBase implements Loggable{
   // imu
   private final AHRS gyro;
   
+  private Pose2d initialPose = new Pose2d(0, 0, Rotation2d.fromDegrees(0));
   public static boolean isHighGear = false;
   private boolean driveInverted;
   private NeutralMode currentBrakeMode = NeutralMode.Coast;
@@ -112,6 +113,18 @@ public class Drivetrain extends SubsystemBase implements Loggable{
 
   public double getTurnRate() {
     return gyro.getRate();
+  }
+
+  public double getDistance(Pose2d startPose, Pose2d endPose) {
+    return startPose.getTranslation().getDistance(endPose.getTranslation());
+  }
+
+  public double getDistance(Pose2d endPose) {
+    return initialPose.getTranslation().getDistance(endPose.getTranslation());
+  }
+
+  public void getInitialPose() {
+    initialPose = getPose();
   }
 
   public void setBrakeMode(NeutralMode brakeMode)

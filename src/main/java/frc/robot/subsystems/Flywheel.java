@@ -38,7 +38,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   private ShooterMode mode;
   
   public Flywheel() {
-    mode = ShooterMode.DISABLED;
+    mode = ShooterMode.AUTON;
     neo = new CANSparkMax(flywheelCANId, MotorType.kBrushless);
     encoder = neo.getEncoder();
     //flywheelFeedforward = new SimpleMotorFeedforward(
@@ -99,7 +99,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
       case DUMP:
         flywheelActive = true;
         break;
-      case DISABLED:
+      case AUTON:
         flywheelActive = true;
         break;
       default:
@@ -113,7 +113,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
       setFlywheelSpeed(InterpolatingTable.get(distanceToHub).rpm);
     } else if (mode == ShooterMode.DUMP) {
       setFlywheelSpeed(1750); // dump = 1750
-    } else if (mode == ShooterMode.DISABLED) {
+    } else if (mode == ShooterMode.AUTON) {
       setFlywheelSpeed(3500);
     }
     flywheelSpeedSetpoint = MathUtil.clamp(flywheelSpeedSetpoint, -6500, -1000);

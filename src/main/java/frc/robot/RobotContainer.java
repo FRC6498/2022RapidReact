@@ -10,7 +10,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -20,13 +19,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.TurretConstants;
 import frc.robot.commands.DriveArcadeOpenLoop;
+import frc.robot.commands.TurretStartup;
+import frc.robot.commands.auto.HighGoalOutsideTarmacTimeBased;
 //import frc.robot.commands.FollowTrajectory;
 import frc.robot.lib.OI.CommandXboxController;
 import frc.robot.subsystems.Climber;
@@ -82,39 +80,6 @@ public class RobotContainer {
   Trigger turretLocked = new Trigger(turret::atSetpoint);
   Trigger flywheelReady = new Trigger(flywheel::atSetpoint);
 
-  SequentialCommandGroup lowAutoDecorated = 
-    new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelDumpRPM), flywheel)
-    .andThen(
-      new StartEndCommand(
-        superstructure::runFeeder, 
-        superstructure::stopFeeder, 
-        superstructure
-      ).withTimeout(5)
-    ).andThen(
-      new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain).withTimeout(1.5)
-    ).andThen(drivetrain::stop);
-
-  SequentialCommandGroup highAutoDecorated = 
-    new InstantCommand(() -> flywheel.setFlywheelSpeed(Constants.ShooterConstants.flywheelHighRPM), flywheel)
-    .andThen(
-      new WaitUntilCommand(flywheel::atSetpoint)
-    ).andThen(
-      new StartEndCommand(
-        superstructure::runFeeder, 
-        superstructure::stopFeeder, 
-        superstructure
-      )
-    ).andThen(
-      new RunCommand(() -> drivetrain.arcadeDrive(-1, 0), drivetrain).withTimeout(1.5)
-    ).andThen(drivetrain::stop);
-
-  SequentialCommandGroup turretCmd = 
-    new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.HOMING))
-    .andThen(new WaitUntilCommand(turret::getHomed))
-    .andThen(() -> superstructure.setShooterMode(ShooterMode.DUMP))
-    .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.frontDumpAngle)), turret))
-    .andThen(new RunCommand(() -> {}, turret));
-
   Trigger operatorLeftTrigger = new Trigger(() -> operatorCmd.getLeftTriggerAxis() < 0.05);
   Trigger operatorRightTrigger = new Trigger(() -> operatorCmd.getRightTriggerAxis() < 0.05);
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -129,7 +94,7 @@ public class RobotContainer {
       )
     );
     drivetrain.setInverted(true);
-    turret.setDefaultCommand(turretCmd);//new RunCommand(turret::stop, turret));
+    turret.setDefaultCommand(new TurretStartup(superstructure, turret));//new RunCommand(turret::stop, turret));
     // Configure the button bindings
     configureButtonBindings();
     timeSelector.addOption("Wall", 0.85);
@@ -215,7 +180,7 @@ public class RobotContainer {
     driverCmd.start().whenActive(new InstantCommand(climber::enable, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
     operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
-    operatorCmd.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
+    operatorCmd.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.AUTON)));
     operatorCmd.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP)));
 
     
@@ -240,19 +205,6 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return 
-    new InstantCommand(backIntake::lowerIntake, backIntake)
-      .andThen(new RunCommand(() -> drivetrain.arcadeDrive(1, 0), drivetrain).withTimeout(0.85))
-      .andThen(drivetrain::stop)
-      .andThen(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED), superstructure))
-      .andThen(new WaitCommand(4))
-      .andThen(
-        new StartEndCommand(
-          superstructure::runFeeder, 
-          superstructure::stopFeeder, 
-          superstructure
-        )
-      ).withTimeout(10)
-      .andThen(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP)));
+    return new HighGoalOutsideTarmacTimeBased(superstructure, drivetrain, backIntake);
   }
 }
