@@ -47,8 +47,7 @@ public final class Constants {
         public static final double maxAccelerationMetersPerSecondSquared = 2;
         public static final double ramseteB = 2;
         public static final double ramseteZeta = 0.7;
-        public static final double driveDistancePerTickMeters = Math.PI * Units.inchesToMeters(6);
-        
+        public static final double driveDistancePerTickMeters = Math.PI * Units.inchesToMeters(6);    
     }
 
     public static final class ShooterConstants {        
