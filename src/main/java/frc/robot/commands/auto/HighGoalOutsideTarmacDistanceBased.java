@@ -19,13 +19,10 @@ import frc.robot.subsystems.Superstructure.ShooterMode;
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class HighGoalOutsideTarmacDistanceBased extends SequentialCommandGroup {
-  /** Creates a new HighGoalOutsideTarmacDistanceBased. */
   public HighGoalOutsideTarmacDistanceBased(Superstructure superstructure, Drivetrain drivetrain, Intake intake) {
-    // Add your commands in the addCommands() call, e.g.
-    // addCommands(new FooCommand(), new BarCommand());
     addCommands(
       new InstantCommand(intake::lowerIntake, intake),
-      new InstantCommand(() -> drivetrain.arcadeDrive(1, 0), drivetrain),
+      new InstantCommand(() -> drivetrain.slewRateArcadeDrive(0.5, 0), drivetrain),
       new WaitUntilCommand(() -> drivetrain.getDistance(drivetrain.getPose()) >= Units.inchesToMeters(42)),
       new InstantCommand(drivetrain::stop),
       new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.AUTON)),

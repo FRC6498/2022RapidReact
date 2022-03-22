@@ -43,7 +43,7 @@ public class Drivetrain extends SubsystemBase implements Loggable{
   // imu
   private final AHRS gyro;
   
-  private Pose2d initialPose = new Pose2d(0, 0, Rotation2d.fromDegrees(0));
+  private Pose2d initialPose = new Pose2d();
   public static boolean isHighGear = false;
   private boolean driveInverted;
   private NeutralMode currentBrakeMode = NeutralMode.Coast;
