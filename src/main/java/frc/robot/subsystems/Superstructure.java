@@ -87,11 +87,14 @@ public class Superstructure extends SubsystemBase implements Loggable {
   @Config
   double flywheelRPM = 0.0;
   public boolean isForward;
-  public double feederSpeedRunning = 0.75;
+  @Log
+  public double frontFeederSpeedRunning = 0.75;
+  @Log
+  public double rearFeederSpeedRunning = 0.75;
   public double feederSpeedStopped = 0.0; 
-  WPI_TalonFX feederA;
-  WPI_TalonFX feederB;
-  DoubleSolenoid merger;
+  WPI_TalonFX frontFeeder;
+  WPI_TalonFX rearFeeder;
+  DoubleSolenoid seesaw;
   GoalTrack goalTrack;
   @Log(tabName = "SmartDashboard", name = "Distance to Hub")
   double distance;
@@ -121,16 +124,16 @@ public class Superstructure extends SubsystemBase implements Loggable {
     goalTrack = new GoalTrack(0, new Translation2d());
     //colorSensor = new PicoColorSensor();
     mode = ShooterMode.DISABLED;
-    feederA = new WPI_TalonFX(10);
-    feederA.setInverted(true);
-    feederB = new WPI_TalonFX(11);
-    feederA.enableVoltageCompensation(true);
-    feederA.configVoltageCompSaturation(12);
-    feederB.enableVoltageCompensation(true);
-    feederB.configVoltageCompSaturation(12);
+    frontFeeder = new WPI_TalonFX(10);
+    frontFeeder.setInverted(true);
+    rearFeeder = new WPI_TalonFX(11);
+    frontFeeder.enableVoltageCompensation(true);
+    frontFeeder.configVoltageCompSaturation(12);
+    rearFeeder.enableVoltageCompensation(true);
+    rearFeeder.configVoltageCompSaturation(12);
 
 
-    merger = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.ConveyorConstants.seesawForwardPCMId, Constants.ConveyorConstants.seesawReversePCMId);
+    seesaw = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.ConveyorConstants.seesawForwardPCMId, Constants.ConveyorConstants.seesawReversePCMId);
 
     flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(NTHelper.getDouble("flywheel_speed_target")), flywheel));
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
@@ -164,34 +167,44 @@ public class Superstructure extends SubsystemBase implements Loggable {
 
   }
 
-  public void runFeederA() {
-    feederA.set(feederSpeedRunning);
-    feederA.setNeutralMode(NeutralMode.Coast);
+  public void runFrontFeeder(double percent) {
+    if (percent > 0.1) {
+      frontFeederSpeedRunning = percent;
+    }
+    frontFeeder.set(frontFeederSpeedRunning);
+    frontFeeder.setNeutralMode(NeutralMode.Coast);
   }
-  public void runFeederB() {
-    feederB.set(feederSpeedRunning);
-    feederB.setNeutralMode(NeutralMode.Coast);
+
+  @Config
+  public void runRearFeeder(double percent) {
+    if (percent > 0.1) {
+      rearFeederSpeedRunning = percent;
+    }
+    rearFeeder.set(rearFeederSpeedRunning);
+    rearFeeder.setNeutralMode(NeutralMode.Coast);
   }
+
+  @Config
   public void runFeeder() {
-    feederA.set(feederSpeedRunning);
-    feederB.set(feederSpeedRunning);
-    feederA.setNeutralMode(NeutralMode.Coast);
-    feederB.setNeutralMode(NeutralMode.Coast);
+    frontFeeder.set(frontFeederSpeedRunning);
+    rearFeeder.set(rearFeederSpeedRunning);
+    frontFeeder.setNeutralMode(NeutralMode.Coast);
+    rearFeeder.setNeutralMode(NeutralMode.Coast);
   }
   
   public void stopFeeder() {
-    feederA.set(feederSpeedStopped);
-    feederB.set(feederSpeedStopped);
-    feederA.setNeutralMode(NeutralMode.Brake);
-    feederB.setNeutralMode(NeutralMode.Brake);
+    frontFeeder.set(feederSpeedStopped);
+    rearFeeder.set(feederSpeedStopped);
+    frontFeeder.setNeutralMode(NeutralMode.Brake);
+    rearFeeder.setNeutralMode(NeutralMode.Brake);
   }
 
   public void seesawToRear() {
-    merger.set(Value.kForward);
+    seesaw.set(Value.kForward);
   }
 
   public void seesawToFront() {
-    merger.set(Value.kReverse);
+    seesaw.set(Value.kReverse);
   }
 
   public Color getAllianceColor() {
@@ -282,7 +295,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
   }
 
   public boolean getSeesawFront() {
-    return merger.get() == Value.kReverse;
+    return seesaw.get() == Value.kReverse;
   }
 
   @Override

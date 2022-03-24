@@ -100,6 +100,7 @@ public class RobotContainer {
     timeSelector.addOption("Wall", 0.85);
     timeSelector.addOption("Long", 0.95);
     distanceSelector.addOption("Tarmac Edge", Units.inchesToMeters(42));
+    superstructure.setShooterMode(ShooterMode.DISABLED);
   }
 
   /**
