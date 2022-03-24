@@ -69,6 +69,7 @@ public class RobotContainer {
 
   Trigger retractClimb = new Trigger();
   Trigger robotLinedUp = new Trigger(vision::getAligned);
+  Trigger defenseMode = new Trigger(() -> superstructure.getShooterMode() == ShooterMode.DISABLED);
   @Log(tabName = "SmartDashboard", name = "Time Selector")
   SendableChooser<Double> timeSelector = new SendableChooser<>();
   @Log(tabName = "SmartDashboard", name = "Distance Selector")
@@ -113,7 +114,7 @@ public class RobotContainer {
     // driver
     driverCmd.rightBumper().whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
     driverCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP_LOW), superstructure));
-    driverCmd.b().or(operatorCmd.b()).whileActiveOnce(
+    driverCmd.b().or(operatorCmd.b()).and(defenseMode.negate()).whileActiveOnce(
       new ConditionalCommand(
         new InstantCommand(frontConveyor::setReversed)
         .andThen(new WaitCommand(0.5))
@@ -137,10 +138,10 @@ public class RobotContainer {
       .andThen(new WaitCommand(0.5))
       .andThen(() -> climber.setEnabled(true))
     );
-    driverCmd.leftBumper().whenActive(
+    driverCmd.leftBumper().and(defenseMode.negate()).whenActive(
       new InstantCommand(turret::togglePosition, turret)
     );
-    driverCmd.y().whenActive(new InstantCommand(superstructure::toggleSeesaw));
+    driverCmd.y().and(defenseMode.negate()).whenActive(new InstantCommand(superstructure::toggleSeesaw));
     // operator
     operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
     

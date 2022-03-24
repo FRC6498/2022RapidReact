@@ -234,6 +234,11 @@ public class Superstructure extends SubsystemBase implements Loggable {
         vision.setLED(VisionLEDMode.kOn);
         break;
       case DISABLED:
+        stopFeeder();
+        frontIntake.raiseIntake();
+        backIntake.raiseIntake();
+        frontConveyor.stop();
+        backConveyor.stop();
       case DUMP_HIGH:
       case DUMP_LOW:
         NetworkTableInstance.getDefault().setUpdateRate(0.1);
