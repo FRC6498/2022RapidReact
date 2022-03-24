@@ -111,7 +111,7 @@ public class RobotContainer {
   private void configureButtonBindings() {
     // driver
     driverCmd.rightBumper().whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
-    driverCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP), superstructure));
+    driverCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP_LOW), superstructure));
     driverCmd.b().or(operatorCmd.b()).whileActiveOnce(
       new ConditionalCommand(
         new InstantCommand(frontConveyor::setReversed)
@@ -180,8 +180,8 @@ public class RobotContainer {
     driverCmd.start().whenActive(new InstantCommand(climber::enable, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
     operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
-    operatorCmd.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.AUTON)));
-    operatorCmd.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP)));
+    operatorCmd.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP_HIGH)));
+    operatorCmd.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
 
     
     robotLinedUp.and(flywheelReady).whileActiveOnce(

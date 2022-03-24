@@ -32,7 +32,7 @@ public class Turret extends SubsystemBase {
   private Rotation2d turretCurrentPosition;
 
   public Turret() {
-    mode = ShooterMode.AUTON;
+    mode = ShooterMode.DISABLED;
     homed = false;
     isHoming = false;
     bearing = new WPI_TalonFX(TurretConstants.yawMotorCANId);
@@ -78,7 +78,7 @@ public class Turret extends SubsystemBase {
 
   public boolean getActive() {
     // return mode < 2
-    return mode != ShooterMode.DUMP;
+    return mode == ShooterMode.MANUAL_FIRE;
   }
 
   @Override

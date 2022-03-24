@@ -47,7 +47,13 @@ public final class Constants {
         public static final double maxAccelerationMetersPerSecondSquared = 2;
         public static final double ramseteB = 2;
         public static final double ramseteZeta = 0.7;
-        public static final double driveDistancePerTickMeters = Math.PI * Units.inchesToMeters(6);
+        // low gear ratio = 26:1
+        // circumference = 0.47877872 meters
+        // 2048 ticks * 25 = ticks per 1 wheel rev
+        // 53248 ticks/rev => 1 tick = 1/53248 rev
+        // 1 tick = 0.000018780048 rev
+        // 0.00000899148 meters
+        public static final double driveDistancePerTickMeters = 0.00000899148;
         
     }
 

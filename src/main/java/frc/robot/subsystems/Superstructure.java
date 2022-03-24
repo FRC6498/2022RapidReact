@@ -120,7 +120,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
     
     goalTrack = new GoalTrack(0, new Translation2d());
     //colorSensor = new PicoColorSensor();
-    mode = ShooterMode.AUTON;
+    mode = ShooterMode.DISABLED;
     feederA = new WPI_TalonFX(10);
     feederA.setInverted(true);
     feederB = new WPI_TalonFX(11);
@@ -148,7 +148,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
     
 
     setupShooterCommands();
-    setShooterMode(ShooterMode.AUTON);
+    setShooterMode(ShooterMode.DUMP_HIGH);
   }
   
   private void setupShooterCommands() {
@@ -217,14 +217,12 @@ public class Superstructure extends SubsystemBase implements Loggable {
     shooterModeUpdater.accept(mode);
     switch (mode) {
       case MANUAL_FIRE:
-      case FULL_AUTO:
         NetworkTableInstance.getDefault().setUpdateRate(0.01);
         vision.setLED(VisionLEDMode.kOn);
         break;
-      case DUMP:
-        vision.setLED(VisionLEDMode.kOn);
-        break;
-      case AUTON:
+      case DISABLED:
+      case DUMP_HIGH:
+      case DUMP_LOW:
         NetworkTableInstance.getDefault().setUpdateRate(0.1);
         vision.setLED(VisionLEDMode.kOff);
         break;
@@ -252,11 +250,12 @@ public class Superstructure extends SubsystemBase implements Loggable {
   
 
   public enum ShooterMode {
-    FULL_AUTO, // turret and flywheel track the goal, ball is fired if present as soon as shooter is ready
     MANUAL_FIRE, // turret and flywheel track the goal, ball is fired on operator command if present
-    DUMP, // Turret locks to dead ahead but flywheel is set to minimum
-    HOMING,
-    AUTON // turret and flywheel do not move, shooting is impossible
+    DUMP_LOW, // Turret locks to dead ahead but flywheel is set to minimum
+    DUMP_HIGH, // Turret locks to dead ahead but flywheel is set to high goal speed
+    HOMING, //
+    TUNING, // Turret Disabled, flywheel speed settable
+    DISABLED // turret and flywheel do not move, shooting is impossible
   }
   // setShooterMode method here
   // subsystems check shooter mode, act accordingly
@@ -296,13 +295,10 @@ public class Superstructure extends SubsystemBase implements Loggable {
     //NTHelper.setDouble("smooth_pos_deg", value);
     switch (mode) {
       case MANUAL_FIRE:
-      case FULL_AUTO:
         if (goalTrack.hasData()) {
           //turret.setPositionSetpoint(smoothedRotation.minus(drivetrain.getGyroAngle()));
         }
         break;
-      case DUMP:
-      case AUTON:
       default:
         break;
     }
