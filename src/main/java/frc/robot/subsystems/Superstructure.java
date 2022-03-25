@@ -232,6 +232,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
       case MANUAL_FIRE:
         NetworkTableInstance.getDefault().setUpdateRate(0.01);
         vision.setLED(VisionLEDMode.kOn);
+        vision.setDriverMode(false);
         break;
       case DISABLED:
         stopFeeder();
@@ -243,6 +244,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
       case DUMP_LOW:
         NetworkTableInstance.getDefault().setUpdateRate(0.1);
         vision.setLED(VisionLEDMode.kOff);
+        vision.setDriverMode(true);
         break;
       default:
         break;

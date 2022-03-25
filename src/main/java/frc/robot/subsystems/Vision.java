@@ -126,8 +126,14 @@ public class Vision extends SubsystemBase {
     } else return false;
   }
 
+  public void setDriverMode(boolean on) {
+    CAM_limelight.setDriverMode(on);
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per robot loop; before triggered commands are scheduled and before any commands are run
   }
+
+
 }
