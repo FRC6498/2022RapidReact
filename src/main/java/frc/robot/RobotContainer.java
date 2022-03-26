@@ -64,8 +64,6 @@ public class RobotContainer {
   };
   Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, shooterModeUpdater, drivetrain);
   Field2d field;
-  XboxController driver = new XboxController(0);
-  XboxController operator = new XboxController(1);
 
   Trigger retractClimb = new Trigger();
   Trigger robotLinedUp = new Trigger(vision::getAligned);
@@ -75,14 +73,14 @@ public class RobotContainer {
   @Log(tabName = "SmartDashboard", name = "Distance Selector")
   SendableChooser<Double> distanceSelector = new SendableChooser<>();
 
-  CommandXboxController driverCmd = new CommandXboxController(0);
-  CommandXboxController operatorCmd = new CommandXboxController(1);
+  CommandXboxController driver = new CommandXboxController(0);
+  CommandXboxController operator = new CommandXboxController(1);
   public boolean feederRunning;
   Trigger turretLocked = new Trigger(turret::atSetpoint);
   Trigger flywheelReady = new Trigger(flywheel::atSetpoint);
 
-  Trigger operatorLeftTrigger = new Trigger(() -> operatorCmd.getLeftTriggerAxis() < 0.05);
-  Trigger operatorRightTrigger = new Trigger(() -> operatorCmd.getRightTriggerAxis() < 0.05);
+  Trigger operatorLeftTrigger = new Trigger(() -> operator.getLeftTriggerAxis() < 0.05);
+  Trigger operatorRightTrigger = new Trigger(() -> operator.getRightTriggerAxis() < 0.05);
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     //vision.setLED(VisionLEDMode.kOff);
@@ -112,9 +110,9 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // driver
-    driverCmd.rightBumper().whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
-    driverCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP_LOW), superstructure));
-    driverCmd.b().or(operatorCmd.b()).and(defenseMode.negate()).whileActiveOnce(
+    driver.rightBumper().whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
+    driver.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP_LOW), superstructure));
+    driver.b().or(operator.b()).and(defenseMode.negate()).whileActiveOnce(
       new ConditionalCommand(
         new InstantCommand(frontConveyor::setReversed)
         .andThen(new WaitCommand(0.5))
@@ -133,19 +131,19 @@ public class RobotContainer {
         ).alongWith(new InstantCommand(backConveyor::setForward, backConveyor))), 
       superstructure::getSeesawFront
     ));
-    driverCmd.rightStick().debounce(0.5).whenActive(
+    driver.rightStick().debounce(0.5).whenActive(
       new InstantCommand(climber::toggleClimber, climber)
       .andThen(new WaitCommand(0.5))
       .andThen(() -> climber.setEnabled(true))
     );
-    driverCmd.leftBumper().and(defenseMode.negate()).whenActive(
+    driver.leftBumper().and(defenseMode.negate()).whenActive(
       new InstantCommand(turret::togglePosition, turret)
     );
-    driverCmd.y().and(defenseMode.negate()).whenActive(new InstantCommand(superstructure::toggleSeesaw));
+    driver.y().and(defenseMode.negate()).whenActive(new InstantCommand(superstructure::toggleSeesaw));
     // operator
-    operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
+    operator.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
     
-    operatorCmd.leftBumper().whenActive(new ConditionalCommand(
+    operator.leftBumper().whenActive(new ConditionalCommand(
       new InstantCommand(frontIntake::raiseIntake, frontIntake), // intake down, so raise it
       new InstantCommand(frontIntake::lowerIntake, frontIntake), // intake up, so lower it
       frontIntake::isExtended)
@@ -161,7 +159,7 @@ public class RobotContainer {
         )
       )
     );*/
-    operatorCmd.rightBumper().whenActive(new ConditionalCommand(
+    operator.rightBumper().whenActive(new ConditionalCommand(
       new InstantCommand(backIntake::raiseIntake, backIntake), // intake down, so raise it
       new InstantCommand(backIntake::lowerIntake, backIntake), // intake up, so lower it
       backIntake::isExtended)
@@ -179,22 +177,22 @@ public class RobotContainer {
     ));*/
     /*operatorCmd.rightBumper().whenActive(new InstantCommand(flywheel::incrementOffset));
     operatorCmd.leftBumper().whenActive(new InstantCommand(flywheel::decrementOffset));*/
-    driverCmd.start().whenActive(new InstantCommand(climber::enable, climber));
+    driver.start().whenActive(new InstantCommand(climber::enable, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
-    operatorCmd.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
-    operatorCmd.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP_HIGH)));
-    operatorCmd.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
+    operator.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
+    operator.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP_HIGH)));
+    operator.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
 
     
     robotLinedUp.and(flywheelReady).whileActiveOnce(
       new StartEndCommand(
         () -> { 
-          driverCmd.setRumble(RumbleType.kLeftRumble, 0.5);
-          driverCmd.setRumble(RumbleType.kRightRumble, 0.5); 
+          driver.setRumble(RumbleType.kLeftRumble, 0.5);
+          driver.setRumble(RumbleType.kRightRumble, 0.5); 
         },
         () -> { 
-          driverCmd.setRumble(RumbleType.kLeftRumble, 0.0);
-          driverCmd.setRumble(RumbleType.kRightRumble, 0.0); 
+          driver.setRumble(RumbleType.kLeftRumble, 0.0);
+          driver.setRumble(RumbleType.kRightRumble, 0.0); 
         }, 
         vision // vision never has any commands, so this is effectively a no-op
       )
