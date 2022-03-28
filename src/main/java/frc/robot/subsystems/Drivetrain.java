@@ -254,12 +254,13 @@ public class Drivetrain extends SubsystemBase implements Loggable{
       getRightDistanceMeters()
     );
 
-    poseEstimator.update(
+    /*poseEstimator.update(
       gyro.getRotation2d(), 
       getWheelSpeeds(), 
       getLeftDistanceMeters(), 
       getRightDistanceMeters()
-    );
+    );*/
+    //TODO: Replace PoseEstimator with higher perf implementation
 
     NTHelper.setDouble("yaw_deg", getGyroAngleDegrees());
   }

@@ -305,7 +305,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
 
   public void updateVision() {
     if (vision.hasTargets()) {
-      poseEstimator.addVisionMeasurement(
+      /*poseEstimator.addVisionMeasurement(
         PhotonUtils.estimateFieldToRobot(
           VisionConstants.limelightHeightFromField, 
           VisionConstants.upperHubTargetHeight, 
@@ -322,7 +322,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
           turret.getCurrentPosition())
         ), 
         Timer.getFPGATimestamp()
-      );
+      );*/
       addVisionUpdate(Timer.getFPGATimestamp(), vision.getBestTarget());
     }
   }
