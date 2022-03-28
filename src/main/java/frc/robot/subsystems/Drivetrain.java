@@ -12,12 +12,19 @@ import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.numbers.N5;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.SPI.Port;
@@ -51,6 +58,11 @@ public class Drivetrain extends SubsystemBase implements Loggable{
       Constants.DriveConstants.kV,
       Constants.DriveConstants.kA
     );
+
+  private DifferentialDrivePoseEstimator poseEstimator;
+  Matrix<N5, N1> stateStdDevs;
+  Matrix<N3, N1> localMeasurementStdDevs;
+  Matrix<N3, N1> visionMeasurementStdDevs;
 
   public Drivetrain()
   {
@@ -90,6 +102,17 @@ public class Drivetrain extends SubsystemBase implements Loggable{
     rightFollower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 199);
     leftFollower.setStatusFramePeriod(StatusFrame.Status_1_General, 201);
     rightFollower.setStatusFramePeriod(StatusFrame.Status_1_General, 202);
+
+    // state variable standard deviations - larger std dev -> increased uncertainty of state variables -> trust state less
+    // state variables are        x pos, y pos,       heading,      left dist, right dist
+    stateStdDevs = VecBuilder.fill(0.02, 0.02, Units.degreesToRadians(1), 0.02, 0.02);
+    // sensor measurements standard deviations - larger std dev -> increased uncertainty of sensor measurements -> trust sensors less
+    // sensor measurements are           left dist, right dist, gyro heading
+    localMeasurementStdDevs = VecBuilder.fill(0.02, 0.02, Units.degreesToRadians(2));
+    // vision measurements standard deviations - larger std dev -> increased uncertainty of vision measurements -> trust vision less
+    // sensor measurements are               x pos, y pos, vision heading
+    visionMeasurementStdDevs = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(5));
+    poseEstimator = new DifferentialDrivePoseEstimator(gyro.getRotation2d(), this.getPose(), stateStdDevs, localMeasurementStdDevs, visionMeasurementStdDevs);
   }
 
   // hardware methods
@@ -100,15 +123,9 @@ public class Drivetrain extends SubsystemBase implements Loggable{
     rightLeader.setSelectedSensorPosition(0);
   }
 
-  public Rotation2d getGyroAngle()
-  {
-    // negative angle because of the direction the gyro is mounted
-    return gyro.getRotation2d();
-  }
-
   //@Log
-  public double getHeading() {
-    return getGyroAngle().getDegrees();
+  public Rotation2d getRotation2d() {
+    return gyro.getRotation2d();
   }
 
   public double getTurnRate() {
@@ -187,7 +204,7 @@ public class Drivetrain extends SubsystemBase implements Loggable{
 
   //@Log(name = "Yaw (deg.)")
   public double getGyroAngleDegrees() {
-    double deg = getGyroAngle().getDegrees() % 360;
+    double deg = gyro.getRotation2d().getDegrees() % 360;
     return deg;
   }
 
@@ -201,6 +218,10 @@ public class Drivetrain extends SubsystemBase implements Loggable{
 
   public DifferentialDriveKinematics getKinematics() {
     return kinematics;
+  }
+
+  public DifferentialDrivePoseEstimator getPoseEstimator() {
+    return poseEstimator;
   }
 
   public SimpleMotorFeedforward getFeedforward() {
@@ -229,6 +250,13 @@ public class Drivetrain extends SubsystemBase implements Loggable{
   public void periodic() {
     odometry.update(
       gyro.getRotation2d(), 
+      getLeftDistanceMeters(), 
+      getRightDistanceMeters()
+    );
+
+    poseEstimator.update(
+      gyro.getRotation2d(), 
+      getWheelSpeeds(), 
       getLeftDistanceMeters(), 
       getRightDistanceMeters()
     );

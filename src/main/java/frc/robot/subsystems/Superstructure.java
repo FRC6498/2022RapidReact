@@ -9,11 +9,15 @@ import java.util.function.Consumer;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
+import org.photonvision.PhotonUtils;
 import org.photonvision.common.hardware.VisionLEDMode;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -27,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.lib.GoalTrack;
 import frc.robot.lib.NTHelper;
 import io.github.oblarg.oblog.Loggable;
@@ -50,7 +55,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
   private final Conveyor frontConveyor;
   private final Conveyor backConveyor;
   
-  //private final PicoColorSensor colorSensor;
   // Flywheel
   private final Flywheel flywheel;
   // Turret
@@ -73,6 +77,8 @@ public class Superstructure extends SubsystemBase implements Loggable {
   // Flywheel
   public Trigger flywheelEnabled;
   public Trigger turretEnabled;
+
+  
   //TODO: Create Driver Dashboard
   // active intake 
   // camera
@@ -108,6 +114,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
   ParallelRaceGroup dump;
   ParallelRaceGroup testing;
   Consumer<ShooterMode> shooterModeUpdater;
+  DifferentialDrivePoseEstimator poseEstimator;
 
   public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater, Drivetrain drivetrain) {
     this.flywheel = flywheel;
@@ -148,7 +155,8 @@ public class Superstructure extends SubsystemBase implements Loggable {
     flywheelEnabled = new Trigger(flywheel::getActive);
     turretEnabled = new Trigger(turret::getActive);
     flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
-    
+
+    poseEstimator = drivetrain.getPoseEstimator();
 
     setupShooterCommands();
     setShooterMode(ShooterMode.DUMP_HIGH);
@@ -287,7 +295,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
     double yaw = -target.getYaw();
   
     distance = vision.getTargetDistance(target);
-    Rotation2d angle = turret.getCurrentPosition().plus(Rotation2d.fromDegrees(yaw)).plus(drivetrain.getGyroAngle());
+    Rotation2d angle = turret.getCurrentPosition().plus(Rotation2d.fromDegrees(yaw)).plus(drivetrain.getRotation2d());
     Translation2d field_to_goal=new Translation2d(distance * angle.getCos(), distance * angle.getSin());
     goalTrack.tryUpdate(timestamp, field_to_goal);
     // System.out.println("time: "+timestamp+ " x: "+field_to_goal.getX()+" y: "+field_to_goal.getY());
@@ -297,6 +305,24 @@ public class Superstructure extends SubsystemBase implements Loggable {
 
   public void updateVision() {
     if (vision.hasTargets()) {
+      poseEstimator.addVisionMeasurement(
+        PhotonUtils.estimateFieldToRobot(
+          VisionConstants.limelightHeightFromField, 
+          VisionConstants.upperHubTargetHeight, 
+          VisionConstants.limelightPitch, 
+          vision.getBestTarget().getPitch(), 
+          Rotation2d.fromDegrees(vision.getBestTarget().getYaw()), 
+          drivetrain.getRotation2d(), 
+          VisionConstants.fieldToTargetTransform, 
+          new Transform2d(
+            new Translation2d(
+              Units.inchesToMeters(6), 
+              Units.inchesToMeters(-(VisionConstants.limelightHeightFromField-2))
+            ), 
+          turret.getCurrentPosition())
+        ), 
+        Timer.getFPGATimestamp()
+      );
       addVisionUpdate(Timer.getFPGATimestamp(), vision.getBestTarget());
     }
   }

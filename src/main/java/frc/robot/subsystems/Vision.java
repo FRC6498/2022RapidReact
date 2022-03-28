@@ -22,7 +22,6 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.lib.NTHelper;
-import frc.robot.lib.SortByDistance;
 
 public class Vision extends SubsystemBase {
   PhotonCamera CAM_limelight;
@@ -74,12 +73,6 @@ public class Vision extends SubsystemBase {
       Units.degreesToRadians(40), 
       Units.degreesToRadians(target.getPitch())
     );
-  }
-
-  public PhotonTrackedTarget getClosestTarget() {
-    ArrayList<PhotonTrackedTarget> targets = new ArrayList<>(currentResult.getTargets());
-    Collections.sort(targets, new SortByDistance(comparisonConstants));
-    return targets.get(0);
   }
 
   public void setEnabled(boolean enabled) {

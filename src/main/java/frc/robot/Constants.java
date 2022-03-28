@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -118,18 +120,9 @@ public final class Constants {
         public static final double limelightHeightFromField = Units.inchesToMeters(27);
         public static final int upperHubPipelineID = 0;
         public static final double limelightPitch = Units.degreesToRadians(40);
-        public static final double[] comparisonConstants = new double[] {
-            limelightHeightFromField,
-            upperHubTargetHeight,
-            limelightPitch
-        };
+        
+        public static final Pose2d fieldToTargetTransform = new Pose2d(Units.feetToMeters(27), Units.feetToMeters(13.5), Rotation2d.fromDegrees(0));
 
-        // lifecam
-        public static final String lifecamCameraName = "lifecam";
-        public static final double lifecamHeightFromField = Units.inchesToMeters(26);
-        public static final int redBallPipelineID = 1;
-        public static final int blueBallPipelineID = 2;
-        public static final double lifecamPitch = Units.degreesToRadians(limelightPitch+180);
     }
 
     public static final double kMaxGoalTrackAge = 0.05;
