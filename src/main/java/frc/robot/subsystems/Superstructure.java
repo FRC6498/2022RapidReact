@@ -13,7 +13,6 @@ import org.photonvision.PhotonUtils;
 import org.photonvision.common.hardware.VisionLEDMode;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -32,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.Constants.VisionConstants;
+import frc.robot.lib.DifferentialDrivePoseEstimator;
 import frc.robot.lib.GoalTrack;
 import frc.robot.lib.NTHelper;
 import io.github.oblarg.oblog.Loggable;
@@ -305,7 +305,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
 
   public void updateVision() {
     if (vision.hasTargets()) {
-      /*poseEstimator.addVisionMeasurement(
+      poseEstimator.addVisionMeasurement(
         PhotonUtils.estimateFieldToRobot(
           VisionConstants.limelightHeightFromField, 
           VisionConstants.upperHubTargetHeight, 
@@ -322,7 +322,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
           turret.getCurrentPosition())
         ), 
         Timer.getFPGATimestamp()
-      );*/
+      );
       addVisionUpdate(Timer.getFPGATimestamp(), vision.getBestTarget());
     }
   }

@@ -15,7 +15,6 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
@@ -32,6 +31,7 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.lib.DifferentialDrivePoseEstimator;
 import frc.robot.lib.NTHelper;
 import io.github.oblarg.oblog.Loggable;
 
@@ -254,13 +254,12 @@ public class Drivetrain extends SubsystemBase implements Loggable{
       getRightDistanceMeters()
     );
 
-    /*poseEstimator.update(
+    poseEstimator.update(
       gyro.getRotation2d(), 
       getWheelSpeeds(), 
       getLeftDistanceMeters(), 
       getRightDistanceMeters()
-    );*/
-    //TODO: Replace PoseEstimator with higher perf implementation
+    );
 
     NTHelper.setDouble("yaw_deg", getGyroAngleDegrees());
   }
