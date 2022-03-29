@@ -18,7 +18,6 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -117,9 +116,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
   Consumer<ShooterMode> shooterModeUpdater;
   DifferentialDrivePoseEstimator poseEstimator;
 
-  DigitalInput frontSensor;
-  DigitalInput backSensor;
-
   public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater, Drivetrain drivetrain) {
     this.flywheel = flywheel;
     this.frontConveyor = frontConveyor;
@@ -164,9 +160,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
 
     setupShooterCommands();
     setShooterMode(ShooterMode.DUMP_HIGH);
-
-    frontSensor = new DigitalInput(1);
-    backSensor = new DigitalInput(2);
   }
   
   private void setupShooterCommands() {
@@ -189,24 +182,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
     frontFeeder.set(frontFeederSpeedRunning);
     frontFeeder.setNeutralMode(NeutralMode.Coast);
   }
-  public boolean getFrontSensorState(boolean frontSensorState) {
-   frontSensorState = frontSensor.get();
-   return frontSensorState;
-  }
-
-  public boolean getBackSensorState(boolean backSensorState) {
-    backSensorState = backSensor.get();
-    return backSensorState;
-  }
  
-  public void dothesensorthing() {
-    if(getBackSensorState(true)) {
-     frontConveyor.stop();
-    }
-    if (getFrontSensorState(true)) {
-      backConveyor.stop();
-    }
-  }
   @Config
   public void runRearFeeder(double percent) {
     if (percent > 0.1) {
