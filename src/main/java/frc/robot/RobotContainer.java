@@ -92,6 +92,7 @@ public class RobotContainer {
         drivetrain
       )
     );
+    drivetrain.setDefaultCommand(new RunCommand(() -> drivetrain.arcadeDrive(driver.getRightTriggerAxis() + -driver.getLeftTriggerAxis(), -driver.getLeftX()), drivetrain));
     drivetrain.setInverted(true);
     turret.setDefaultCommand(new TurretStartup(superstructure, turret));//new RunCommand(turret::stop, turret));
     // Configure the button bindings
