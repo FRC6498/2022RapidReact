@@ -193,8 +193,7 @@ public class RobotContainer {
         () -> { 
           driver.setRumble(RumbleType.kLeftRumble, 0.0);
           driver.setRumble(RumbleType.kRightRumble, 0.0); 
-        }, 
-        vision // vision never has any commands, so this is effectively a no-op
+        }
       )
     );
   }

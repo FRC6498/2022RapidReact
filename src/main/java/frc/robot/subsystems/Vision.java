@@ -7,9 +7,6 @@ package frc.robot.subsystems;
 import static frc.robot.Constants.VisionConstants.*;
 
 
-import java.util.ArrayList;
-import java.util.Collections;
-
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonUtils;
 import org.photonvision.common.hardware.VisionLEDMode;
@@ -23,7 +20,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.lib.NTHelper;
 
-public class Vision extends SubsystemBase {
+public class Vision {
   PhotonCamera CAM_limelight;
   PhotonPipelineResult currentResult;
   boolean enabled = true;
@@ -85,32 +82,8 @@ public class Vision extends SubsystemBase {
     
   }
 
-  public int getTargetCount() {
-    return currentResult.getTargets().size();
-  }
-
-  public double getTargetYaw(PhotonTrackedTarget target) {
-    if (hasTargets()) {
-      return -target.getYaw();
-    } else {
-      return 0;
-    }
-  }
-
-  public VisionLEDMode getLED() {
+  public VisionLEDMode getLEDMode() {
     return CAM_limelight.getLEDMode();
-  }
-
-  public void updatePhotonResult() {
-    if (enabled) {
-      currentResult = CAM_limelight.getLatestResult();
-
-      if (currentResult.hasTargets() && currentResult != null) {
-        NTHelper.setDouble("target_distance", getTargetDistance(getBestTarget()));
-      } else {
-        NTHelper.setDouble("target_distance", -1.0);
-      }
-    }
   }
 
   public boolean getAligned() {
@@ -123,10 +96,15 @@ public class Vision extends SubsystemBase {
     CAM_limelight.setDriverMode(on);
   }
 
-  @Override
   public void periodic() {
-    // This method will be called once per robot loop; before triggered commands are scheduled and before any commands are run
+    if (enabled) {
+      currentResult = CAM_limelight.getLatestResult();
+
+      if (currentResult.hasTargets() && currentResult != null) {
+        NTHelper.setDouble("target_distance", getTargetDistance(getBestTarget()));
+      } else {
+        NTHelper.setDouble("target_distance", -1.0);
+      }
+    }
   }
-
-
 }
