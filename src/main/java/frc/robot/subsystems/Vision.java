@@ -6,7 +6,6 @@ package frc.robot.subsystems;
 
 import static frc.robot.Constants.VisionConstants.*;
 
-
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonUtils;
 import org.photonvision.common.hardware.VisionLEDMode;
@@ -17,14 +16,13 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.lib.NTHelper;
 
 public class Vision {
   PhotonCamera CAM_limelight;
   PhotonPipelineResult currentResult;
   boolean enabled = true;
-  NetworkTable NT_photonvision, NT_limelight;
+  NetworkTable NT_photonvision;
   /** Creates a new VisionSystem. */
   public Vision() {
     CAM_limelight = new PhotonCamera(limelightCameraName);
@@ -36,8 +34,6 @@ public class Vision {
     // THIS IS THE COPROCESSOR NOT FOUND FIX
     NetworkTableEntry photonVersionEntry = NT_photonvision.getEntry("version");
     photonVersionEntry.setString("v2022.1.4");
-
-    NT_limelight = NT_photonvision.getSubTable("limelight");
   }
 
   public PhotonTrackedTarget getBestTarget()
