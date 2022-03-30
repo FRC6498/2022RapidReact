@@ -7,7 +7,7 @@ package frc.robot.lib;
 import static frc.robot.Constants.VisionConstants.*;
 
 import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonUtils;
+//import org.photonvision.PhotonUtils;
 import org.photonvision.common.hardware.VisionLEDMode;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
@@ -53,18 +53,21 @@ public class Vision {
   }
 
   /**
-   * 
-   * 
-   * @return Distance to the current pipeline's best target, for input to a PID controller (for shooting)
+   * Algorithm from https://www.chiefdelphi.com/t/calculating-distance-to-vision-target/387183/6?u=jonahsnider
+   * @param target The vision target to compute the distance to (usually the PV Best Target)
    */
   public double getTargetDistance(PhotonTrackedTarget target)
   {
-    return PhotonUtils.calculateDistanceToTargetMeters(
+    // difference in height from the target to camera
+    double dh = 2.64 - Units.inchesToMeters(29);
+    double distance = dh / (Math.tan(target.getPitch()) * Math.cos(target.getYaw()));
+    return distance;
+    /*return PhotonUtils.calculateDistanceToTargetMeters(
       Units.inchesToMeters(29), 
       2.64, // 264cm from floor->ring
       Units.degreesToRadians(40), 
       Units.degreesToRadians(target.getPitch())
-    );
+    );*/
   }
 
   public void setEnabled(boolean enabled) {
