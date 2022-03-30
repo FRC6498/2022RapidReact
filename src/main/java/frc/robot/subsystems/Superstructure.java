@@ -13,6 +13,7 @@ import org.photonvision.PhotonUtils;
 import org.photonvision.common.hardware.VisionLEDMode;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -306,24 +307,29 @@ public class Superstructure extends SubsystemBase implements Loggable {
 
   public void updateVision() {
     if (vision.hasTargets()) {
-      poseEstimator.addVisionMeasurement(
-        PhotonUtils.estimateFieldToRobot(
-          VisionConstants.limelightHeightFromField, 
-          VisionConstants.upperHubTargetHeight, 
-          VisionConstants.limelightPitch, 
-          vision.getBestTarget().getPitch(), 
-          Rotation2d.fromDegrees(vision.getBestTarget().getYaw()), 
-          drivetrain.getRotation2d(), 
-          VisionConstants.fieldToTargetTransform, 
-          new Transform2d(
-            new Translation2d(
-              Units.inchesToMeters(6), 
-              Units.inchesToMeters(-(VisionConstants.limelightHeightFromField-2))
-            ), 
-          turret.getCurrentPosition())
-        ), 
-        Timer.getFPGATimestamp()
+      Pose2d visionPose = PhotonUtils.estimateFieldToRobot(
+        VisionConstants.limelightHeightFromField, 
+        VisionConstants.upperHubTargetHeight, 
+        VisionConstants.limelightPitch, 
+        vision.getBestTarget().getPitch(), 
+        Rotation2d.fromDegrees(vision.getBestTarget().getYaw()), 
+        drivetrain.getRotation2d(), 
+        VisionConstants.fieldToTargetTransform, 
+        new Transform2d( // camera to robot transform
+          new Translation2d(
+            Units.inchesToMeters(6), 
+            Units.inchesToMeters(-(VisionConstants.limelightHeightFromField-2))
+          ), 
+          turret.getCurrentPosition()
+        )
       );
+      if (visionPose.getTranslation().getDistance(poseEstimator.getEstimatedPosition().getTranslation()) < 1) {
+        poseEstimator.addVisionMeasurement(
+          visionPose, 
+          Timer.getFPGATimestamp()
+        );
+      }
+     
       addVisionUpdate(Timer.getFPGATimestamp(), vision.getBestTarget());
     }
   }
@@ -336,6 +342,10 @@ public class Superstructure extends SubsystemBase implements Loggable {
   public void periodic() {
     
     Translation2d smoothedPos = goalTrack.getSmoothedPosition();
+    // get transform from robot pose to target pose
+    //Transform2d robotToHub = new Transform2d(poseEstimator.getEstimatedPosition(), VisionConstants.fieldToTargetTransform);
+    // get rotation of transform
+    //Rotation2d robotToHubRotation = robotToHub.getRotation();
     // ALWAYS MAKE A NEW VARIABLE, OTHERWISE IT WILL JITTER DANGEROUSLY!!!
     Rotation2d smoothedRotation = new Rotation2d(smoothedPos.getX(), smoothedPos.getY());
     NTHelper.setDouble("smoothed_pos_angle", smoothedRotation.getDegrees());
@@ -344,7 +354,8 @@ public class Superstructure extends SubsystemBase implements Loggable {
       case MANUAL_FIRE:
         if (goalTrack.hasData()) {
           //turret.setPositionSetpoint(smoothedRotation.minus(drivetrain.getGyroAngle()));
-        }
+        }  
+        //turret.setPositionSetpoint(robotToHubRotation);
         break;
       default:
         break;
