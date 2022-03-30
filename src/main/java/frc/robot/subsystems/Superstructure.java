@@ -34,6 +34,7 @@ import frc.robot.Constants.VisionConstants;
 import frc.robot.lib.DifferentialDrivePoseEstimator;
 import frc.robot.lib.GoalTrack;
 import frc.robot.lib.NTHelper;
+import frc.robot.lib.Vision;
 import io.github.oblarg.oblog.Loggable;
 //import frc.robot.lib.PicoColorSensor;
 import io.github.oblarg.oblog.annotations.Config;

@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveArcadeOpenLoop;
 import frc.robot.commands.TurretStartup;
 import frc.robot.commands.auto.HighGoalOutsideTarmacTimeBased;
+import frc.robot.lib.Vision;
 //import frc.robot.commands.FollowTrajectory;
 import frc.robot.lib.OI.CommandXboxController;
 import frc.robot.subsystems.Climber;
@@ -34,7 +35,6 @@ import frc.robot.subsystems.Flywheel;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Turret;
-import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.annotations.Log;
 
