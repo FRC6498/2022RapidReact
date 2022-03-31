@@ -34,6 +34,7 @@ import frc.robot.Constants;
 import frc.robot.lib.DifferentialDrivePoseEstimator;
 import frc.robot.lib.NTHelper;
 import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Log;
 
 public class Drivetrain extends SubsystemBase implements Loggable{
   // motors
@@ -123,17 +124,14 @@ public class Drivetrain extends SubsystemBase implements Loggable{
     rightLeader.setSelectedSensorPosition(0);
   }
 
-  //@Log
-  public Rotation2d getRotation2d() {
+  
+  public Rotation2d getGyroAngle() {
     return gyro.getRotation2d();
   }
 
-  public double getTurnRate() {
-    return gyro.getRate();
-  }
-
-  public double getDistance(Pose2d startPose, Pose2d endPose) {
-    return startPose.getTranslation().getDistance(endPose.getTranslation());
+  @Log(name = "Gyro Angle (deg.)")
+  public double getGyroAngleDegrees() {
+    return getGyroAngle().getDegrees();
   }
 
   public double getDistance(Pose2d endPose) {
@@ -201,12 +199,7 @@ public class Drivetrain extends SubsystemBase implements Loggable{
   public String getBrakeMode() {
     return currentBrakeMode.toString();
   }
-
-  //@Log(name = "Yaw (deg.)")
-  public double getGyroAngleDegrees() {
-    double deg = gyro.getRotation2d().getDegrees() % 360;
-    return deg;
-  }
+  
 
   public Pose2d getPose() {
     return odometry.getPoseMeters();

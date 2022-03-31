@@ -291,15 +291,16 @@ public class Superstructure extends SubsystemBase implements Loggable {
   // subsystems check shooter mode, act accordingly
 
   public void addVisionUpdate(double timestamp, PhotonTrackedTarget target) {
-    //counter clock wise is positivie thats why target yaw is inverted
-    //pretty sure x is positive forward, y is positive left
-        
+    //CCW positive, PV has left positive, so invert
+    //x is positive forward, y is positive left
+    
     double yaw = -target.getYaw();
   
     distance = vision.getTargetDistance(target);
-    Rotation2d angle = turret.getCurrentPosition().plus(Rotation2d.fromDegrees(yaw)).plus(drivetrain.getRotation2d());
-    Translation2d field_to_goal=new Translation2d(distance * angle.getCos(), distance * angle.getSin());
-    goalTrack.tryUpdate(timestamp, field_to_goal);
+    // angle to target = gyro + turret position + observed yaw
+    Rotation2d angle = drivetrain.getGyroAngle().plus(turret.getCurrentPosition()).plus(Rotation2d.fromDegrees(yaw));
+    Translation2d fieldCoordinatesOfGoal=new Translation2d(distance * angle.getCos(), distance * angle.getSin());
+    goalTrack.tryUpdate(timestamp, fieldCoordinatesOfGoal);
     // System.out.println("time: "+timestamp+ " x: "+field_to_goal.getX()+" y: "+field_to_goal.getY());
     
 
@@ -307,13 +308,13 @@ public class Superstructure extends SubsystemBase implements Loggable {
 
   public void updateVision() {
     if (vision.hasTargets()) {
-      Pose2d visionPose = PhotonUtils.estimateFieldToRobot(
+      /*Pose2d visionPose = PhotonUtils.estimateFieldToRobot(
         VisionConstants.limelightHeightFromField, 
         VisionConstants.upperHubTargetHeight, 
         VisionConstants.limelightPitch, 
         vision.getBestTarget().getPitch(), 
         Rotation2d.fromDegrees(vision.getBestTarget().getYaw()), 
-        drivetrain.getRotation2d(), 
+        drivetrain.getGyroAngle(), 
         VisionConstants.fieldToTargetTransform, 
         new Transform2d( // camera to robot transform
           new Translation2d(
@@ -324,11 +325,11 @@ public class Superstructure extends SubsystemBase implements Loggable {
         )
       );
       if (visionPose.getTranslation().getDistance(poseEstimator.getEstimatedPosition().getTranslation()) < 1) {
-        poseEstimator.addVisionMeasurement(
-          visionPose, 
-          Timer.getFPGATimestamp()
-        );
-      }
+        //poseEstimator.addVisionMeasurement(
+        //  visionPose, 
+        //  Timer.getFPGATimestamp()
+        //);
+      }*/
      
       addVisionUpdate(Timer.getFPGATimestamp(), vision.getBestTarget());
     }

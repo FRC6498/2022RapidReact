@@ -17,12 +17,14 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
+import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Log;
 /**
  * 
  * 
  */
 // turret clockwise = forward 
-public class Turret extends SubsystemBase {
+public class Turret extends SubsystemBase implements Loggable {
   private WPI_TalonFX bearing;
   private TalonFXConfiguration bearingConfig;
   private boolean homed;
@@ -183,6 +185,7 @@ public class Turret extends SubsystemBase {
     bearing.set(ControlMode.Position, rotation2dToNativeUnits(setpoint));
   }
 
+  @Log(name = "Turret Position (deg.)")
   public Rotation2d getCurrentPosition() {
     turretCurrentPosition = nativeUnitsToRotation2d(bearing.getSelectedSensorPosition());
     return turretCurrentPosition;
