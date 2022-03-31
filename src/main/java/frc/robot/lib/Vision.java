@@ -30,9 +30,6 @@ public class Vision {
     //CAM_limelight
 
     NT_photonvision = NetworkTableInstance.getDefault().getTable("photonvision");
-    // THIS IS THE COPROCESSOR NOT FOUND FIX
-    NetworkTableEntry photonVersionEntry = NT_photonvision.getEntry("version");
-    photonVersionEntry.setString("v2022.1.4");
   }
 
   public PhotonTrackedTarget getBestTarget()
