@@ -185,10 +185,15 @@ public class Turret extends SubsystemBase implements Loggable {
     bearing.set(ControlMode.Position, rotation2dToNativeUnits(setpoint));
   }
 
-  @Log(name = "Turret Position (deg.)")
+  
   public Rotation2d getCurrentPosition() {
     turretCurrentPosition = nativeUnitsToRotation2d(bearing.getSelectedSensorPosition());
     return turretCurrentPosition;
+  }
+  
+  @Log(name = "Turret Position (deg.)")
+  public double getCurrentPositionDegrees() {
+    return getCurrentPosition().getDegrees();
   }
 
   public void togglePosition() {
