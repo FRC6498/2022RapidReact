@@ -214,14 +214,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
     rearFeeder.setNeutralMode(NeutralMode.Brake);
   }
 
-  public void seesawToRear() {
-    seesaw.set(Value.kForward);
-  }
-
-  public void seesawToFront() {
-    seesaw.set(Value.kReverse);
-  }
-
   public Color getAllianceColor() {
     Alliance alliance = DriverStation.getAlliance();
     switch (alliance) {
@@ -268,14 +260,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
         break;
       default:
         break;
-    }
-  }
-
-  public void toggleSeesaw() {
-    if (seesawFront) {
-      seesawToRear();
-    } else {
-      seesawToFront();
     }
   }
 
@@ -372,12 +356,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
       turretAtFront = true;
     } else {
       turretAtFront = false;
-    }
-    
-    if (frontIntake.isExtended()) {
-      seesawToFront();
-    } else if (backIntake.isExtended()) {
-      seesawToRear();
     }
 
     if (rearFeeder.get() > 0) {
