@@ -87,6 +87,7 @@ public class Drivetrain extends SubsystemBase implements Loggable{
     diffDrive.setSafetyEnabled(false);
 
     gyro = new AHRS(Port.kMXP);
+    gyro.reset();
     odometry = new DifferentialDriveOdometry(gyro.getRotation2d());
     kinematics = new DifferentialDriveKinematics(Constants.DriveConstants.trackWidthMeters);
 
