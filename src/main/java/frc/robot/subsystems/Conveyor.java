@@ -84,6 +84,10 @@ public class Conveyor extends SubsystemBase {
             driver.set(Constants.ConveyorConstants.conveyorNominalSpeed);
           }
         }
+      } else {
+        if (driver.get() > 0) {
+          driver.set(0);
+        }
       }
     }
 
