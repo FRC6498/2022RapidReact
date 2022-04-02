@@ -9,15 +9,12 @@ import java.util.function.Consumer;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
-import org.photonvision.PhotonUtils;
 import org.photonvision.common.hardware.VisionLEDMode;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -25,13 +22,18 @@ import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
-import frc.robot.Constants.VisionConstants;
+import frc.robot.Constants.TurretConstants;
 import frc.robot.lib.DifferentialDrivePoseEstimator;
 import frc.robot.lib.GoalTrack;
 import frc.robot.lib.NTHelper;
@@ -157,11 +159,14 @@ public class Superstructure extends SubsystemBase implements Loggable {
     flywheelEnabled = new Trigger(flywheel::getActive);
     turretEnabled = new Trigger(turret::getActive);
     flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
+    //atStart = new Trigger(() -> { return Math.abs(turret.getCurrentPosition().getDegrees() - turretToSearchStart.calculate(0).position) < 1.5; });
+    //turret.revLimit.and(vision.hasTarget.negate()).whenActive(new InstantCommand(() -> turret.openLoop(0.2)));
+    //turret.fwdLimit.and(vision.hasTarget.negate()).whenActive(new InstantCommand(() -> turret.openLoop(percent)))
 
     poseEstimator = drivetrain.getPoseEstimator();
 
     setupShooterCommands();
-    setShooterMode(ShooterMode.DUMP_HIGH);
+    setShooterMode(ShooterMode.SEARCHING);
   }
   
   private void setupShooterCommands() {
@@ -250,11 +255,16 @@ public class Superstructure extends SubsystemBase implements Loggable {
         backIntake.raiseIntake();
         frontConveyor.stop();
         backConveyor.stop();
-      case DUMP_HIGH:
-      case DUMP_LOW:
-        NetworkTableInstance.getDefault().setUpdateRate(0.1);
-        vision.setLED(VisionLEDMode.kOff);
-        vision.setDriverMode(true);
+      case SEARCHING:
+        vision.hasTarget.whenInactive(
+          new SequentialCommandGroup(
+            new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.hardForwardAngle)), turret),
+            new WaitUntilCommand(turret::atSetpoint),
+            new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.hardReverseAngle)), turret),
+            new WaitUntilCommand(turret::atSetpoint)
+          ).perpetually().until(vision.hasTarget.negate())
+          .andThen(new InstantCommand(() -> setShooterMode(ShooterMode.MANUAL_FIRE)))
+        );
         break;
       default:
         break;
@@ -282,7 +292,8 @@ public class Superstructure extends SubsystemBase implements Loggable {
   public enum ShooterMode {
     MANUAL_FIRE, // turret and flywheel track the goal, ball is fired on operator command if present
     DUMP_LOW, // Turret locks to dead ahead but flywheel is set to minimum
-    DUMP_HIGH, // Turret locks to dead ahead but flywheel is set to high goal speed
+    DUMP_HIGH,
+    SEARCHING, 
     HOMING, //
     TUNING, // Turret Disabled, flywheel speed settable
     DISABLED // turret and flywheel do not move, shooting is impossible
@@ -294,17 +305,20 @@ public class Superstructure extends SubsystemBase implements Loggable {
     //CCW positive, PV has left positive, so invert
     //x is positive forward, y is positive left
     
-    double yaw = -target.getYaw();
+    // DO NOT INVERT VISION
+    double yaw = target.getYaw();
+    //SmartDashboard.putNumber("goal_yaw", yaw);
   
     distance = vision.getTargetDistance(target);
     // angle to target = gyro + turret position + observed yaw
     Rotation2d angle = drivetrain.getGyroAngle().plus(turret.getCurrentPosition()).plus(Rotation2d.fromDegrees(yaw));
     Translation2d fieldCoordinatesOfGoal=new Translation2d(distance * angle.getCos(), distance * angle.getSin());
+    SmartDashboard.putNumber("Goal_X", fieldCoordinatesOfGoal.getX());
+    SmartDashboard.putNumber("Goal_Y", fieldCoordinatesOfGoal.getY());
+    SmartDashboard.putNumber("Goal_Degrees", angle.getDegrees());
     goalTrack.tryUpdate(timestamp, fieldCoordinatesOfGoal);
     // System.out.println("time: "+timestamp+ " x: "+field_to_goal.getX()+" y: "+field_to_goal.getY());
-    
-
-}
+  }
 
   public void updateVision() {
     if (vision.hasTargets()) {
@@ -342,21 +356,14 @@ public class Superstructure extends SubsystemBase implements Loggable {
   @Override
   public void periodic() {
     
-    Translation2d smoothedPos = goalTrack.getSmoothedPosition();
-    // get transform from robot pose to target pose
-    //Transform2d robotToHub = new Transform2d(poseEstimator.getEstimatedPosition(), VisionConstants.fieldToTargetTransform);
-    // get rotation of transform
-    //Rotation2d robotToHubRotation = robotToHub.getRotation();
-    // ALWAYS MAKE A NEW VARIABLE, OTHERWISE IT WILL JITTER DANGEROUSLY!!!
-    Rotation2d smoothedRotation = new Rotation2d(smoothedPos.getX(), smoothedPos.getY());
-    NTHelper.setDouble("smoothed_pos_angle", smoothedRotation.getDegrees());
-    //NTHelper.setDouble("smooth_pos_deg", value);
+    
     switch (mode) {
       case MANUAL_FIRE:
-        if (goalTrack.hasData()) {
-          //turret.setPositionSetpoint(smoothedRotation.minus(drivetrain.getGyroAngle()));
-        }  
-        //turret.setPositionSetpoint(robotToHubRotation);
+        if (vision.hasTarget.get()) {
+          turret.setPositionSetpoint(Rotation2d.fromDegrees(vision.getBestTarget().getYaw()).plus(turret.getCurrentPosition()));
+        } else {
+          setShooterMode(ShooterMode.SEARCHING);
+        }
         break;
       default:
         break;
@@ -371,6 +378,11 @@ public class Superstructure extends SubsystemBase implements Loggable {
       seesawToFront();
     } else if (backIntake.isExtended()) {
       seesawToRear();
+    }
+
+    if (rearFeeder.get() > 0) {
+      rearFeeder.set(0);
+      //TODO: re-enable rear feeder
     }
   }
   

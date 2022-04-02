@@ -14,15 +14,12 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
-/**
- * 
- * 
- */
 // turret clockwise = forward 
 public class Turret extends SubsystemBase implements Loggable {
   private WPI_TalonFX bearing;
@@ -32,6 +29,7 @@ public class Turret extends SubsystemBase implements Loggable {
   private ShooterMode mode;
   private Rotation2d turretPositionSetpoint;
   private Rotation2d turretCurrentPosition;
+  public Trigger fwdLimit, revLimit;
 
   public Turret() {
     mode = ShooterMode.DISABLED;
@@ -58,6 +56,9 @@ public class Turret extends SubsystemBase implements Loggable {
     
     turretCurrentPosition = Rotation2d.fromDegrees(0);
     turretPositionSetpoint = Rotation2d.fromDegrees(0);
+
+    fwdLimit = new Trigger(this::getFwdLimit);
+    revLimit = new Trigger(this::getRevLimit);
   }
 
   private double rotation2dToNativeUnits(Rotation2d rotation) {
@@ -90,10 +91,6 @@ public class Turret extends SubsystemBase implements Loggable {
     NTHelper.setDouble("turret_position_deg", turretCurrentPosition.getDegrees());
     NTHelper.setDouble("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
     NTHelper.setBoolean("turret_at_setpoint", atSetpoint());
-    /*NTHelper.setDouble("turret_controller_error", bearing.getClosedLoopError());
-    if (bearing.getControlMode() == ControlMode.Position) { 
-      NTHelper.setDouble("turret_controller_target_deg", nativeUnitsToRotation2d(bearing.getClosedLoopTarget()).getDegrees());
-    }*/
     if (!homed && !isHoming) {
       startHome();
     }
@@ -194,13 +191,5 @@ public class Turret extends SubsystemBase implements Loggable {
   @Log(name = "Turret Position (deg.)")
   public double getCurrentPositionDegrees() {
     return getCurrentPosition().getDegrees();
-  }
-
-  public void togglePosition() {
-    if (getCurrentPosition().getDegrees() > -10) {
-      setPositionSetpoint(Rotation2d.fromDegrees(-180));
-    } else {
-      setPositionSetpoint(Rotation2d.fromDegrees(0));
-    }
   }
 }

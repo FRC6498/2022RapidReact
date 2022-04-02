@@ -7,29 +7,25 @@ package frc.robot.lib;
 import static frc.robot.Constants.VisionConstants.*;
 
 import org.photonvision.PhotonCamera;
-//import org.photonvision.PhotonUtils;
+import org.photonvision.PhotonUtils;
 import org.photonvision.common.hardware.VisionLEDMode;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class Vision {
   PhotonCamera CAM_limelight;
   PhotonPipelineResult currentResult;
-  boolean enabled = true;
-  NetworkTable NT_photonvision;
+  boolean enabled = true;  
+  public Trigger hasTarget;
   /** Creates a new VisionSystem. */
   public Vision() {
     CAM_limelight = new PhotonCamera(limelightCameraName);
     CAM_limelight.setDriverMode(false);
     CAM_limelight.setPipelineIndex(upperHubPipelineID);
-    //CAM_limelight
-
-    NT_photonvision = NetworkTableInstance.getDefault().getTable("photonvision");
+    hasTarget = new Trigger(this::hasTargets);
   }
 
   public PhotonTrackedTarget getBestTarget()
@@ -56,15 +52,15 @@ public class Vision {
   public double getTargetDistance(PhotonTrackedTarget target)
   {
     // difference in height from the target to camera
-    double dh = 2.64 - Units.inchesToMeters(29);
-    double distance = dh / (Math.tan(target.getPitch()) * Math.cos(target.getYaw()));
-    return distance;
-    /*return PhotonUtils.calculateDistanceToTargetMeters(
+    //double dh = 2.64 - Units.inchesToMeters(29);
+    //double distance = dh / (Math.tan(target.getPitch()) * Math.cos(target.getYaw()));
+    //return distance;
+    return PhotonUtils.calculateDistanceToTargetMeters(
       Units.inchesToMeters(29), 
       2.64, // 264cm from floor->ring
       Units.degreesToRadians(40), 
       Units.degreesToRadians(target.getPitch())
-    );*/
+    );
   }
 
   public void setEnabled(boolean enabled) {

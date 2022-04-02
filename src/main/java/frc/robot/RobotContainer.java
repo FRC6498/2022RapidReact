@@ -124,12 +124,12 @@ public class RobotContainer {
         ).alongWith(new InstantCommand(backConveyor::setForward, backConveyor))), 
       superstructure::getSeesawFront
     ));
+    driver.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.SEARCHING), superstructure));
     driver.rightStick().debounce(0.5).whenActive(
       new InstantCommand(climber::toggleClimber, climber)
       .andThen(new WaitCommand(0.5))
       .andThen(() -> climber.setEnabled(true))
     );
-    driver.y().and(defenseMode.negate()).whenActive(new InstantCommand(superstructure::toggleSeesaw));
     // operator
     operator.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
     
