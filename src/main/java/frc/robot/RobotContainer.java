@@ -21,9 +21,10 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.DriveArcadeOpenLoop;
 import frc.robot.commands.TurretStartup;
+import frc.robot.commands.TurretTrack;
 import frc.robot.commands.auto.HighGoalOutsideTarmacTimeBased;
 import frc.robot.lib.Vision;
 //import frc.robot.commands.FollowTrajectory;
@@ -83,15 +84,6 @@ public class RobotContainer {
   Trigger operatorRightTrigger = new Trigger(() -> operator.getRightTriggerAxis() < 0.05);
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    //vision.setLED(VisionLEDMode.kOff);
-    drivetrain.setDefaultCommand(
-      new DriveArcadeOpenLoop(
-        driver::getRightTriggerAxis, 
-        driver::getLeftX, 
-        driver::getLeftTriggerAxis, 
-        drivetrain
-      )
-    );
     drivetrain.setDefaultCommand(new RunCommand(() -> drivetrain.arcadeDrive(driver.getRightTriggerAxis() + -driver.getLeftTriggerAxis(), -driver.getLeftX()), drivetrain));
     drivetrain.setInverted(true);
     turret.setDefaultCommand(new TurretStartup(superstructure, turret));//new RunCommand(turret::stop, turret));
@@ -115,14 +107,14 @@ public class RobotContainer {
     driver.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP_LOW), superstructure));
     driver.b().or(operator.b()).and(defenseMode.negate()).whileActiveOnce(
       new ConditionalCommand(
-        new InstantCommand(frontConveyor::setReversed)
-        .andThen(new WaitCommand(0.5))
+        new TurretTrack(turret, vision)
+        .andThen(new WaitUntilCommand(() -> vision.hasTargets() && turret.atSetpoint()))
         .andThen(new StartEndCommand(
           superstructure::runFeeder, 
           superstructure::stopFeeder, 
           superstructure
-        ).alongWith(new InstantCommand(frontConveyor::setForward, frontConveyor))
-        ), 
+        )
+      ), 
       new InstantCommand(backConveyor::setReversed)
         .andThen(new WaitCommand(0.5))
         .andThen(new StartEndCommand(
@@ -136,9 +128,6 @@ public class RobotContainer {
       new InstantCommand(climber::toggleClimber, climber)
       .andThen(new WaitCommand(0.5))
       .andThen(() -> climber.setEnabled(true))
-    );
-    driver.leftBumper().and(defenseMode.negate()).whenActive(
-      new InstantCommand(turret::togglePosition, turret)
     );
     driver.y().and(defenseMode.negate()).whenActive(new InstantCommand(superstructure::toggleSeesaw));
     // operator
@@ -181,7 +170,6 @@ public class RobotContainer {
     driver.start().whenActive(new InstantCommand(climber::enable, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
     operator.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
-    operator.b().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP_HIGH)));
     operator.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
 
     
