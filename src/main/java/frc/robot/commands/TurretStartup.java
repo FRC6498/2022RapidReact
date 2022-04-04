@@ -25,8 +25,9 @@ public class TurretStartup extends SequentialCommandGroup {
     addCommands(
       new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.HOMING))
     .andThen(new WaitUntilCommand(turret::getHomed))
-    .andThen(() -> superstructure.setShooterMode(ShooterMode.DUMP_LOW))
+    //.andThen(() -> superstructure.setShooterMode(ShooterMode.DUMP_LOW))
     .andThen(new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.frontDumpAngle)), turret))
+    .andThen(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)))
     .andThen(new RunCommand(() -> {}, turret)));
   }
 }

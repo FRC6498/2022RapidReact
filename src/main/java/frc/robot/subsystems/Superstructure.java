@@ -4,7 +4,9 @@
 
 package frc.robot.subsystems;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
@@ -12,34 +14,29 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import org.photonvision.common.hardware.VisionLEDMode;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.filter.MedianFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants;
+import frc.robot.Vision;
 import frc.robot.Constants.TurretConstants;
-import frc.robot.lib.DifferentialDrivePoseEstimator;
+import frc.robot.commands.TurretStartup;
+import frc.robot.commands.TurretTrack;
 import frc.robot.lib.GoalTrack;
 import frc.robot.lib.NTHelper;
-import frc.robot.lib.Vision;
 import io.github.oblarg.oblog.Loggable;
-//import frc.robot.lib.PicoColorSensor;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -104,7 +101,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
   public double feederSpeedStopped = 0.0; 
   WPI_TalonFX frontFeeder;
   WPI_TalonFX rearFeeder;
-  DoubleSolenoid seesaw;
   GoalTrack goalTrack;
   @Log(tabName = "SmartDashboard", name = "Distance to Hub")
   double distance;
@@ -112,13 +108,11 @@ public class Superstructure extends SubsystemBase implements Loggable {
   @Log.BooleanBox(name = "Seesaw Position", colorWhenTrue = "yellow", colorWhenFalse = "blue", tabName = "SmartDashboard")
   boolean seesawFront = true;
 
-  ParallelRaceGroup fullAuto;
-  ParallelRaceGroup manualShoot;
-  ParallelRaceGroup disabled;
-  ParallelRaceGroup dump;
-  ParallelRaceGroup testing;
   Consumer<ShooterMode> shooterModeUpdater;
-  DifferentialDrivePoseEstimator poseEstimator;
+  BooleanSupplier visionHasTarget;
+  DoubleSupplier targetYaw;
+  MedianFilter yawSmooth = new MedianFilter(10);
+
 
   public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater, Drivetrain drivetrain) {
     this.flywheel = flywheel;
@@ -143,9 +137,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
     rearFeeder.enableVoltageCompensation(true);
     rearFeeder.configVoltageCompSaturation(12);
 
-
-    seesaw = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.ConveyorConstants.seesawForwardPCMId, Constants.ConveyorConstants.seesawReversePCMId);
-
     flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(NTHelper.getDouble("flywheel_speed_target")), flywheel));
     frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
     turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
@@ -159,27 +150,16 @@ public class Superstructure extends SubsystemBase implements Loggable {
     flywheelEnabled = new Trigger(flywheel::getActive);
     turretEnabled = new Trigger(turret::getActive);
     flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
-    //atStart = new Trigger(() -> { return Math.abs(turret.getCurrentPosition().getDegrees() - turretToSearchStart.calculate(0).position) < 1.5; });
-    //turret.revLimit.and(vision.hasTarget.negate()).whenActive(new InstantCommand(() -> turret.openLoop(0.2)));
-    //turret.fwdLimit.and(vision.hasTarget.negate()).whenActive(new InstantCommand(() -> turret.openLoop(percent)))
 
-    poseEstimator = drivetrain.getPoseEstimator();
+    targetYaw = this::getTargetYaw;
 
-    setupShooterCommands();
-    setShooterMode(ShooterMode.SEARCHING);
   }
   
-  private void setupShooterCommands() {
-    //frontConveyorFull.whenActive(new InstantCommand(this::seesawToFront));
-    //backConveyorFull.and(frontConveyorFull.negate()).whenActive(new InstantCommand(this::seesawToRear));
-
-    // set speed
-   
-
-    //frontConveyorFull.whileActiveOnce(new StartEndCommand(this::runFeeder, this::stopFeeder, this));
-    //vision.setLED(VisionLEDMode.kOff);
-    //turret.setDefaultCommand(new RunCommand(() -> { turret.setSetpointDegrees(0); }, turret));
-
+  @Log(tabName = "team6498")
+  private double getTargetYaw() {
+    if (vision.hasTargets()) {
+      return yawSmooth.calculate(vision.getBestTarget().getYaw());
+    } else { return 0; }
   }
 
   public void runFrontFeeder(double percent) {
@@ -247,17 +227,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
         backIntake.raiseIntake();
         frontConveyor.stop();
         backConveyor.stop();
-      case SEARCHING:
-        vision.hasTarget.whenInactive(
-          new SequentialCommandGroup(
-            new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.hardForwardAngle)), turret),
-            new WaitUntilCommand(turret::atSetpoint),
-            new InstantCommand(() -> turret.setPositionSetpoint(Rotation2d.fromDegrees(TurretConstants.hardReverseAngle)), turret),
-            new WaitUntilCommand(turret::atSetpoint)
-          ).perpetually().until(vision.hasTarget.negate())
-          .andThen(new InstantCommand(() -> setShooterMode(ShooterMode.MANUAL_FIRE)))
-        );
-        break;
       default:
         break;
     }
@@ -275,9 +244,9 @@ public class Superstructure extends SubsystemBase implements Loggable {
 
   public enum ShooterMode {
     MANUAL_FIRE, // turret and flywheel track the goal, ball is fired on operator command if present
-    DUMP_LOW, // Turret locks to dead ahead but flywheel is set to minimum
-    DUMP_HIGH,
-    SEARCHING, 
+    //DUMP_LOW, // Turret locks to dead ahead but flywheel is set to minimum
+    //DUMP_HIGH,
+    //SEARCHING, 
     HOMING, //
     TUNING, // Turret Disabled, flywheel speed settable
     DISABLED // turret and flywheel do not move, shooting is impossible
@@ -333,24 +302,10 @@ public class Superstructure extends SubsystemBase implements Loggable {
     }
   }
 
-  public boolean getSeesawFront() {
-    return seesaw.get() == Value.kReverse;
-  }
-
   @Override
   public void periodic() {
-    
-    
-    switch (mode) {
-      case MANUAL_FIRE:
-        if (vision.hasTarget.get()) {
-          turret.setPositionSetpoint(Rotation2d.fromDegrees(vision.getBestTarget().getYaw()).plus(turret.getCurrentPosition()));
-        } else {
-          setShooterMode(ShooterMode.SEARCHING);
-        }
-        break;
-      default:
-        break;
+    if (mode == ShooterMode.MANUAL_FIRE && turret.getDefaultCommand() instanceof TurretStartup) {
+      turret.setDefaultCommand(new TurretTrack(turret, targetYaw));
     }
     if (turret.getCurrentPosition().getDegrees() > -10) { // 0, front
       turretAtFront = true;

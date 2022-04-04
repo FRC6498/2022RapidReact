@@ -28,14 +28,14 @@ public class HighGoalOutsideTarmacDistanceBased extends SequentialCommandGroup {
       new InstantCommand(() -> drivetrain.arcadeDrive(1, 0), drivetrain),
       new WaitUntilCommand(() -> drivetrain.getDistance(drivetrain.getPose()) >= Units.inchesToMeters(42)),
       new InstantCommand(drivetrain::stop),
-      new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP_HIGH)),
+      new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)),
       new WaitCommand(4),
       new StartEndCommand(
         superstructure::runFeeder, 
         superstructure::stopFeeder, 
         superstructure
       ).withTimeout(10),
-      new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP_LOW))
+      new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE))
     );
   }
 }

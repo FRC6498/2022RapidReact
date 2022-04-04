@@ -76,9 +76,9 @@ public final class Constants {
 
     public static final class TurretConstants {
         public static final int yawMotorCANId = 12;
-        public static final double turretPositionToleranceDegrees = 1;
-        public static final double kP = 0.25;
-        public static final double kI = 0.0005;
+        public static final double turretPositionToleranceDegrees = 0.1;
+        public static final double kP = 0.05;
+        public static final double kI = 0.0000;
         public static final double kD = 0;
         public static final double turretTicksPerRotation = 2048*(40/10)*(40/20)*(314.0/40.0);
         public static final double turretSoftLimitOffset = 20;

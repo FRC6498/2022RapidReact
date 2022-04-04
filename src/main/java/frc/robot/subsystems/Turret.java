@@ -47,7 +47,7 @@ public class Turret extends SubsystemBase implements Loggable {
     bearingConfig.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
     bearingConfig.reverseLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
     // set position tolerance to 200 ticks (1 deg ~ 359)
-    bearingConfig.slot0.allowableClosedloopError = 200;
+    bearingConfig.slot0.allowableClosedloopError = rotation2dToNativeUnits(Rotation2d.fromDegrees(TurretConstants.turretPositionToleranceDegrees));
     bearingConfig.slot0.integralZone = 1023/bearingConfig.slot0.kP;
     bearingConfig.closedloopRamp = 0.1;
     bearing.configAllSettings(bearingConfig);
@@ -76,7 +76,7 @@ public class Turret extends SubsystemBase implements Loggable {
   }
 
   public boolean atSetpoint() {
-    return nativeUnitsToRotation2d(bearing.getClosedLoopError()).getDegrees() < 1;
+    return nativeUnitsToRotation2d(bearing.getClosedLoopError()).getDegrees() < TurretConstants.turretPositionToleranceDegrees;
   }
 
   public boolean getActive() {
@@ -91,6 +91,7 @@ public class Turret extends SubsystemBase implements Loggable {
     NTHelper.setDouble("turret_position_deg", turretCurrentPosition.getDegrees());
     NTHelper.setDouble("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
     NTHelper.setBoolean("turret_at_setpoint", atSetpoint());
+    
     if (!homed && !isHoming) {
       startHome();
     }

@@ -21,12 +21,9 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.TurretStartup;
-import frc.robot.commands.TurretTrack;
 import frc.robot.commands.auto.HighGoalOutsideTarmacTimeBased;
-import frc.robot.lib.Vision;
 //import frc.robot.commands.FollowTrajectory;
 import frc.robot.lib.OI.CommandXboxController;
 import frc.robot.subsystems.Climber;
@@ -104,8 +101,8 @@ public class RobotContainer {
   private void configureButtonBindings() {
     // driver
     driver.rightBumper().whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
-    driver.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP_LOW), superstructure));
-    driver.b().or(operator.b()).and(defenseMode.negate()).whileActiveOnce(
+    //driver.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP_LOW), superstructure));
+    /*driver.b().or(operator.b()).and(defenseMode.negate()).whileActiveOnce(
       new ConditionalCommand(
         new TurretTrack(turret, vision)
         .andThen(new WaitUntilCommand(() -> vision.hasTargets() && turret.atSetpoint()))
@@ -123,8 +120,8 @@ public class RobotContainer {
           superstructure
         ).alongWith(new InstantCommand(backConveyor::setForward, backConveyor))), 
       superstructure::getSeesawFront
-    ));
-    driver.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.SEARCHING), superstructure));
+    ));*/
+    driver.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
     driver.rightStick().debounce(0.5).whenActive(
       new InstantCommand(climber::toggleClimber, climber)
       .andThen(new WaitCommand(0.5))

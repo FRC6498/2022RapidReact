@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.lib;
+package frc.robot;
 
 import static frc.robot.Constants.VisionConstants.*;
 
@@ -14,6 +14,7 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.lib.NTHelper;
 
 public class Vision {
   PhotonCamera CAM_limelight;
@@ -23,6 +24,7 @@ public class Vision {
   /** Creates a new VisionSystem. */
   public Vision() {
     CAM_limelight = new PhotonCamera(limelightCameraName);
+    PhotonCamera.setVersionCheckEnabled(false);
     CAM_limelight.setDriverMode(false);
     CAM_limelight.setPipelineIndex(upperHubPipelineID);
     hasTarget = new Trigger(this::hasTargets);

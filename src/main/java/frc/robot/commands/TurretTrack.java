@@ -4,9 +4,11 @@
 
 package frc.robot.commands;
 
+import java.util.function.DoubleSupplier;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.lib.Vision;
+import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Turret;
 
 /**
@@ -14,12 +16,11 @@ import frc.robot.subsystems.Turret;
  */
 public class TurretTrack extends CommandBase {
   Turret turret;
-  Vision vision;
-  boolean forward = false;
-  public TurretTrack(Turret turret, Vision vision) {
+  DoubleSupplier getTargetYaw;
+  public TurretTrack(Turret turret, DoubleSupplier getTargetYaw) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.turret = turret;
-    this.vision = vision;
+    this.getTargetYaw = getTargetYaw;
     addRequirements(turret);
   }
 
@@ -31,21 +32,9 @@ public class TurretTrack extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if (vision.hasTargets()) {
-      turret.setPositionSetpoint(turret.getCurrentPosition().rotateBy(Rotation2d.fromDegrees(vision.getBestTarget().getYaw())));
-    } else {
-      if (forward) {
-        turret.openLoop(0.2);
-      } else {
-        turret.openLoop(-0.2);
-      }
-      if (turret.getFwdLimit()) {
-        forward = false;
-      }
-      if (turret.getRevLimit()) {
-        forward = true;
-      }
-    }
+    Rotation2d angle = turret.getCurrentPosition().plus(Rotation2d.fromDegrees(-getTargetYaw.getAsDouble()));
+    NTHelper.setDouble("turret_setpoint_calc", angle.getDegrees());
+    turret.setPositionSetpoint(angle);
   }
 
   // Called once the command ends or is interrupted.

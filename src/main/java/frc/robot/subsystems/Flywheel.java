@@ -95,8 +95,6 @@ public class Flywheel extends SubsystemBase implements Loggable {
     this.mode = mode;
     switch (mode) {
       case MANUAL_FIRE:
-      case DUMP_HIGH:
-      case DUMP_LOW:
       case TUNING:
         flywheelActive = false;
         break;
@@ -105,6 +103,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
         flywheelActive = false;
         break;
       default:
+      flywheelActive = false;
         break;
     }
   }
@@ -114,10 +113,10 @@ public class Flywheel extends SubsystemBase implements Loggable {
   public void periodic() {
     if (mode == ShooterMode.MANUAL_FIRE) {
       setFlywheelSpeed(InterpolatingTable.get(distanceToHub).rpm);
-    } else if (mode == ShooterMode.DUMP_LOW) {
+    /*} else if (mode == ShooterMode.DUMP_LOW) {
       setFlywheelSpeed(1750); // dump = 1750
     } else if (mode == ShooterMode.DUMP_HIGH) {
-      setFlywheelSpeed(3500);
+      setFlywheelSpeed(3500);*/
     }
     flywheelSpeedSetpoint = MathUtil.clamp(flywheelSpeedSetpoint, -6500, -1000);
     flywheel_speed_target = flywheelSpeedSetpoint;
