@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import static frc.robot.Constants.VisionConstants.*;
-
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonUtils;
 import org.photonvision.common.hardware.VisionLEDMode;
@@ -13,21 +11,19 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.lib.NTHelper;
 
 public class Vision {
   PhotonCamera CAM_limelight;
   PhotonPipelineResult currentResult;
   boolean enabled = true;  
-  public Trigger hasTarget;
   /** Creates a new VisionSystem. */
   public Vision() {
-    CAM_limelight = new PhotonCamera(limelightCameraName);
+    CAM_limelight = new PhotonCamera(VisionConstants.limelightCameraName);
     PhotonCamera.setVersionCheckEnabled(false);
     CAM_limelight.setDriverMode(false);
-    CAM_limelight.setPipelineIndex(upperHubPipelineID);
-    hasTarget = new Trigger(this::hasTargets);
+    CAM_limelight.setPipelineIndex(VisionConstants.upperHubPipelineID);
   }
 
   public PhotonTrackedTarget getBestTarget()

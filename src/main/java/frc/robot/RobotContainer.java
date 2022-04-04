@@ -13,7 +13,6 @@ package frc.robot;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
@@ -22,9 +21,9 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.IntakeConstants;
 import frc.robot.commands.TurretStartup;
 import frc.robot.commands.auto.HighGoalOutsideTarmacTimeBased;
-//import frc.robot.commands.FollowTrajectory;
 import frc.robot.lib.OI.CommandXboxController;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Conveyor;
@@ -34,9 +33,6 @@ import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Superstructure.ShooterMode;
-import io.github.oblarg.oblog.annotations.Log;
-
-import static frc.robot.Constants.IntakeConstants.*;
 
 import java.util.function.Consumer;
 
@@ -54,21 +50,20 @@ public class RobotContainer {
   Climber climber = new Climber();
   Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, 1);
   Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.backDriverCANId, 2);
-  Intake frontIntake = new Intake(intakeACANId, frontIntakeForwardChannel, frontIntakeReverseChannel);
-  Intake backIntake = new Intake(intakeBCANId, backIntakeForwardChannel, backIntakeReverseChannel);
+  Intake frontIntake = new Intake(IntakeConstants.intakeACANId, IntakeConstants.frontIntakeForwardChannel, IntakeConstants.frontIntakeReverseChannel);
+  Intake backIntake = new Intake(IntakeConstants.intakeBCANId, IntakeConstants.backIntakeForwardChannel, IntakeConstants.backIntakeReverseChannel);
   Consumer<ShooterMode> shooterModeUpdater = (ShooterMode mode) -> {
     flywheel.setShooterMode(mode);
     turret.setShooterMode(mode);
   };
   Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, shooterModeUpdater, drivetrain);
-  Field2d field;
 
   Trigger retractClimb = new Trigger();
   Trigger robotLinedUp = new Trigger(vision::getAligned);
   Trigger defenseMode = new Trigger(() -> superstructure.getShooterMode() == ShooterMode.DISABLED);
-  @Log(tabName = "SmartDashboard", name = "Time Selector")
+  //@Log(tabName = "SmartDashboard", name = "Time Selector")
   SendableChooser<Double> timeSelector = new SendableChooser<>();
-  @Log(tabName = "SmartDashboard", name = "Distance Selector")
+  //@Log(tabName = "SmartDashboard", name = "Distance Selector")
   SendableChooser<Double> distanceSelector = new SendableChooser<>();
 
   CommandXboxController driver = new CommandXboxController(0);

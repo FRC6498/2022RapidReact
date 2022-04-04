@@ -16,8 +16,7 @@ import frc.robot.lib.InterpolatingTable;
 import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
-
-import static frc.robot.Constants.ShooterConstants.*;
+import frc.robot.Constants.ShooterConstants;
 
 public class Flywheel extends SubsystemBase implements Loggable {
   // Hardware
@@ -39,7 +38,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   
   public Flywheel() {
     mode = ShooterMode.DISABLED;
-    neo = new CANSparkMax(flywheelCANId, MotorType.kBrushless);
+    neo = new CANSparkMax(ShooterConstants.flywheelCANId, MotorType.kBrushless);
     encoder = neo.getEncoder();
     //flywheelFeedforward = new SimpleMotorFeedforward(
     //  flywheelkS, 
@@ -88,7 +87,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   }
 
   public boolean atSetpoint() {
-    return Math.abs(getFlywheelSpeed() - flywheelSpeedSetpoint) < flywheelSetpointToleranceRPM;
+    return Math.abs(getFlywheelSpeed() - flywheelSpeedSetpoint) < ShooterConstants.flywheelSetpointToleranceRPM;
   }
 
   public void setShooterMode(ShooterMode mode) {

@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems;
 
-import static frc.robot.Constants.ClimberConstants.*;
-
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
@@ -17,6 +15,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.ClimberConstants;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class Climber extends SubsystemBase {
@@ -29,7 +28,7 @@ public class Climber extends SubsystemBase {
   public Climber() {
     enabled = false;
     config = new TalonFXConfiguration();
-    climberMotor = new WPI_TalonFX(climberMotorCANId);
+    climberMotor = new WPI_TalonFX(ClimberConstants.climberMotorCANId);
     config.closedloopRamp = 0.5;
     config.peakOutputForward = 0.75;
     config.peakOutputReverse = -0.75;
@@ -40,7 +39,7 @@ public class Climber extends SubsystemBase {
 
     lock = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
     //setup encoders
-    config.slot0.kP = climber_kP;
+    config.slot0.kP = ClimberConstants.climber_kP;
     climberMotor.configAllSettings(config);
     //climberMotor.configForwardSoftLimitThreshold(17860 * 0.5);
     //climberMotor.configForwardSoftLimitThreshold(286300);
