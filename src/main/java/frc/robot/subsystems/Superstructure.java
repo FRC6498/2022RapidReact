@@ -133,15 +133,13 @@ public class Superstructure extends SubsystemBase implements Loggable {
     rearFeeder.configVoltageCompSaturation(12);
 
     flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(NTHelper.getDouble("flywheel_speed_target")), flywheel));
-    frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.start(), frontConveyor));
+    //frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
     turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
-    backConveyor.setDefaultCommand(new RunCommand(backConveyor::start, backConveyor));
+    //backConveyor.setDefaultCommand(new RunCommand(backConveyor::stop, backConveyor));
 
     
     shooterReady = new Trigger(this::getShooterReady);
     robotLinedUp = new Trigger(vision::getAligned);
-    frontConveyorFull = new Trigger(frontConveyor::isBallPresent);
-    backConveyorFull = new Trigger(backConveyor::isBallPresent);
     flywheelEnabled = new Trigger(flywheel::getActive);
     turretEnabled = new Trigger(turret::getActive);
     flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
@@ -155,6 +153,22 @@ public class Superstructure extends SubsystemBase implements Loggable {
     if (vision.hasTargets()) {
       return yawSmooth.calculate(vision.getBestTarget().getYaw());
     } else { return 0; }
+  }
+
+  public void runFrontConveyor() {
+    frontConveyor.start();
+  }
+
+  public void runRearConveyor() {
+    backConveyor.start();
+  }
+
+  public void stopFrontConveyor() {
+    frontConveyor.stop();
+  }
+
+  public void stopRearConveyor() {
+    backConveyor.stop();
   }
 
   public void runFrontFeeder(double percent) {
@@ -174,7 +188,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
     rearFeeder.setNeutralMode(NeutralMode.Coast);
   }
 
-  @Config
   public void runFeeder() {
     frontFeeder.set(frontFeederSpeedRunning);
     rearFeeder.set(rearFeederSpeedRunning);
@@ -307,11 +320,5 @@ public class Superstructure extends SubsystemBase implements Loggable {
     } else {
       turretAtFront = false;
     }
-
-    if (rearFeeder.get() > 0) {
-      rearFeeder.set(0);
-      //TODO: re-enable rear feeder
-    }
-  }
-  
+  } 
 }

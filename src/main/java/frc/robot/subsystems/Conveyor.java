@@ -8,18 +8,17 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Constants.ConveyorConstants;
 
 public class Conveyor extends SubsystemBase {
 
   private final WPI_TalonFX driver;
-  private final DigitalInput ballSensor;
   private final TalonFXConfiguration driverConfig;
+  private double speed;
   public boolean running = true;
   boolean reversed;
-  public boolean empty;
 
   
   /** Commands
@@ -28,7 +27,7 @@ public class Conveyor extends SubsystemBase {
    */
 
   /** Creates a new Conveyor. */
-  public Conveyor(int driverCANId, int ballSensorChannelID) {
+  public Conveyor(int driverCANId) {
     driver = new WPI_TalonFX(driverCANId); 
 
     driverConfig = new TalonFXConfiguration();
@@ -41,10 +40,11 @@ public class Conveyor extends SubsystemBase {
     driver.enableVoltageCompensation(true);
 
     running = false;
-    ballSensor = new DigitalInput(ballSensorChannelID);
+    speed = ConveyorConstants.conveyorNominalSpeed;
 
     if (driverCANId == 9) {
       driver.setInverted(true);
+      speed = 0.5;
     }
   }
 
@@ -58,7 +58,7 @@ public class Conveyor extends SubsystemBase {
   }
 
   public void stop() {
-    driver.set(0);
+    running = false;
   }
 
   public void setForward() {
@@ -69,19 +69,15 @@ public class Conveyor extends SubsystemBase {
     reversed = true;
   }
 
-  public boolean isBallPresent() {
-    return ballSensor.get();
-  }
-
   private void updateOutput() {
     if (running) {
         if (reversed) {
           if (driver.get() > 0) { // we are going forwards, reverse it
-            driver.set(-Constants.ConveyorConstants.conveyorNominalSpeed);
+            driver.set(-speed);
           }
         } else { 
           if (driver.get() <= 0) { // going backwards, forwards it
-            driver.set(Constants.ConveyorConstants.conveyorNominalSpeed);
+            driver.set(speed);
           }
         }
       } else {
@@ -93,9 +89,6 @@ public class Conveyor extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // are we empty
-    empty = !isBallPresent();
-    empty = false;
     updateOutput();
   }
 }

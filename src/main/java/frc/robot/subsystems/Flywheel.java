@@ -95,7 +95,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     switch (mode) {
       case MANUAL_FIRE:
       case TUNING:
-        flywheelActive = false;
+        flywheelActive = true;
         break;
       case DISABLED:
       case HOMING:
@@ -106,7 +106,6 @@ public class Flywheel extends SubsystemBase implements Loggable {
         break;
     }
   }
-  //TODO: Turn conveyor and flywheel back on
   
   @Override
   public void periodic() {

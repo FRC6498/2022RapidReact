@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.IntakeConstants;
+import frc.robot.commands.ShootCommand;
 import frc.robot.commands.TurretStartup;
 import frc.robot.commands.auto.HighGoalOutsideTarmacTimeBased;
 import frc.robot.lib.OI.CommandXboxController;
@@ -48,8 +49,8 @@ public class RobotContainer {
   Turret turret = new Turret();
   Vision vision = new Vision();
   Climber climber = new Climber();
-  Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, 1);
-  Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.backDriverCANId, 2);
+  Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId);
+  Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.backDriverCANId);
   Intake frontIntake = new Intake(IntakeConstants.intakeACANId, IntakeConstants.frontIntakeForwardChannel, IntakeConstants.frontIntakeReverseChannel);
   Intake backIntake = new Intake(IntakeConstants.intakeBCANId, IntakeConstants.backIntakeForwardChannel, IntakeConstants.backIntakeReverseChannel);
   Consumer<ShooterMode> shooterModeUpdater = (ShooterMode mode) -> {
@@ -68,7 +69,6 @@ public class RobotContainer {
 
   CommandXboxController driver = new CommandXboxController(0);
   CommandXboxController operator = new CommandXboxController(1);
-  public boolean feederRunning;
   Trigger turretLocked = new Trigger(turret::atSetpoint);
   Trigger flywheelReady = new Trigger(flywheel::atSetpoint);
 
@@ -85,6 +85,7 @@ public class RobotContainer {
     timeSelector.addOption("Long", 0.95);
     distanceSelector.addOption("Tarmac Edge", Units.inchesToMeters(42));
     superstructure.setShooterMode(ShooterMode.DISABLED);
+    superstructure.stopFeeder();
   }
 
   /**
@@ -96,26 +97,8 @@ public class RobotContainer {
   private void configureButtonBindings() {
     // driver
     driver.rightBumper().whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
-    //driver.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DUMP_LOW), superstructure));
-    /*driver.b().or(operator.b()).and(defenseMode.negate()).whileActiveOnce(
-      new ConditionalCommand(
-        new TurretTrack(turret, vision)
-        .andThen(new WaitUntilCommand(() -> vision.hasTargets() && turret.atSetpoint()))
-        .andThen(new StartEndCommand(
-          superstructure::runFeeder, 
-          superstructure::stopFeeder, 
-          superstructure
-        )
-      ), 
-      new InstantCommand(backConveyor::setReversed)
-        .andThen(new WaitCommand(0.5))
-        .andThen(new StartEndCommand(
-          superstructure::runFeeder, 
-          superstructure::stopFeeder, 
-          superstructure
-        ).alongWith(new InstantCommand(backConveyor::setForward, backConveyor))), 
-      superstructure::getSeesawFront
-    ));*/
+    driver.b().and(defenseMode.negate()).whileActiveOnce(new ShootCommand(superstructure));
+    
     driver.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
     driver.rightStick().debounce(0.5).whenActive(
       new InstantCommand(climber::toggleClimber, climber)
@@ -126,39 +109,15 @@ public class RobotContainer {
     operator.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
     
     operator.leftBumper().whenActive(new ConditionalCommand(
-      new InstantCommand(frontIntake::raiseIntake, frontIntake), // intake down, so raise it
-      new InstantCommand(frontIntake::lowerIntake, frontIntake), // intake up, so lower it
+      new InstantCommand(frontIntake::raiseIntake, frontIntake).andThen(new InstantCommand(frontConveyor::stop)), // intake down, so raise it
+      new InstantCommand(frontIntake::lowerIntake, frontIntake).andThen(new InstantCommand(frontConveyor::start)), // intake up, so lower it
       frontIntake::isExtended)
     );
-    /*operatorLeftTrigger.whileActiveOnce(new StartEndCommand(
-      frontIntake::setForward, // inverted, so go forward
-      frontIntake::setReverse, // forward up, so invert it
-      frontIntake
-      ).alongWith(new StartEndCommand(
-        frontConveyor::setReversed, 
-        frontConveyor::setForward, 
-        frontConveyor
-        )
-      )
-    );*/
     operator.rightBumper().whenActive(new ConditionalCommand(
-      new InstantCommand(backIntake::raiseIntake, backIntake), // intake down, so raise it
-      new InstantCommand(backIntake::lowerIntake, backIntake), // intake up, so lower it
+      new InstantCommand(backIntake::raiseIntake, backIntake).andThen(new InstantCommand(backConveyor::stop)), // intake down, so raise it
+      new InstantCommand(backIntake::lowerIntake, backIntake).andThen(new InstantCommand(backConveyor::start)), // intake up, so lower it
       backIntake::isExtended)
     );
-    /*operatorRightTrigger.whileActiveOnce(
-      new StartEndCommand(
-        backIntake::setForward, // invert 
-        backIntake::setReverse, // uninvert
-        backIntake
-      ).alongWith(new StartEndCommand(
-        backConveyor::setForward, 
-        backConveyor::setReversed, 
-        backConveyor
-      )
-    ));*/
-    /*operatorCmd.rightBumper().whenActive(new InstantCommand(flywheel::incrementOffset));
-    operatorCmd.leftBumper().whenActive(new InstantCommand(flywheel::decrementOffset));*/
     driver.start().whenActive(new InstantCommand(climber::enable, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
     operator.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
