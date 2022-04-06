@@ -9,12 +9,12 @@ public class ShotParameter {
 
     // Variables
     public final double rpm;
-    public final double offset;
+    public final double hoodSpeedOffset;
 
     // Constructor
     public ShotParameter(double rpm, double offset) {
         this.rpm = rpm;
-        this.offset = offset;
+        this.hoodSpeedOffset = offset;
     }   
 
     public ShotParameter(double rpm) {
@@ -24,14 +24,14 @@ public class ShotParameter {
     // Method equals
     public boolean equals(ShotParameter other) {
         return Math.abs(this.rpm - other.rpm) < 0.1 &&
-        Math.abs(this.offset - other.offset) < 0.1;
+        Math.abs(this.hoodSpeedOffset - other.hoodSpeedOffset) < 0.1;
     }
 
     // Method to interpolate
     public ShotParameter interpolate(ShotParameter end, double t) {
         return new ShotParameter(
             lerp(rpm, end.rpm, t), 
-            lerp(offset, end.offset, t)
+            lerp(hoodSpeedOffset, end.hoodSpeedOffset, t)
         );
     }
 

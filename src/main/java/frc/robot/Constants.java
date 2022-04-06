@@ -72,6 +72,7 @@ public final class Constants {
         public static final double flywheelSetpointToleranceRPM = 10;
         public static final double flywheelDumpRPM = 500;
         public static final double flywheelHighRPM = 4000;
+        public static final int hoodRollerCANId = 13;
     }
 
     public static final class TurretConstants {

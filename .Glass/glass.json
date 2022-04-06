@@ -12,6 +12,9 @@
         },
         "open": true
       },
+      "Flywheel": {
+        "open": true
+      },
       "Superstructure": {
         "Turret": {
           "open": true
@@ -24,6 +27,7 @@
       "Vision": {
         "open": true
       },
+      "open": true,
       "team6498": {
         "open": true
       }
@@ -34,8 +38,7 @@
       },
       "limelight": {
         "open": true
-      },
-      "open": true
+      }
     },
     "team6498": {
       "open": true
@@ -79,93 +82,21 @@
           "series": [
             {
               "color": [
-                0.5490196347236633,
-                0.5490196347236633,
-                0.5490196347236633,
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
                 1.0
               ],
-              "id": "NT:/team6498/flywheel_speed_target"
+              "id": "NT:/Shuffleboard/Flywheel/getFlywheelSpeed"
             },
             {
               "color": [
-                0.8000000715255737,
-                0.7254902124404907,
-                0.4549019932746887,
-                1.0
-              ],
-              "id": "NT:/team6498/flywheel_speed_actual"
-            },
-            {
-              "color": [
-                0.3921568989753723,
-                0.7098039388656616,
-                0.803921639919281,
-                1.0
-              ],
-              "id": "NT:/photonvision/limelight/targetYaw"
-            },
-            {
-              "color": [
-                0.7686275243759155,
-                0.30588236451148987,
+                0.8666667342185974,
+                0.5176470875740051,
                 0.32156863808631897,
                 1.0
               ],
-              "id": "NT:/team6498/turret_position_deg"
-            },
-            {
-              "color": [
-                0.5058823823928833,
-                0.44705885648727417,
-                0.7019608020782471,
-                1.0
-              ],
-              "id": "NT:/team6498/turret_setpoint_deg"
-            },
-            {
-              "color": [
-                0.5764706134796143,
-                0.4705882668495178,
-                0.3764706254005432,
-                1.0
-              ],
-              "id": "NT:/team6498/smoothed_pos_angle"
-            },
-            {
-              "color": [
-                0.8549020290374756,
-                0.545098066329956,
-                0.7647059559822083,
-                1.0
-              ],
-              "id": "NT:/team6498/yaw_deg"
-            },
-            {
-              "color": [
-                0.5490196347236633,
-                0.5490196347236633,
-                0.5490196347236633,
-                1.0
-              ],
-              "id": "NT:/team6498/target_distance"
-            },
-            {
-              "color": [
-                0.8000000715255737,
-                0.7254902124404907,
-                0.4549019932746887,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/team6498/getTargetYaw"
-            },
-            {
-              "color": [
-                0.3921568989753723,
-                0.7098039388656616,
-                0.803921639919281,
-                1.0
-              ],
-              "id": "NT:/team6498/turret_setpoint_calc"
+              "id": "NT:/Shuffleboard/Flywheel/getHoodSpeed"
             }
           ]
         }

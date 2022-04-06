@@ -4,6 +4,11 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.DemandType;
+import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
+import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -11,11 +16,13 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.lib.InterpolatingTable;
-import frc.robot.lib.NTHelper;
+//import frc.robot.lib.InterpolatingTable;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Config;
+import io.github.oblarg.oblog.annotations.Log;
 import frc.robot.Constants.ShooterConstants;
 
 public class Flywheel extends SubsystemBase implements Loggable {
@@ -23,12 +30,14 @@ public class Flywheel extends SubsystemBase implements Loggable {
   private final CANSparkMax neo;
   private final RelativeEncoder encoder;
   private final SparkMaxPIDController pid;
+  private final WPI_TalonFX hoodRollers;
   // Software
-  //private final SimpleMotorFeedforward flywheelFeedforward;
+  private final SimpleMotorFeedforward hoodFeedforward;
   private boolean flywheelActive;
   public double flywheelSpeedSetpoint = -3000.0;
   public double flywheel_speed_target;
-  private int speedOffset = 0;
+  private double speedOffset = 0;
+  private TalonFXConfiguration hoodConfig;
 
   //private double feedforwardOutput;
   double lastPosition = 0.0;
@@ -40,40 +49,53 @@ public class Flywheel extends SubsystemBase implements Loggable {
     mode = ShooterMode.DISABLED;
     neo = new CANSparkMax(ShooterConstants.flywheelCANId, MotorType.kBrushless);
     encoder = neo.getEncoder();
-    //flywheelFeedforward = new SimpleMotorFeedforward(
-    //  flywheelkS, 
-    //  flywheelkV, 
-    //  flywheelkA
-    //);
+    hoodFeedforward = new SimpleMotorFeedforward(
+      0.86936, 
+      0.11827, 
+      0.0060958
+    );
     pid = neo.getPIDController();
     
-    //neo.restoreFactoryDefaults(true);
-    //neo.setIdleMode(IdleMode.kCoast);
+    hoodRollers = new WPI_TalonFX(ShooterConstants.hoodRollerCANId);
+    hoodConfig = new TalonFXConfiguration();
+    hoodConfig.slot0.kP = 0.076642;
+    hoodConfig.slot0.kI = 0;
+    hoodConfig.slot0.kD = 0;
+    hoodConfig.slot0.kF = 0;
+    // once we hit 40A for >=100ms, hold at 40A
+    hoodConfig.supplyCurrLimit = new SupplyCurrentLimitConfiguration(true, 40, 40, 100);
+    hoodRollers.configAllSettings(hoodConfig);
     neo.enableVoltageCompensation(12.3);
-  } 
+    hoodRollers.configVoltageCompSaturation(12.3);
+    hoodRollers.enableVoltageCompensation(true);
+  }
   
   /**
    * 
    * @param velocity Desired velocity in rpm
    */
   //@Config(name = "Set Flywheel Speed(RPM)")
+  @Config
   public void setFlywheelSpeed(double velocity) {
-      flywheelSpeedSetpoint = -(velocity + speedOffset);
+    flywheelSpeedSetpoint = -velocity;
   }
 
   public void setFlywheelDistance(double distance) {
     distanceToHub = distance;
   }
 
-  public void incrementOffset() {
-    speedOffset += 100;
+  @Config
+  public void setHoodRollerOffset(double rpmOffset) {
+    speedOffset = rpmOffset;
   }
 
-  public void decrementOffset() {
-    speedOffset -= 100;
+  @Log
+  public double getHoodSpeed() {
+    return falconTicksToRPM(hoodRollers.getSelectedSensorVelocity());
   }
 
   //@Log(name = "Flywheel Velocity (RPM)")
+  @Log
   public double getFlywheelSpeed() {
     return encoder.getVelocity();
   }
@@ -106,22 +128,34 @@ public class Flywheel extends SubsystemBase implements Loggable {
         break;
     }
   }
+
+  private double rpmToFalconTicks(double rpm) {
+    return rpm * 2048.0 / 600.0;
+  }
+
+  private double falconTicksToRPM(double ticks) {
+    return ticks / 2048.0 * 600.0;
+  }
   
   @Override
   public void periodic() {
-    if (mode == ShooterMode.MANUAL_FIRE) {
-      setFlywheelSpeed(InterpolatingTable.get(distanceToHub).rpm);
+    switch (mode) {
+      case MANUAL_FIRE:
+        //setFlywheelSpeed(InterpolatingTable.get(distanceToHub).rpm);
+        //setFlywheelSpeed(3500);
+        break;
+      default:
+        break;
+    }
+      
     /*} else if (mode == ShooterMode.DUMP_LOW) {
       setFlywheelSpeed(1750); // dump = 1750
     } else if (mode == ShooterMode.DUMP_HIGH) {
       setFlywheelSpeed(3500);*/
-    }
-    flywheelSpeedSetpoint = MathUtil.clamp(flywheelSpeedSetpoint, -6500, -1000);
-    flywheel_speed_target = flywheelSpeedSetpoint;
-    NTHelper.setDouble("flywheel_speed_target", flywheelSpeedSetpoint);
-    NTHelper.setDouble("flywheel_speed_actual", getFlywheelSpeed());
+    //flywheelSpeedSetpoint = MathUtil.clamp(flywheelSpeedSetpoint, -6500, -1000);
     if (flywheelActive) {
       pid.setReference(flywheelSpeedSetpoint, ControlType.kVelocity);
+      hoodRollers.set(ControlMode.Velocity, rpmToFalconTicks(Math.abs(flywheelSpeedSetpoint) + speedOffset), DemandType.ArbitraryFeedForward, hoodFeedforward.calculate(rpmToFalconTicks(Math.abs(flywheelSpeedSetpoint) + speedOffset)));
     } else {
       setFlywheelIdle();
     }

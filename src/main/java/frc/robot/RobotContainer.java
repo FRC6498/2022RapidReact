@@ -49,8 +49,8 @@ public class RobotContainer {
   Turret turret = new Turret();
   Vision vision = new Vision();
   Climber climber = new Climber();
-  Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId);
-  Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.backDriverCANId);
+  Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, vision);
+  Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.backDriverCANId, vision);
   Intake frontIntake = new Intake(IntakeConstants.intakeACANId, IntakeConstants.frontIntakeForwardChannel, IntakeConstants.frontIntakeReverseChannel);
   Intake backIntake = new Intake(IntakeConstants.intakeBCANId, IntakeConstants.backIntakeForwardChannel, IntakeConstants.backIntakeReverseChannel);
   Consumer<ShooterMode> shooterModeUpdater = (ShooterMode mode) -> {
@@ -86,6 +86,8 @@ public class RobotContainer {
     distanceSelector.addOption("Tarmac Edge", Units.inchesToMeters(42));
     superstructure.setShooterMode(ShooterMode.DISABLED);
     superstructure.stopFeeder();
+    frontConveyor.setName("FrontConveyor");
+    backConveyor.setName("BackConveyor");
   }
 
   /**

@@ -8,8 +8,10 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
+
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import frc.robot.Vision;
 import frc.robot.Constants.ConveyorConstants;
 
 public class Conveyor extends SubsystemBase {
@@ -19,6 +21,8 @@ public class Conveyor extends SubsystemBase {
   private double speed;
   public boolean running = true;
   boolean reversed;
+  DigitalInput ballSensor;
+  Vision vision;
 
   
   /** Commands
@@ -27,15 +31,15 @@ public class Conveyor extends SubsystemBase {
    */
 
   /** Creates a new Conveyor. */
-  public Conveyor(int driverCANId) {
+  public Conveyor(int driverCANId, Vision vision) {
     driver = new WPI_TalonFX(driverCANId); 
+    this.vision = vision;
 
     driverConfig = new TalonFXConfiguration();
     driverConfig.openloopRamp = 0.5;
     driverConfig.peakOutputForward = 1.0;
     driverConfig.peakOutputReverse = -1.0;
     driverConfig.voltageCompSaturation = 12;
-
     driver.configAllSettings(driverConfig);
     driver.enableVoltageCompensation(true);
 
@@ -45,6 +49,12 @@ public class Conveyor extends SubsystemBase {
     if (driverCANId == 9) {
       driver.setInverted(true);
       speed = 0.5;
+    }
+
+    if (getName() == "FrontConveyor") {
+      ballSensor = new DigitalInput(1);
+    } else if (getName() == "BackConveyor") {
+      ballSensor = new DigitalInput(2);
     }
   }
 
