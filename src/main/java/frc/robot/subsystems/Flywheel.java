@@ -34,9 +34,12 @@ public class Flywheel extends SubsystemBase implements Loggable {
   // Software
   private final SimpleMotorFeedforward hoodFeedforward;
   private boolean flywheelActive;
+  @Log
   public double flywheelSpeedSetpoint = -3000.0;
-  public double flywheel_speed_target;
+  @Log
   private double speedOffset = 0;
+  @Log
+  private double hoodTargetRPM = 0;
   private TalonFXConfiguration hoodConfig;
 
   //private double feedforwardOutput;
@@ -136,7 +139,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   private double falconTicksToRPM(double ticks) {
     return ticks / 2048.0 * 600.0;
   }
-  
+
   @Override
   public void periodic() {
     switch (mode) {
@@ -154,8 +157,9 @@ public class Flywheel extends SubsystemBase implements Loggable {
       setFlywheelSpeed(3500);*/
     //flywheelSpeedSetpoint = MathUtil.clamp(flywheelSpeedSetpoint, -6500, -1000);
     if (flywheelActive) {
+      hoodTargetRPM = rpmToFalconTicks(Math.abs(flywheelSpeedSetpoint) + speedOffset);
       pid.setReference(flywheelSpeedSetpoint, ControlType.kVelocity);
-      hoodRollers.set(ControlMode.Velocity, rpmToFalconTicks(Math.abs(flywheelSpeedSetpoint) + speedOffset), DemandType.ArbitraryFeedForward, hoodFeedforward.calculate(rpmToFalconTicks(Math.abs(flywheelSpeedSetpoint) + speedOffset)));
+      hoodRollers.set(ControlMode.Velocity, hoodTargetRPM, DemandType.ArbitraryFeedForward, hoodFeedforward.calculate(hoodTargetRPM));
     } else {
       setFlywheelIdle();
     }

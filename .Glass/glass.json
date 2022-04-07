@@ -7,6 +7,9 @@
     },
     "Shuffleboard": {
       ".metadata": {
+        "Flywheel": {
+          "open": true
+        },
         "SmartDashboard": {
           "open": true
         },
@@ -16,6 +19,9 @@
         "open": true
       },
       "Superstructure": {
+        "Flywheel": {
+          "open": true
+        },
         "Turret": {
           "open": true
         },
@@ -97,6 +103,33 @@
                 1.0
               ],
               "id": "NT:/Shuffleboard/Flywheel/getHoodSpeed"
+            },
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/Flywheel/hoodTargetRPM"
+            },
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/Flywheel/flywheelSpeedSetpoint"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/Flywheel/speedOffset"
             }
           ]
         }
