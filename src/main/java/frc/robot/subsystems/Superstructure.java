@@ -90,9 +90,9 @@ public class Superstructure extends SubsystemBase implements Loggable {
   double flywheelRPM = 0.0;
   public boolean isForward;
   @Log
-  public double frontFeederSpeedRunning = 0;//0.75;
+  public double frontFeederSpeedRunning = 0.75;
   @Log
-  public double rearFeederSpeedRunning = 0;//0.75;
+  public double rearFeederSpeedRunning = 0.75;
   public double feederSpeedStopped = 0.0; 
   WPI_TalonFX frontFeeder;
   WPI_TalonFX rearFeeder;

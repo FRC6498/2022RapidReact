@@ -15,7 +15,6 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 //import frc.robot.lib.InterpolatingTable;
@@ -37,39 +36,38 @@ public class Flywheel extends SubsystemBase implements Loggable {
   @Log
   public double flywheelSpeedSetpoint = -3000.0;
   @Log
-  private double speedOffset = 0;
+  private double speedOffset = 0.0;
   @Log
-  private double hoodTargetRPM = 0;
+  private double hoodTargetRPM = 0.0;
   private TalonFXConfiguration hoodConfig;
+  private final double nominalVoltage = 12.3;
 
   //private double feedforwardOutput;
   double lastPosition = 0.0;
   double distanceToHub = 0.0;
   //@Log.ToString(name = "Flywheel Mode", tabName = "SmartDashboard")
   private ShooterMode mode;
-  
   public Flywheel() {
     mode = ShooterMode.DISABLED;
     neo = new CANSparkMax(ShooterConstants.flywheelCANId, MotorType.kBrushless);
     encoder = neo.getEncoder();
     hoodFeedforward = new SimpleMotorFeedforward(
-      0.86936, 
-      0.11827, 
-      0.0060958
+      0.88729, // all numbers from sysid
+      12.3/5380.0, 
+      0.0025797
     );
     pid = neo.getPIDController();
-    
     hoodRollers = new WPI_TalonFX(ShooterConstants.hoodRollerCANId);
     hoodConfig = new TalonFXConfiguration();
-    hoodConfig.slot0.kP = 0.076642;
+    hoodConfig.slot0.kP = 0;//.076642;
     hoodConfig.slot0.kI = 0;
     hoodConfig.slot0.kD = 0;
     hoodConfig.slot0.kF = 0;
     // once we hit 40A for >=100ms, hold at 40A
     hoodConfig.supplyCurrLimit = new SupplyCurrentLimitConfiguration(true, 40, 40, 100);
     hoodRollers.configAllSettings(hoodConfig);
-    neo.enableVoltageCompensation(12.3);
-    hoodRollers.configVoltageCompSaturation(12.3);
+    neo.enableVoltageCompensation(nominalVoltage);
+    hoodRollers.configVoltageCompSaturation(nominalVoltage);
     hoodRollers.enableVoltageCompensation(true);
   }
   
@@ -132,7 +130,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     }
   }
 
-  private double rpmToFalconTicks(double rpm) {
+  private double rpmToNativeUnits(double rpm) {
     return rpm * 2048.0 / 600.0;
   }
 
@@ -145,7 +143,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     switch (mode) {
       case MANUAL_FIRE:
         //setFlywheelSpeed(InterpolatingTable.get(distanceToHub).rpm);
-        //setFlywheelSpeed(3500);
+        setFlywheelSpeed(2500);
         break;
       default:
         break;
@@ -157,9 +155,10 @@ public class Flywheel extends SubsystemBase implements Loggable {
       setFlywheelSpeed(3500);*/
     //flywheelSpeedSetpoint = MathUtil.clamp(flywheelSpeedSetpoint, -6500, -1000);
     if (flywheelActive) {
-      hoodTargetRPM = rpmToFalconTicks(Math.abs(flywheelSpeedSetpoint) + speedOffset);
+      hoodTargetRPM = Math.abs(flywheelSpeedSetpoint) + speedOffset;
+      double feedforwardOutput = hoodFeedforward.calculate(hoodTargetRPM);
       pid.setReference(flywheelSpeedSetpoint, ControlType.kVelocity);
-      hoodRollers.set(ControlMode.Velocity, hoodTargetRPM, DemandType.ArbitraryFeedForward, hoodFeedforward.calculate(hoodTargetRPM));
+      hoodRollers.set(ControlMode.Velocity, rpmToNativeUnits(hoodTargetRPM), DemandType.ArbitraryFeedForward, feedforwardOutput / nominalVoltage);
     } else {
       setFlywheelIdle();
     }

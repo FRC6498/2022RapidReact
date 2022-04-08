@@ -8,12 +8,13 @@
     "Shuffleboard": {
       ".metadata": {
         "Flywheel": {
-          "open": true
+          "setHoodRollerOffset": {
+            "open": true
+          }
         },
         "SmartDashboard": {
           "open": true
-        },
-        "open": true
+        }
       },
       "Flywheel": {
         "open": true
@@ -37,6 +38,9 @@
       "team6498": {
         "open": true
       }
+    },
+    "SmartDashboard": {
+      "open": true
     },
     "photonvision": {
       "gloworm": {
