@@ -145,6 +145,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
     flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
 
     targetYaw = this::getTargetYaw;
+    setDefaultCommand(new RunCommand(this::stopFeeder, this));
 
   }
   

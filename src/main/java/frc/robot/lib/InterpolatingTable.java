@@ -18,9 +18,12 @@ public class InterpolatingTable {
     private static final TreeMap<Double, ShotParameter> map = new TreeMap<>(
         Map.ofEntries(
             // distance = 1.97, 2750 rpm
-            Map.entry(2.8, new ShotParameter(3900, 0.0)),
-            Map.entry(3.72, new ShotParameter(4600, 0.0)),
-            Map.entry(4.7, new ShotParameter(5200, 0.0))
+            Map.entry(2.04, new ShotParameter(2100, 0.0)),
+            Map.entry(2.54, new ShotParameter(2250, 0.0)),
+            Map.entry(3.44, new ShotParameter(2350, 0.0)),
+            Map.entry(4.5, new ShotParameter(2500, 0)),
+            Map.entry(6.0, new ShotParameter(2750, 100)),
+            Map.entry(6.4, new ShotParameter(2850, 0))
         )
     );
 

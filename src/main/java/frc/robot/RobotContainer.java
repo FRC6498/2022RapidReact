@@ -99,7 +99,7 @@ public class RobotContainer {
   private void configureButtonBindings() {
     // driver
     driver.rightBumper().whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
-    driver.b().and(defenseMode.negate()).whileActiveOnce(new ShootCommand(superstructure));
+    driver.b().whileActiveOnce(new ShootCommand(superstructure));
     
     driver.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
     driver.rightStick().debounce(0.5).whenActive(

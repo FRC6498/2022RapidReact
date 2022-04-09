@@ -134,6 +134,15 @@
                 1.0
               ],
               "id": "NT:/Shuffleboard/Flywheel/speedOffset"
+            },
+            {
+              "color": [
+                0.5764706134796143,
+                0.4705882668495178,
+                0.3764706254005432,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/Flywheel/getHoodError"
             }
           ]
         }
