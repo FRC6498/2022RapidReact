@@ -131,6 +131,8 @@ public class Superstructure extends SubsystemBase implements Loggable {
     frontFeeder.configVoltageCompSaturation(12);
     rearFeeder.enableVoltageCompensation(true);
     rearFeeder.configVoltageCompSaturation(12);
+    frontFeeder.configOpenloopRamp(0.1);
+    rearFeeder.configOpenloopRamp(0.1);
 
     flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(NTHelper.getDouble("flywheel_speed_target")), flywheel));
     //frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
@@ -149,7 +151,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
 
   }
   
-  @Log(tabName = "team6498")
+//@Log(tabName = "team6498")
   private double getTargetYaw() {
     if (vision.hasTargets()) {
       return yawSmooth.calculate(vision.getBestTarget().getYaw());
@@ -158,6 +160,29 @@ public class Superstructure extends SubsystemBase implements Loggable {
 
   public void runFrontConveyor() {
     frontConveyor.start();
+  }
+
+  public void runFrontConveyorSlow() {
+    frontConveyor.start(0.5);
+  }
+
+  public void runFrontConveyorReverse() {
+    frontConveyor.start(-0.1);
+  }
+
+  public void runRearConveyorReverse() {
+    backConveyor.start(-0.1);
+  }
+
+  public void runFeederReverse() {
+    frontFeeder.set(-1);
+    rearFeeder.set(-1);
+    frontFeeder.setNeutralMode(NeutralMode.Coast);
+    rearFeeder.setNeutralMode(NeutralMode.Coast);
+  }
+
+  public void runRearConveyorSlow() {
+    backConveyor.start(0.5);
   }
 
   public void runRearConveyor() {

@@ -21,6 +21,7 @@ public class Conveyor extends SubsystemBase {
   private double speed;
   public boolean running = true;
   boolean reversed;
+  boolean slow = false;
   DigitalInput ballSensor;
   Vision vision;
 
@@ -59,11 +60,11 @@ public class Conveyor extends SubsystemBase {
   }
 
   public void start() {
-    running = true;
+    start(1);
   }
 
   public void start(double dutyCycle) {
-    //driverOutput = Constants.ConveyorConstants.conveyorNominalSpeed * dutyCycle;
+    speed = ConveyorConstants.conveyorNominalSpeed * dutyCycle;
     running = true;
   }
 

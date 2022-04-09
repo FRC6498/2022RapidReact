@@ -7,6 +7,7 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.subsystems.Superstructure;
 
@@ -20,7 +21,13 @@ public class ShootCommand extends SequentialCommandGroup {
     this.superstructure = superstructure;
     addCommands(
     new WaitUntilCommand(() -> superstructure.flyWheelAtSetpoint.get() && superstructure.robotLinedUp.get()),
+    new InstantCommand(superstructure::runFrontConveyorReverse),
+    new InstantCommand(superstructure::runRearConveyorReverse),
+    new WaitCommand(0.075), // feeder spinup
+    new InstantCommand(superstructure::runFeederReverse), // reverse
+    new WaitCommand(0.15), // shoot!
     new InstantCommand(superstructure::runFeeder, superstructure),
+    new WaitCommand(0.075),
     new InstantCommand(superstructure::runFrontConveyor, superstructure),
     new InstantCommand(superstructure::runRearConveyor, superstructure),
     new RunCommand(() -> {}, superstructure)
