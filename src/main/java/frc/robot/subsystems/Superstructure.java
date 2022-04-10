@@ -346,5 +346,12 @@ public class Superstructure extends SubsystemBase implements Loggable {
     } else {
       turretAtFront = false;
     }
+
+    if (frontIntake.isExtended() && !frontConveyor.running) {
+      runFrontConveyor();
+    }
+    if (backIntake.isExtended() && !backConveyor.running) {
+      runRearConveyor();
+    }
   } 
 }
