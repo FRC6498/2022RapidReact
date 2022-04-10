@@ -1,3 +1,8 @@
+// pins 2-4 are the rbg pins
+// 2 being red and 4 being blue
+// pins 5 and 6 are binary color inputs
+// can be changed below
+
 //binary mappings
 //each index represents a color
 int bval [4] = {0b100,0b010,0b001,0b101};
