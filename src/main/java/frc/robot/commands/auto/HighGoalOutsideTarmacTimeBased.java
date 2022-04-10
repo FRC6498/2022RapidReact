@@ -9,6 +9,8 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.commands.ShootCommand;
+import frc.robot.subsystems.Conveyor;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
@@ -19,20 +21,19 @@ import frc.robot.subsystems.Superstructure.ShooterMode;
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class HighGoalOutsideTarmacTimeBased extends SequentialCommandGroup {
   /** Creates a new HighGoalOutsideTarmac. */
-  public HighGoalOutsideTarmacTimeBased(Superstructure superstructure, Drivetrain drivetrain, Intake intake) {
+  public HighGoalOutsideTarmacTimeBased(Superstructure superstructure, Drivetrain drivetrain, Intake intake, Conveyor conveyor) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
       new InstantCommand(intake::lowerIntake, intake),
+      new InstantCommand(conveyor::start),
       new RunCommand(() -> drivetrain.arcadeDrive(1, 0), drivetrain).withTimeout(0.85),
       new InstantCommand(drivetrain::stop),
+      new WaitCommand(1),
+      new InstantCommand(intake::raiseIntake, intake),
       new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)),
-      new WaitCommand(4),
-      new StartEndCommand(
-        superstructure::runFeeder, 
-        superstructure::stopFeeder, 
-        superstructure
-      ).withTimeout(10)
+      //new WaitCommand(4),
+      new ShootCommand(superstructure).withTimeout(10)
     );
   }
 }
