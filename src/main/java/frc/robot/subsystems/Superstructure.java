@@ -90,9 +90,9 @@ public class Superstructure extends SubsystemBase implements Loggable {
   double flywheelRPM = 0.0;
   public boolean isForward;
   @Log
-  public double frontFeederSpeedRunning = 0.75;
+  public double frontFeederSpeedRunning = 0.5;
   @Log
-  public double rearFeederSpeedRunning = 0.75;
+  public double rearFeederSpeedRunning = 0.5;
   public double feederSpeedStopped = 0.0; 
   WPI_TalonFX frontFeeder;
   WPI_TalonFX rearFeeder;
@@ -345,13 +345,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
       turretAtFront = true;
     } else {
       turretAtFront = false;
-    }
-
-    if (frontIntake.isExtended() && !frontConveyor.running) {
-      runFrontConveyor();
-    }
-    if (backIntake.isExtended() && !backConveyor.running) {
-      runRearConveyor();
     }
   } 
 }

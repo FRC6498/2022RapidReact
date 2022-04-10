@@ -23,11 +23,11 @@ public class ShootCommand extends SequentialCommandGroup {
     new WaitUntilCommand(() -> superstructure.flyWheelAtSetpoint.get() && superstructure.robotLinedUp.get()),
     new InstantCommand(superstructure::runFrontConveyorReverse),
     new InstantCommand(superstructure::runRearConveyorReverse),
-    new WaitCommand(0.075), // feeder spinup
+    new WaitCommand(0.4), // feeder spinup
     new InstantCommand(superstructure::runFeederReverse), // reverse
     new WaitCommand(0.15), // shoot!
     new InstantCommand(superstructure::runFeeder, superstructure),
-    new WaitCommand(0.075),
+    new WaitCommand(0.1),
     new InstantCommand(superstructure::runFrontConveyor, superstructure),
     new InstantCommand(superstructure::runRearConveyor, superstructure),
     new RunCommand(() -> {}, superstructure)
