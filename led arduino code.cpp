@@ -1,3 +1,4 @@
+//code for arduino uno
 // pins 2-4 are the rbg pins
 // 2 being red and 4 being blue
 // pins 5 and 6 are binary color inputs
