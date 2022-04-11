@@ -10,8 +10,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -59,21 +57,20 @@ public class RobotContainer {
   };
   Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, shooterModeUpdater, drivetrain);
 
+  //@Log(tabName = "SmartDashboard", name = "Time Selector")
+  SendableChooser<Command> autoSelector = new SendableChooser<>();
+  
+  CommandXboxController driver = new CommandXboxController(0);
+  CommandXboxController operator = new CommandXboxController(1);
+
+  Trigger turretLocked = new Trigger(turret::atSetpoint);
+  Trigger flywheelReady = new Trigger(flywheel::atSetpoint);
+  Trigger operatorLeftTrigger = new Trigger(() -> operator.getLeftTriggerAxis() < 0.05);
+  Trigger operatorRightTrigger = new Trigger(() -> operator.getRightTriggerAxis() < 0.05);
   Trigger retractClimb = new Trigger();
   Trigger robotLinedUp = new Trigger(vision::getAligned);
   Trigger defenseMode = new Trigger(() -> superstructure.getShooterMode() == ShooterMode.DISABLED);
-  //@Log(tabName = "SmartDashboard", name = "Time Selector")
-  SendableChooser<Double> timeSelector = new SendableChooser<>();
-  //@Log(tabName = "SmartDashboard", name = "Distance Selector")
-  SendableChooser<Double> distanceSelector = new SendableChooser<>();
 
-  CommandXboxController driver = new CommandXboxController(0);
-  CommandXboxController operator = new CommandXboxController(1);
-  Trigger turretLocked = new Trigger(turret::atSetpoint);
-  Trigger flywheelReady = new Trigger(flywheel::atSetpoint);
-
-  Trigger operatorLeftTrigger = new Trigger(() -> operator.getLeftTriggerAxis() < 0.05);
-  Trigger operatorRightTrigger = new Trigger(() -> operator.getRightTriggerAxis() < 0.05);
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     drivetrain.setDefaultCommand(new RunCommand(() -> drivetrain.arcadeDrive(driver.getRightTriggerAxis() + -driver.getLeftTriggerAxis(), -driver.getLeftX()), drivetrain));
@@ -81,9 +78,7 @@ public class RobotContainer {
     turret.setDefaultCommand(new TurretStartup(superstructure, turret));//new RunCommand(turret::stop, turret));
     // Configure the button bindings
     configureButtonBindings();
-    timeSelector.addOption("Wall", 0.85);
-    timeSelector.addOption("Long", 0.95);
-    distanceSelector.addOption("Tarmac Edge", Units.inchesToMeters(42));
+    autoSelector.addOption("Normal", new HighGoalOutsideTarmacTimeBased(superstructure, drivetrain, backIntake, backConveyor));
     superstructure.setShooterMode(ShooterMode.DISABLED);
     superstructure.stopFeeder();
     frontConveyor.setName("FrontConveyor");
@@ -124,7 +119,6 @@ public class RobotContainer {
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
     operator.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
     operator.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
-
     
     robotLinedUp.and(flywheelReady).whileActiveOnce(
       new StartEndCommand(
@@ -146,6 +140,6 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return new HighGoalOutsideTarmacTimeBased(superstructure, drivetrain, backIntake, backConveyor);
+    return autoSelector.getSelected(); 
   }
 }
