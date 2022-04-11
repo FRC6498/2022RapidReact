@@ -150,8 +150,8 @@ public class Flywheel extends SubsystemBase implements Loggable {
   public void periodic() {
     switch (mode) {
       case MANUAL_FIRE:
-        //setFlywheelSpeed(3nterpolatingTable.get(distanceToHub).rpm);
-        setFlywheelSpeed(2550);
+        setFlywheelSpeed(InterpolatingTable.get(distanceToHub).rpm);
+        //setFlywheelSpeed(2550);
         break;
       default:
         break;
