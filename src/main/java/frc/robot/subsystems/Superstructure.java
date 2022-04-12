@@ -36,9 +36,9 @@ import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
 /**
- * Coordinates all subsystems involving cargo
- * Drivers command Superstructure, which passes it on to the subsystems
- * It makes sure two subsystems are ready for handoff before initiating it
+ * Coordinates all subsystems involving cargo<p>
+ * Drivers command Superstructure, which passes it on to the subsystems<p>
+ * It makes sure two subsystems are ready for handoff before initiating it<p>
  * Reports Statuses back to the dashboard
  */
 public class Superstructure extends SubsystemBase implements Loggable {
@@ -278,7 +278,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
 
   public enum ShooterMode {
     MANUAL_FIRE, // turret and flywheel track the goal, ball is fired on operator command if present
-    //DUMP_LOW, // Turret locks to dead ahead but flywheel is set to minimum
+    REJECT, // Turret locks to dead ahead but flywheel is set to minimum
     //DUMP_HIGH,
     //SEARCHING, 
     HOMING, //

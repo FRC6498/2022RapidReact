@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.IntakeConstants;
+import frc.robot.commands.RejectCargo;
 import frc.robot.commands.ShootCommand;
 import frc.robot.commands.TurretStartup;
 import frc.robot.commands.auto.HighGoalOutsideTarmacTimeBased;
@@ -94,17 +95,17 @@ public class RobotContainer {
   private void configureButtonBindings() {
     // driver
     driver.rightBumper().whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
-    driver.b().whileActiveOnce(new ShootCommand(superstructure));
-    
+    driver.b().whileActiveOnce(new ShootCommand(superstructure, true));
     driver.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
     driver.rightStick().debounce(0.5).whenActive(
       new InstantCommand(climber::toggleClimber, climber)
       .andThen(new WaitCommand(0.5))
       .andThen(() -> climber.setEnabled(true))
     );
+    driver.start().whenActive(new InstantCommand(climber::enable, climber));
+    climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
     // operator
     operator.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
-    
     operator.leftBumper().whenActive(new ConditionalCommand(
       new InstantCommand(frontIntake::raiseIntake, frontIntake).andThen(new InstantCommand(frontConveyor::stop)), // intake down, so raise it
       new InstantCommand(frontIntake::lowerIntake, frontIntake).andThen(new InstantCommand(frontConveyor::start)), // intake up, so lower it
@@ -115,11 +116,10 @@ public class RobotContainer {
       new InstantCommand(backIntake::lowerIntake, backIntake).andThen(new InstantCommand(backConveyor::start)), // intake up, so lower it
       backIntake::isExtended)
     );
-    driver.start().whenActive(new InstantCommand(climber::enable, climber));
-    climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
-    operator.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)));
     operator.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
-    
+    operator.b().whenActive(new RejectCargo(superstructure));
+
+    // triggers
     robotLinedUp.and(flywheelReady).whileActiveOnce(
       new StartEndCommand(
         () -> { 
@@ -142,4 +142,5 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     return new HighGoalOutsideTarmacTimeBased(superstructure, drivetrain, backIntake, backConveyor);
   }
+  //TODO: puke mode!
 }

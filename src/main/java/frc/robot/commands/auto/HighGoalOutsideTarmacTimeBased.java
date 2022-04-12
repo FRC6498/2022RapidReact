@@ -33,7 +33,7 @@ public class HighGoalOutsideTarmacTimeBased extends SequentialCommandGroup {
       new InstantCommand(intake::raiseIntake, intake),
       new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)),
       //new WaitCommand(4),
-      new ShootCommand(superstructure).withTimeout(10)
+      new ShootCommand(superstructure, true).withTimeout(5)
     );
   }
 }

@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
-/** Add your docs here. */
 public class InterpolatingTable {
 
     /* Private constructor because this is a utility class */

@@ -25,6 +25,7 @@ import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.lib.InterpolatingTable;
+import frc.robot.lib.ShotParameter;
 
 public class Flywheel extends SubsystemBase implements Loggable {
   // Hardware
@@ -43,6 +44,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
   private double hoodTargetRPM = 0.0;
   private TalonFXConfiguration hoodConfig;
   private final double nominalVoltage = 12.3;
+  ShotParameter currentShot;
 
   //private double feedforwardOutput;
   double lastPosition = 0.0;
@@ -125,7 +127,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     this.mode = mode;
     switch (mode) {
       case MANUAL_FIRE:
-      case TUNING:
+      case REJECT:
         flywheelActive = true;
         break;
       case DISABLED:
@@ -150,8 +152,13 @@ public class Flywheel extends SubsystemBase implements Loggable {
   public void periodic() {
     switch (mode) {
       case MANUAL_FIRE:
-        setFlywheelSpeed(InterpolatingTable.get(distanceToHub).rpm);
+        currentShot = InterpolatingTable.get(distanceToHub);
+        setFlywheelSpeed(currentShot.rpm);
+        setHoodRollerOffset(currentShot.hoodSpeedOffset);
         break;
+      case REJECT:
+        setFlywheelSpeed(1000);
+        setHoodRollerOffset(0);
       default:
         break;
     }

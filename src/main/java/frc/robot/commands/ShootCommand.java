@@ -17,10 +17,10 @@ import frc.robot.subsystems.Superstructure;
 public class ShootCommand extends SequentialCommandGroup {
   /** Creates a new ShootCommand. */
   Superstructure superstructure;
-  public ShootCommand(Superstructure superstructure) {
+  public ShootCommand(Superstructure superstructure, boolean useTurret) {
     this.superstructure = superstructure;
     addCommands(
-    new WaitUntilCommand(() -> superstructure.flyWheelAtSetpoint.get() && superstructure.robotLinedUp.get()),
+    new WaitUntilCommand(() -> superstructure.flyWheelAtSetpoint.get() && (superstructure.robotLinedUp.get() || !useTurret)),
     new InstantCommand(superstructure::runFrontConveyorReverse),
     new InstantCommand(superstructure::runRearConveyorReverse),
     new WaitCommand(0.4), // feeder spinup
