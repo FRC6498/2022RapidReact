@@ -140,6 +140,6 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoSelector.getSelected(); 
+    return new HighGoalOutsideTarmacTimeBased(superstructure, drivetrain, backIntake, backConveyor);
   }
 }
