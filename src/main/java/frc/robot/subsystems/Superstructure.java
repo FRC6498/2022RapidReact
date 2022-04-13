@@ -108,7 +108,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
   DoubleSupplier targetYaw;
   MedianFilter yawSmooth = new MedianFilter(10);
 
-
   public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater, Drivetrain drivetrain) {
     this.flywheel = flywheel;
     this.frontConveyor = frontConveyor;
@@ -134,7 +133,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
     frontFeeder.configOpenloopRamp(0.1);
     rearFeeder.configOpenloopRamp(0.1);
 
-    flywheel.setDefaultCommand(new RunCommand(() -> flywheel.setFlywheelSpeed(NTHelper.getDouble("flywheel_speed_target")), flywheel));
     //frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
     turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
     //backConveyor.setDefaultCommand(new RunCommand(backConveyor::stop, backConveyor));
@@ -345,6 +343,9 @@ public class Superstructure extends SubsystemBase implements Loggable {
       turretAtFront = true;
     } else {
       turretAtFront = false;
+    }
+    if (vision.hasTargets()) {
+      flywheel.setFlywheelDistance(vision.getTargetDistance(vision.getBestTarget()));
     }
   } 
 }

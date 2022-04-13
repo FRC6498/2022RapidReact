@@ -13,14 +13,21 @@ import frc.robot.subsystems.Superstructure.ShooterMode;
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class RejectCargo extends SequentialCommandGroup {
+  Superstructure superstructure;
   /** Creates a new RejectCargo. */
   public RejectCargo(Superstructure superstructure) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
       new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.REJECT), superstructure),
-      new ShootCommand(superstructure, false).withTimeout(5),
+      new ShootCommand(superstructure, false),
       new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure)
     );
+    this.superstructure = superstructure;
+  }
+
+  @Override
+  public void end(boolean interrupted) {
+    superstructure.setShooterMode(ShooterMode.MANUAL_FIRE);
   }
 }

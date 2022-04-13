@@ -117,7 +117,7 @@ public class RobotContainer {
       backIntake::isExtended)
     );
     operator.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
-    operator.b().whenActive(new RejectCargo(superstructure));
+    operator.b().whileActiveOnce(new RejectCargo(superstructure));
 
     // triggers
     robotLinedUp.and(flywheelReady).whileActiveOnce(
