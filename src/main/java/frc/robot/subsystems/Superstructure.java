@@ -194,24 +194,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
   public void stopRearConveyor() {
     backConveyor.stop();
   }
-
-  public void runFrontFeeder(double percent) {
-    if (percent > 0.1) {
-      frontFeederSpeedRunning = percent;
-    }
-    frontFeeder.set(frontFeederSpeedRunning);
-    frontFeeder.setNeutralMode(NeutralMode.Coast);
-  }
- 
-  @Config
-  public void runRearFeeder(double percent) {
-    if (percent > 0.1) {
-      rearFeederSpeedRunning = percent;
-    }
-    rearFeeder.set(rearFeederSpeedRunning);
-    rearFeeder.setNeutralMode(NeutralMode.Coast);
-  }
-
   public void runFeeder() {
     frontFeeder.set(frontFeederSpeedRunning);
     rearFeeder.set(rearFeederSpeedRunning);

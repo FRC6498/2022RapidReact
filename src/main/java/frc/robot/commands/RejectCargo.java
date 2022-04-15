@@ -29,5 +29,7 @@ public class RejectCargo extends SequentialCommandGroup {
   @Override
   public void end(boolean interrupted) {
     superstructure.setShooterMode(ShooterMode.MANUAL_FIRE);
+    superstructure.stopFrontConveyor();
+    superstructure.stopRearConveyor();
   }
 }

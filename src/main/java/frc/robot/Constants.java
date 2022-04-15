@@ -91,7 +91,7 @@ public final class Constants {
         public static final double center = 203.31;
         public static final double hardForwardAngle = 231.236-center;
         public static final double hardReverseAngle = 0-center;
-        public static final double frontDumpAngle = 4;
+        public static final double frontDumpAngle = -5;
         public static final double rearDumpAngle = -178;
     }
 
