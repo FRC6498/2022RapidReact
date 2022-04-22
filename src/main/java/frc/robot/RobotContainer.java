@@ -142,5 +142,4 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     return new HighGoalOutsideTarmacTimeBased(superstructure, drivetrain, backIntake, backConveyor);
   }
-  //TODO: use suppliers instead of setFlywheelX
 }

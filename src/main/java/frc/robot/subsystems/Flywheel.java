@@ -17,14 +17,13 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.ShooterConstants;
+import frc.robot.lib.InterpolatingTable;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
-import frc.robot.Constants.ShooterConstants;
-import frc.robot.lib.InterpolatingTable;
 
 public class Flywheel extends SubsystemBase implements Loggable {
   // Hardware
@@ -150,14 +149,8 @@ public class Flywheel extends SubsystemBase implements Loggable {
   public void periodic() {
     switch (mode) {
       case MANUAL_FIRE:
-        //if (DriverStation.isAutonomous()) {
-        if (false) {
-          setFlywheelSpeed(2900);
-          setHoodRollerOffset(0);
-        } else {
-          setFlywheelSpeed(InterpolatingTable.get(distanceToHub).rpm);
-          setHoodRollerOffset(InterpolatingTable.get(distanceToHub).hoodSpeedOffset);
-        }
+        setFlywheelSpeed(InterpolatingTable.get(distanceToHub).rpm);
+        setHoodRollerOffset(InterpolatingTable.get(distanceToHub).hoodSpeedOffset);
         break;
       case REJECT:
         setFlywheelSpeed(1000);
