@@ -5,26 +5,22 @@
 package frc.robot.subsystems;
 
 
-import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
-
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Vision;
 import frc.robot.Constants.ConveyorConstants;
 
 public class Conveyor extends SubsystemBase {
 
-  private final WPI_TalonFX driver;
+  private final TalonFX driver;
   private final TalonFXConfiguration driverConfig;
   private double speed;
   public boolean running = true;
   boolean reversed;
   boolean slow = false;
   DigitalInput ballSensor;
-  Vision vision;
-
   
   /** Commands
    * Start/Stop Front
@@ -32,22 +28,19 @@ public class Conveyor extends SubsystemBase {
    */
 
   /** Creates a new Conveyor. */
-  public Conveyor(int driverCANId, Vision vision) {
-    driver = new WPI_TalonFX(driverCANId); 
-    this.vision = vision;
-
+  public Conveyor(int driverCANId, boolean rear) {
+    driver = new TalonFX(driverCANId); 
     driverConfig = new TalonFXConfiguration();
-    driverConfig.openloopRamp = 0.5;
-    driverConfig.peakOutputForward = 1.0;
-    driverConfig.peakOutputReverse = -1.0;
-    driverConfig.voltageCompSaturation = 12;
-    driver.configAllSettings(driverConfig);
-    driver.enableVoltageCompensation(true);
+    driverConfig.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 0.5;
+    driverConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.5;
+    driverConfig.MotorOutput.PeakForwardDutyCycle = 1.0;
+    driverConfig.MotorOutput.PeakReverseDutyCycle = -1.0;
+    driver.getConfigurator().apply(driverConfig);
 
     running = false;
     speed = ConveyorConstants.conveyorNominalSpeed;
 
-    if (driverCANId == 9) {
+    if (rear) {
       driver.setInverted(true);
       speed = 0.5;
     }

@@ -46,8 +46,8 @@ public class RobotContainer {
   Turret turret = new Turret();
   Vision vision = new Vision();
   Climber climber = new Climber();
-  Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, vision);
-  Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.backDriverCANId, vision);
+  Conveyor frontConveyor = new Conveyor(Constants.ConveyorConstants.frontDriverCANId, false);
+  Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.backDriverCANId, true);
   Intake frontIntake = new Intake(IntakeConstants.intakeACANId, IntakeConstants.frontIntakeForwardChannel, IntakeConstants.frontIntakeReverseChannel);
   Intake backIntake = new Intake(IntakeConstants.intakeBCANId, IntakeConstants.backIntakeForwardChannel, IntakeConstants.backIntakeReverseChannel);
   Consumer<ShooterMode> shooterModeUpdater = (ShooterMode mode) -> {
