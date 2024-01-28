@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import frc.robot.commands.ShootCommand;
 import frc.robot.subsystems.Conveyor;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Intake;
@@ -33,7 +32,7 @@ public class HighGoalOutsideTarmacTimeBased extends SequentialCommandGroup {
       new InstantCommand(intake::raiseIntake, intake),
       new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)),
       //new WaitCommand(2),
-      new ShootCommand(superstructure, false).withTimeout(5),
+      superstructure.shoot(false).withTimeout(5),
       new RunCommand(() -> drivetrain.arcadeDrive(1, 0), drivetrain).withTimeout(0.5)
     );
   }

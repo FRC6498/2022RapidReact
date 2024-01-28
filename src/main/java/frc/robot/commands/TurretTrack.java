@@ -7,14 +7,14 @@ package frc.robot.commands;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Turret;
 
 /**
  * Slews until target is aquired and tracks it until it hits a limit switch
  */
-public class TurretTrack extends CommandBase {
+public class TurretTrack extends Command {
   Turret turret;
   DoubleSupplier getTargetYaw;
   public TurretTrack(Turret turret, DoubleSupplier getTargetYaw) {

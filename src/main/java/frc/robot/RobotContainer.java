@@ -18,13 +18,11 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.IntakeConstants;
-import frc.robot.commands.RejectCargo;
-import frc.robot.commands.ShootCommand;
 import frc.robot.commands.TurretStartup;
 import frc.robot.commands.auto.HighGoalOutsideTarmacTimeBased;
-import frc.robot.lib.OI.CommandXboxController;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Conveyor;
 import frc.robot.subsystems.Drivetrain;
@@ -68,7 +66,6 @@ public class RobotContainer {
   Trigger flywheelReady = new Trigger(flywheel::atSetpoint);
   Trigger operatorLeftTrigger = new Trigger(() -> operator.getLeftTriggerAxis() < 0.05);
   Trigger operatorRightTrigger = new Trigger(() -> operator.getRightTriggerAxis() < 0.05);
-  Trigger retractClimb = new Trigger();
   Trigger robotLinedUp = new Trigger(vision::getAligned);
   Trigger defenseMode = new Trigger(() -> superstructure.getShooterMode() == ShooterMode.DISABLED);
 
@@ -94,41 +91,41 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // driver
-    driver.rightBumper().whenActive(new InstantCommand(drivetrain::toggleGear, drivetrain));
-    driver.b().whileActiveOnce(new ShootCommand(superstructure, true));
-    driver.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
-    driver.rightStick().debounce(0.5).whenActive(
+    driver.rightBumper().onTrue(new InstantCommand(drivetrain::toggleGear, drivetrain));
+    driver.b().whileTrue(superstructure.shoot(true));
+    driver.x().onTrue(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
+    driver.rightStick().debounce(0.5).onTrue(
       new InstantCommand(climber::toggleClimber, climber)
       .andThen(new WaitCommand(0.5))
       .andThen(() -> climber.setEnabled(true))
     );
-    driver.start().whenActive(new InstantCommand(climber::enable, climber));
+    driver.start().onTrue(new InstantCommand(climber::enable, climber));
     climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
     // operator
-    operator.a().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
-    operator.leftBumper().whenActive(new ConditionalCommand(
+    operator.a().onTrue(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
+    operator.leftBumper().onTrue(new ConditionalCommand(
       new InstantCommand(frontIntake::raiseIntake, frontIntake).andThen(new InstantCommand(frontConveyor::stop)), // intake down, so raise it
       new InstantCommand(frontIntake::lowerIntake, frontIntake).andThen(new InstantCommand(frontConveyor::start)), // intake up, so lower it
       frontIntake::isExtended)
     );
-    operator.rightBumper().whenActive(new ConditionalCommand(
+    operator.rightBumper().onTrue(new ConditionalCommand(
       new InstantCommand(backIntake::raiseIntake, backIntake).andThen(new InstantCommand(backConveyor::stop)), // intake down, so raise it
       new InstantCommand(backIntake::lowerIntake, backIntake).andThen(new InstantCommand(backConveyor::start)), // intake up, so lower it
       backIntake::isExtended)
     );
-    operator.x().whenActive(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
-    operator.b().whileActiveOnce(new RejectCargo(superstructure));
+    operator.x().onTrue(new InstantCommand(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
+    operator.b().whileTrue(superstructure.rejectCargo());
 
     // triggers
-    robotLinedUp.and(flywheelReady).whileActiveOnce(
+    robotLinedUp.and(flywheelReady).whileTrue(
       new StartEndCommand(
         () -> { 
-          driver.setRumble(RumbleType.kLeftRumble, 0.5);
-          driver.setRumble(RumbleType.kRightRumble, 0.5); 
+          driver.getHID().setRumble(RumbleType.kLeftRumble, 0.5);
+          driver.getHID().setRumble(RumbleType.kRightRumble, 0.5); 
         },
         () -> { 
-          driver.setRumble(RumbleType.kLeftRumble, 0.0);
-          driver.setRumble(RumbleType.kRightRumble, 0.0); 
+          driver.getHID().setRumble(RumbleType.kLeftRumble, 0.0);
+          driver.getHID().setRumble(RumbleType.kRightRumble, 0.0); 
         }
       )
     );
@@ -142,4 +139,5 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     return new HighGoalOutsideTarmacTimeBased(superstructure, drivetrain, backIntake, backConveyor);
   }
+  //TODO: use suppliers instead of setFlywheelX
 }

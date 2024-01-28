@@ -17,11 +17,11 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.constraint.DifferentialDriveVoltageConstraint;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.subsystems.Drivetrain;
 
-public class FollowTrajectory extends CommandBase {
+public class FollowTrajectory extends Command {
   /** Creates a new FollowTrajectory. */
   Drivetrain drivetrain;
   Trajectory trajectory;

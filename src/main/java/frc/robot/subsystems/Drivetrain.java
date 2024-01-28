@@ -15,10 +15,12 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelPositions;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -31,17 +33,16 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.lib.DifferentialDrivePoseEstimator;
 import frc.robot.lib.NTHelper;
+import static edu.wpi.first.units.Units.*;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
-public class Drivetrain extends SubsystemBase implements Loggable{
+public class Drivetrain extends SubsystemBase implements Loggable {
   // motors
   private final WPI_TalonFX leftLeader, rightLeader;
   private final WPI_TalonFX leftFollower, rightFollower;
   private final MotorControllerGroup leftMotors, rightMotors;
-  private final DifferentialDriveOdometry odometry;
   private final DifferentialDriveKinematics kinematics;
   private final DifferentialDrive diffDrive;
   //
@@ -88,7 +89,6 @@ public class Drivetrain extends SubsystemBase implements Loggable{
 
     gyro = new AHRS(Port.kMXP);
     gyro.reset();
-    odometry = new DifferentialDriveOdometry(gyro.getRotation2d());
     kinematics = new DifferentialDriveKinematics(Constants.DriveConstants.trackWidthMeters);
 
     shifter = new Solenoid(PneumaticsModuleType.CTREPCM, DriveConstants.shifterChannelId);
@@ -114,7 +114,7 @@ public class Drivetrain extends SubsystemBase implements Loggable{
     // vision measurements standard deviations - larger std dev -> increased uncertainty of vision measurements -> trust vision less
     // sensor measurements are               x pos, y pos, vision heading
     visionMeasurementStdDevs = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(5));
-    poseEstimator = new DifferentialDrivePoseEstimator(gyro.getRotation2d(), this.getPose(), stateStdDevs, localMeasurementStdDevs, visionMeasurementStdDevs);
+    poseEstimator = new DifferentialDrivePoseEstimator(kinematics, getGyroAngle(), getLeftDistanceMeters(), getRightDistanceMeters(), initialPose, localMeasurementStdDevs, visionMeasurementStdDevs);
   }
 
   // hardware methods
@@ -203,7 +203,7 @@ public class Drivetrain extends SubsystemBase implements Loggable{
   
 
   public Pose2d getPose() {
-    return odometry.getPoseMeters();
+    return poseEstimator.getEstimatedPosition();
   }
 
   public DifferentialDriveWheelSpeeds getWheelSpeeds() {
@@ -228,7 +228,7 @@ public class Drivetrain extends SubsystemBase implements Loggable{
    */
   public void resetOdometry(Pose2d pose) {
     resetSensors();
-    odometry.resetPosition(pose, gyro.getRotation2d());
+    poseEstimator.resetPosition(getGyroAngle(), new DifferentialDriveWheelPositions(null, null), pose);
   }
 
   public void tankDriveVolts(double leftVolts, double rightVolts) {
@@ -242,17 +242,9 @@ public class Drivetrain extends SubsystemBase implements Loggable{
 
   @Override
   public void periodic() {
-    odometry.update(
-      gyro.getRotation2d(), 
-      getLeftDistanceMeters(), 
-      getRightDistanceMeters()
-    );
-
     poseEstimator.update(
-      gyro.getRotation2d(), 
-      getWheelSpeeds(), 
-      getLeftDistanceMeters(), 
-      getRightDistanceMeters()
+      getGyroAngle(), 
+      new DifferentialDriveWheelPositions(null, null)
     );
 
     NTHelper.setDouble("yaw_deg", getGyroAngleDegrees());
