@@ -8,22 +8,23 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import org.photonvision.common.hardware.VisionLEDMode;
 
-import edu.wpi.first.math.filter.MedianFilter;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Vision;
-import frc.robot.commands.TurretStartup;
-import frc.robot.commands.TurretTrack;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -68,7 +69,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
   public Trigger turretEnabled;
 
   
-  //Driver Dashboard
+  //TODO: Create Driver Dashboard
   // active intake 
   // camera
   // turret position DONE
@@ -83,12 +84,10 @@ public class Superstructure extends SubsystemBase implements Loggable {
   double flywheelRPM = 0.0;
   public boolean isForward;
   @Log
-  public double frontFeederSpeedRunning = 0.5;
-  @Log
-  public double rearFeederSpeedRunning = 0.5;
+  public double feederSpeedRunning = 0.5;
   public double feederSpeedStopped = 0.0; 
-  WPI_TalonFX frontFeeder;
-  WPI_TalonFX rearFeeder;
+  TalonFX frontFeeder;
+  TalonFX rearFeeder;
   @Log(tabName = "SmartDashboard", name = "Distance to Hub")
   double distance;
 
@@ -98,7 +97,8 @@ public class Superstructure extends SubsystemBase implements Loggable {
   Consumer<ShooterMode> shooterModeUpdater;
   BooleanSupplier visionHasTarget;
   DoubleSupplier targetYaw;
-  MedianFilter yawSmooth = new MedianFilter(10);
+
+  DutyCycleOut feederPercent = new DutyCycleOut(0);
 
   public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater, Drivetrain drivetrain) {
     this.flywheel = flywheel;
@@ -112,38 +112,49 @@ public class Superstructure extends SubsystemBase implements Loggable {
     this.drivetrain = drivetrain;
     this.shooterModeUpdater = shooterModeUpdater;
     
-    mode = ShooterMode.DISABLED;
-    frontFeeder = new WPI_TalonFX(10);
+    frontFeeder = new TalonFX(10);
     frontFeeder.setInverted(true);
-    rearFeeder = new WPI_TalonFX(11);
-    frontFeeder.enableVoltageCompensation(true);
-    frontFeeder.configVoltageCompSaturation(12);
-    rearFeeder.enableVoltageCompensation(true);
-    rearFeeder.configVoltageCompSaturation(12);
-    frontFeeder.configOpenloopRamp(0.1);
-    rearFeeder.configOpenloopRamp(0.1);
-
-    //frontConveyor.setDefaultCommand(new RunCommand(() -> frontConveyor.stop(), frontConveyor));
-    turret.setDefaultCommand(new RunCommand(()-> turret.stop(), turret));
-    //backConveyor.setDefaultCommand(new RunCommand(backConveyor::stop, backConveyor));
-
+    rearFeeder = new TalonFX(11);
+    TalonFXConfiguration config = new TalonFXConfiguration();
+    config.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.1;
+    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    frontFeeder.getConfigurator().apply(config);
+    rearFeeder.getConfigurator().apply(config);
+    rearFeeder.setControl(new Follower(frontFeeder.getDeviceID(), true));
     
     shooterReady = new Trigger(this::getShooterReady);
     robotLinedUp = new Trigger(vision::getAligned);
     flywheelEnabled = new Trigger(flywheel::getActive);
     turretEnabled = new Trigger(turret::getActive);
     flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
-
-    targetYaw = this::getTargetYaw;
-    setDefaultCommand(new RunCommand(this::stopFeeder, this));
-
   }
-  
-//@Log(tabName = "team6498")
-  private double getTargetYaw() {
-    if (vision.hasTargets()) {
-      return yawSmooth.calculate(vision.getBestTarget().getYaw());
-    } else { return 0; }
+
+  public Command rejectCargo() {
+    return Commands.sequence(
+      runOnce(() -> setShooterMode(ShooterMode.REJECT)),
+      shoot(false),
+      runOnce(() -> setShooterMode(ShooterMode.MANUAL_FIRE))
+    );
+  }
+
+  public Command shoot(boolean useTurret) {
+    return Commands.sequence(
+      Commands.waitUntil(() -> flyWheelAtSetpoint.getAsBoolean() && robotLinedUp.getAsBoolean() || !useTurret),
+      runOnce(this::runFrontConveyorReverse),
+      runOnce(this::runRearConveyorReverse),
+      Commands.waitSeconds(0.4),
+      runOnce(this::runFeederReverse),
+      Commands.waitSeconds(0.15),
+      runOnce(this::runFeeder),
+      Commands.waitSeconds(0.1),
+      runOnce(this::runFrontConveyor),
+      runOnce(this::runRearConveyor),
+      Commands.idle(this)
+    ).finallyDo(() -> {
+      stopFrontConveyor();
+      stopRearConveyor();
+      stopFeeder();
+    });
   }
 
   public void runFrontConveyor() {
@@ -163,10 +174,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
   }
 
   public void runFeederReverse() {
-    frontFeeder.set(-1);
-    rearFeeder.set(-1);
-    frontFeeder.setNeutralMode(NeutralMode.Coast);
-    rearFeeder.setNeutralMode(NeutralMode.Coast);
+    frontFeeder.setControl(feederPercent.withOutput(-1));
   }
 
   public void runRearConveyorSlow() {
@@ -184,31 +192,25 @@ public class Superstructure extends SubsystemBase implements Loggable {
   public void stopRearConveyor() {
     backConveyor.stop();
   }
+
   public void runFeeder() {
-    frontFeeder.set(frontFeederSpeedRunning);
-    rearFeeder.set(rearFeederSpeedRunning);
-    frontFeeder.setNeutralMode(NeutralMode.Coast);
-    rearFeeder.setNeutralMode(NeutralMode.Coast);
+    frontFeeder.setControl(feederPercent.withOutput(feederSpeedRunning));
   }
   
   public void stopFeeder() {
-    frontFeeder.set(feederSpeedStopped);
-    rearFeeder.set(feederSpeedStopped);
-    frontFeeder.setNeutralMode(NeutralMode.Brake);
-    rearFeeder.setNeutralMode(NeutralMode.Brake);
+    frontFeeder.setControl(feederPercent.withOutput(0));
   }
 
   public Color getAllianceColor() {
-    Alliance alliance = DriverStation.getAlliance();
-    switch (alliance) {
-      case Red:
-        return Color.kRed;
-      case Blue:
+    if (DriverStation.getAlliance().isPresent()) {
+      var alliance = DriverStation.getAlliance().get();
+      if (alliance == Alliance.Blue) {
         return Color.kBlue;
-      case Invalid:
-      default:
-        return Color.kBrown;
+      } else {
+        return Color.kRed;
+      }
     }
+    return Color.kBlack;
   }
 
   public void getBallColors() {
@@ -221,7 +223,6 @@ public class Superstructure extends SubsystemBase implements Loggable {
     shooterModeUpdater.accept(mode);
     switch (mode) {
       case MANUAL_FIRE:
-        NetworkTableInstance.getDefault().setUpdateRate(0.01);
         vision.setLED(VisionLEDMode.kOn);
         vision.setDriverMode(false);
         break;
@@ -260,16 +261,10 @@ public class Superstructure extends SubsystemBase implements Loggable {
 
   @Override
   public void periodic() {
-    if (mode == ShooterMode.MANUAL_FIRE && turret.getDefaultCommand() instanceof TurretStartup) {
-      turret.setDefaultCommand(new TurretTrack(turret, targetYaw));
-    }
     if (turret.getCurrentPosition().getDegrees() > -10) { // 0, front
       turretAtFront = true;
     } else {
       turretAtFront = false;
-    }
-    if (vision.hasTargets()) {
-      flywheel.setFlywheelDistance(vision.getTargetDistance(vision.getBestTarget()));
     }
   } 
 }

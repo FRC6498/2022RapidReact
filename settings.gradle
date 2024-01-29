@@ -4,7 +4,7 @@ pluginManagement {
     repositories {
         mavenLocal()
         gradlePluginPortal()
-        String frcYear = '2022'
+        String frcYear = '2024'
         File frcHome
         if (OperatingSystem.current().isWindows()) {
             String publicFolder = System.getenv('PUBLIC')
@@ -26,10 +26,5 @@ pluginManagement {
     }
 }
 
-rootProject.name='2022RapidReact'
-// add library repo
-//include 'SurpriseLib'
-//rootProject.children[0].buildFileName = "Surprise.gradle"
-//if (!rootProject.children[0].buildFile.isFile()) {
-//    rootProject.children[0].buildFileName="build.gradle"
-//}
+Properties props = System.getProperties();
+props.setProperty("org.gradle.internal.native.headers.unresolved.dependencies.ignore", "true");

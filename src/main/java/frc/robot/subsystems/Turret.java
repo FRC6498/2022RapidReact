@@ -4,79 +4,94 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
-import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
-import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.ForwardLimitSourceValue;
+import com.ctre.phoenix6.signals.ForwardLimitTypeValue;
+import com.ctre.phoenix6.signals.ForwardLimitValue;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.ReverseLimitSourceValue;
+import com.ctre.phoenix6.signals.ReverseLimitTypeValue;
+import com.ctre.phoenix6.signals.ReverseLimitValue;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import static edu.wpi.first.units.Units.*;
+
+import java.util.OptionalDouble;
+import java.util.function.Supplier;
+
 import frc.robot.Constants.TurretConstants;
 import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
+
 // turret clockwise = forward 
 public class Turret extends SubsystemBase implements Loggable {
-  private WPI_TalonFX bearing;
-  private TalonFXConfiguration bearingConfig;
   private boolean homed;
-  private boolean isHoming;
   private ShooterMode mode;
   private Rotation2d turretPositionSetpoint;
   private Rotation2d turretCurrentPosition;
+  private Supplier<OptionalDouble> targetYaw;
+  private TalonFX bearing;
+  private TalonFXConfiguration bearingConfig;
+  private DutyCycleOut percentOut = new DutyCycleOut(0);
+  private PositionVoltage position = new PositionVoltage(0);
+
   public Trigger fwdLimit, revLimit;
 
-  public Turret() {
-    mode = ShooterMode.DISABLED;
-    homed = false;
-    isHoming = false;
-    bearing = new WPI_TalonFX(TurretConstants.yawMotorCANId);
+  public Turret(Supplier<OptionalDouble> targetYaw) {
+    bearing = new TalonFX(TurretConstants.yawMotorCANId);
     bearingConfig = new TalonFXConfiguration();
-    bearingConfig.peakOutputForward = 0.3;
-    bearingConfig.peakOutputReverse = -0.3;
-    bearingConfig.slot0.kP = TurretConstants.kP;
-    bearingConfig.slot0.kI = TurretConstants.kI;
-    bearingConfig.slot0.kD = TurretConstants.kD;
-    bearingConfig.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
-    bearingConfig.forwardLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
-    bearingConfig.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
-    bearingConfig.reverseLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
+    bearingConfig.MotorOutput.PeakForwardDutyCycle = 0.3;
+    bearingConfig.MotorOutput.PeakReverseDutyCycle = -0.3;
+    bearingConfig.Slot0.kP = TurretConstants.kP;
+    bearingConfig.Slot0.kI = TurretConstants.kI;
+    bearingConfig.Slot0.kD = TurretConstants.kD;
+    bearingConfig.HardwareLimitSwitch.ForwardLimitType = ForwardLimitTypeValue.NormallyOpen;
+    bearingConfig.HardwareLimitSwitch.ForwardLimitSource = ForwardLimitSourceValue.LimitSwitchPin;
+    bearingConfig.HardwareLimitSwitch.ReverseLimitType = ReverseLimitTypeValue.NormallyOpen;
+    bearingConfig.HardwareLimitSwitch.ReverseLimitSource = ReverseLimitSourceValue.LimitSwitchPin;
     // set position tolerance to 200 ticks (1 deg ~ 359)
-    bearingConfig.slot0.allowableClosedloopError = rotation2dToNativeUnits(Rotation2d.fromDegrees(TurretConstants.turretPositionToleranceDegrees));
-    bearingConfig.slot0.integralZone = 1023/bearingConfig.slot0.kP;
-    bearingConfig.closedloopRamp = 0.1;
-    bearing.configAllSettings(bearingConfig);
-    bearing.setNeutralMode(NeutralMode.Brake);
-    bearing.setInverted(TalonFXInvertType.CounterClockwise);
+    //bearingConfig.slot0.allowableClosedloopError = rotation2dToNativeUnits(Rotation2d.fromDegrees(TurretConstants.turretPositionToleranceDegrees));
+    bearingConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.1;
+    bearingConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    bearingConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    bearingConfig.Feedback.SensorToMechanismRatio = TurretConstants.turretRotorToMechanismRatio;
+    bearing.getConfigurator().apply(bearingConfig);
     
     turretCurrentPosition = Rotation2d.fromDegrees(0);
     turretPositionSetpoint = Rotation2d.fromDegrees(0);
 
     fwdLimit = new Trigger(this::getFwdLimit);
     revLimit = new Trigger(this::getRevLimit);
+    this.targetYaw = targetYaw;
+    setDefaultCommand(Commands.idle(this));
   }
 
-  private double rotation2dToNativeUnits(Rotation2d rotation) {
-    double degrees = rotation.getDegrees();
-    return degrees * TurretConstants.turretTicksPerDegree;
+  public Command stop() {
+    return runOnce(() -> bearing.set(0))
+    .andThen(Commands.idle(this));
   }
 
-  private Rotation2d nativeUnitsToRotation2d(double units) {
-    //254.7 ticks / 1 degree
-    return Rotation2d.fromDegrees(units / TurretConstants.turretTicksPerDegree);
-  }
-
-  public void stop() {
-    bearing.set(0);
+  public Command track() {
+    return run(() -> {
+      // subtract the yaw of the target if we see one, or else subtract nothing
+      Rotation2d angle = getCurrentPosition().minus(Rotation2d.fromDegrees(targetYaw.get().orElse(0)));
+      NTHelper.setDouble("turret_setpoint_calc", angle.getDegrees());
+      setPositionSetpoint(angle);
+    });
   }
 
   public boolean atSetpoint() {
-    return nativeUnitsToRotation2d(bearing.getClosedLoopError()).getDegrees() < TurretConstants.turretPositionToleranceDegrees;
+    return bearing.getClosedLoopError().getValue() < TurretConstants.turretPositionToleranceDegrees.in(Rotations);
   }
 
   public boolean getActive() {
@@ -91,59 +106,36 @@ public class Turret extends SubsystemBase implements Loggable {
     NTHelper.setDouble("turret_position_deg", turretCurrentPosition.getDegrees());
     NTHelper.setDouble("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
     NTHelper.setBoolean("turret_at_setpoint", atSetpoint());
-    
-    if (!homed && !isHoming) {
-      startHome();
-    }
-    if (!homed) {
-      home();
-    }
-    
-    checkLimits();
-
   }
 
-  public void startHome() {
-    homed = false;
-    isHoming = true;
-    // counter clockwise, this is positive if motor is uninverted
-    openLoop(0.15);
-    bearing.overrideSoftLimitsEnable(false);
-  }
-
-  public boolean getHomed() {
-    return homed;
-  }
-
-  public void home() {
-    if (checkLimits()) {
-      openLoop(0);
-      homed = true;
-      bearing.overrideSoftLimitsEnable(false);
-    }
-  }
-
-  public void openLoop(double percent) {
-    bearing.set(ControlMode.PercentOutput, percent);
+  public Command home() {
+    return Commands.sequence(
+      runOnce(() -> setShooterMode(ShooterMode.HOMING)),
+      runOnce(() -> bearing.setControl(percentOut.withOutput(0.15))),
+      Commands.waitUntil(this::checkLimits),
+      runOnce(() -> bearing.setControl(percentOut.withOutput(0))),
+      runOnce(() -> setPositionSetpoint(TurretConstants.frontDumpAngle)),
+      runOnce(() -> setShooterMode(ShooterMode.MANUAL_FIRE))
+    );
   }
 
   public boolean getFwdLimit() {
-    return bearing.isFwdLimitSwitchClosed() == 1;
+    return bearing.getForwardLimit().getValue() == ForwardLimitValue.ClosedToGround;
   }
 
   public boolean getRevLimit() {
-    return bearing.isRevLimitSwitchClosed() == 1;
+    return bearing.getReverseLimit().getValue() == ReverseLimitValue.ClosedToGround;
   }
 
   public boolean checkLimits() {
     NTHelper.setBoolean("homed", homed);
     if (getFwdLimit()) {
-      reset(Rotation2d.fromDegrees(TurretConstants.hardForwardAngle));
+      reset(TurretConstants.hardForwardAngle);
       NTHelper.setBoolean("forward_limit", true);
       NTHelper.setBoolean("reverse_limit", false);
       return true;
     } else if (getRevLimit()) {
-      reset(Rotation2d.fromDegrees(TurretConstants.hardReverseAngle));
+      reset(TurretConstants.hardReverseAngle);
       NTHelper.setBoolean("reverse_limit", true);
       NTHelper.setBoolean("forward_limit", false);
       return true;
@@ -155,7 +147,7 @@ public class Turret extends SubsystemBase implements Loggable {
   }
 
   private void reset(Rotation2d angle) {
-    bearing.setSelectedSensorPosition(rotation2dToNativeUnits(angle));
+    bearing.setPosition(angle.getRotations());
     turretCurrentPosition = angle;
   }
 
@@ -180,12 +172,12 @@ public class Turret extends SubsystemBase implements Loggable {
   public void setPositionSetpoint(Rotation2d setpoint) {
     //System.out.println(setpoint.getDegrees());
     turretPositionSetpoint = setpoint;
-    bearing.set(ControlMode.Position, rotation2dToNativeUnits(setpoint));
+    bearing.setControl(position.withPosition(setpoint.getRotations()));
   }
 
   
   public Rotation2d getCurrentPosition() {
-    turretCurrentPosition = nativeUnitsToRotation2d(bearing.getSelectedSensorPosition());
+    turretCurrentPosition = Rotation2d.fromRotations(bearing.getPosition().getValue());
     return turretCurrentPosition;
   }
   
