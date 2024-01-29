@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.OptionalDouble;
+
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonUtils;
 import org.photonvision.common.hardware.VisionLEDMode;
@@ -15,8 +17,8 @@ import frc.robot.Constants.VisionConstants;
 import frc.robot.lib.NTHelper;
 
 public class Vision {
-  PhotonCamera CAM_limelight;
-  PhotonPipelineResult currentResult;
+  private PhotonCamera CAM_limelight;
+  private PhotonPipelineResult currentResult;
   boolean enabled = true;  
   /** Creates a new VisionSystem. */
   public Vision() {
@@ -47,18 +49,32 @@ public class Vision {
    * Algorithm from https://www.chiefdelphi.com/t/calculating-distance-to-vision-target/387183/6?u=jonahsnider
    * @param target The vision target to compute the distance to (usually the PV Best Target)
    */
-  public double getTargetDistance(PhotonTrackedTarget target)
+  private double getTargetDistance(PhotonTrackedTarget target)
   {
-    // difference in height from the target to camera
-    //double dh = 2.64 - Units.inchesToMeters(29);
-    //double distance = dh / (Math.tan(target.getPitch()) * Math.cos(target.getYaw()));
-    //return distance;
-    return PhotonUtils.calculateDistanceToTargetMeters(
-      Units.inchesToMeters(29), 
-      2.64, // 264cm from floor->ring
-      Units.degreesToRadians(40), 
-      Units.degreesToRadians(target.getPitch())
-    );
+      // difference in height from the target to camera
+      //double dh = 2.64 - Units.inchesToMeters(29);
+      //double distance = dh / (Math.tan(target.getPitch()) * Math.cos(target.getYaw()));
+      //return distance;
+      return PhotonUtils.calculateDistanceToTargetMeters(
+          Units.inchesToMeters(29), 
+          2.64, // 264cm from floor->ring
+          Units.degreesToRadians(40), 
+          Units.degreesToRadians(target.getPitch())
+      );
+  }
+
+  public OptionalDouble getTargetDistance() {
+    if (hasTargets()) {
+      return OptionalDouble.of(getTargetDistance(currentResult.getBestTarget()));
+    } else return OptionalDouble.empty();
+  }
+
+  public OptionalDouble getTargetYaw() {
+    if (hasTargets()) {
+      return OptionalDouble.of(currentResult.getBestTarget().getYaw());
+    } else {
+      return OptionalDouble.empty();
+    }
   }
 
   public void setEnabled(boolean enabled) {
@@ -89,11 +105,9 @@ public class Vision {
     if (enabled) {
       currentResult = CAM_limelight.getLatestResult();
 
-      if (currentResult.hasTargets() && currentResult != null) {
-        NTHelper.setDouble("target_distance", getTargetDistance(getBestTarget()));
-      } else {
-        NTHelper.setDouble("target_distance", -1.0);
-      }
+      getTargetDistance().ifPresent(
+        (dist) -> NTHelper.setDouble("target_distance", dist)
+      );
     }
   }
 }
