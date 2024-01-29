@@ -28,6 +28,8 @@ import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Superstructure.ShooterMode;
+import monologue.Logged;
+import monologue.Monologue;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
@@ -39,7 +41,7 @@ import java.util.function.Consumer;
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
-public class RobotContainer {
+public class RobotContainer implements Logged {
   Drivetrain drivetrain = new Drivetrain();
   Flywheel flywheel = new Flywheel();
   Vision vision = new Vision();
@@ -70,6 +72,7 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    Monologue.setupMonologue(this, "RobotContainer", false, false);
     drivetrain.setDefaultCommand(new RunCommand(() -> drivetrain.arcadeDrive(driver.getRightTriggerAxis() + -driver.getLeftTriggerAxis(), -driver.getLeftX()), drivetrain));
     drivetrain.setInverted(true);
     turret.setDefaultCommand(turret.home().andThen(turret.track()));//new RunCommand(turret::stop, turret));

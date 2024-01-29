@@ -30,11 +30,11 @@ import java.util.function.Supplier;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.lib.NTHelper;
 import frc.robot.subsystems.Superstructure.ShooterMode;
-import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log;
+import monologue.Logged;
+import monologue.Annotations.Log;
 
 // turret clockwise = forward 
-public class Turret extends SubsystemBase implements Loggable {
+public class Turret extends SubsystemBase implements Logged {
   private boolean homed;
   private ShooterMode mode;
   private Rotation2d turretPositionSetpoint;
@@ -181,7 +181,7 @@ public class Turret extends SubsystemBase implements Loggable {
     return turretCurrentPosition;
   }
   
-  @Log(name = "Turret Position (deg.)")
+  @Log //(name = "Turret Position (deg.)")
   public double getCurrentPositionDegrees() {
     return getCurrentPosition().getDegrees();
   }

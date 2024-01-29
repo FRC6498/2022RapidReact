@@ -33,10 +33,11 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.lib.NTHelper;
-import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log;
+import monologue.Logged;
+import monologue.Annotations.Log;
 
-public class Drivetrain extends SubsystemBase implements Loggable {
+
+public class Drivetrain extends SubsystemBase implements Logged {
   // motors
   private final TalonFX leftLeader, rightLeader;
   private final TalonFX leftFollower, rightFollower;
@@ -115,7 +116,7 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     return gyro.getRotation2d();
   }
 
-  @Log(name = "Gyro Angle (deg.)")
+  @Log // (name = "Gyro Angle (deg.)")
   public double getGyroAngleDegrees() {
     return getGyroAngle().getDegrees();
   }

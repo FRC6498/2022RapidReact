@@ -25,9 +25,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Vision;
-import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Config;
-import io.github.oblarg.oblog.annotations.Log;
+import monologue.Logged;
+import monologue.Annotations.Log;
 
 /**
  * Coordinates all subsystems involving cargo<p>
@@ -35,7 +34,7 @@ import io.github.oblarg.oblog.annotations.Log;
  * It makes sure two subsystems are ready for handoff before initiating it<p>
  * Reports Statuses back to the dashboard
  */
-public class Superstructure extends SubsystemBase implements Loggable {
+public class Superstructure extends SubsystemBase implements Logged {
   // Intake
   private final Intake frontIntake;
   private final Intake backIntake;
@@ -61,7 +60,7 @@ public class Superstructure extends SubsystemBase implements Loggable {
   public Trigger frontConveyorFull;
   public Trigger backConveyorFull;
   public Trigger flyWheelAtSetpoint;
-  @Log.BooleanBox(name = "Robot Aligned", methodName = "get", tabName = "SmartDashboard")
+  @Log //.BooleanBox(name = "Robot Aligned", methodName = "get", tabName = "SmartDashboard")
   public Trigger robotLinedUp;
   // Intakes
   // Flywheel
@@ -77,21 +76,21 @@ public class Superstructure extends SubsystemBase implements Loggable {
   // robot lined up rumble DONE
   // flywheel at speed DONE
   
-  @Log.BooleanBox(tabName = "SmartDashboard", name = "Turret Position", colorWhenTrue = "yellow", colorWhenFalse = "blue")
+  @Log //.BooleanBox(tabName = "SmartDashboard", name = "Turret Position", colorWhenTrue = "yellow", colorWhenFalse = "blue")
   boolean turretAtFront = true;
   ShooterMode mode;
-  @Config
+  //@Config
   double flywheelRPM = 0.0;
   public boolean isForward;
-  @Log
+  @monologue.Annotations.Log
   public double feederSpeedRunning = 0.5;
   public double feederSpeedStopped = 0.0; 
   TalonFX frontFeeder;
   TalonFX rearFeeder;
-  @Log(tabName = "SmartDashboard", name = "Distance to Hub")
+  @Log //(tabName = "SmartDashboard", name = "Distance to Hub")
   double distance;
 
-  @Log.BooleanBox(name = "Seesaw Position", colorWhenTrue = "yellow", colorWhenFalse = "blue", tabName = "SmartDashboard")
+  @Log //.BooleanBox(name = "Seesaw Position", colorWhenTrue = "yellow", colorWhenFalse = "blue", tabName = "SmartDashboard")
   boolean seesawFront = true;
 
   Consumer<ShooterMode> shooterModeUpdater;

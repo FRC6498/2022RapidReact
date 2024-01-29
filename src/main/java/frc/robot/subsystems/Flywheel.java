@@ -17,13 +17,12 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.Constants.ShooterConstants.RotationsPerMinute;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.Superstructure.ShooterMode;
-import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Config;
-import io.github.oblarg.oblog.annotations.Log;
+import monologue.Logged;
+import monologue.Annotations.Log;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.lib.InterpolatingTable;
 
-public class Flywheel extends SubsystemBase implements Loggable {
+public class Flywheel extends SubsystemBase implements Logged {
   // Hardware
   private final TalonFX shooter;
   private final TalonFX hoodRollers;
@@ -76,7 +75,7 @@ public class Flywheel extends SubsystemBase implements Loggable {
     distanceToHub = distance;
   }
 
-  @Config
+  //@Config
   public void setHoodRollerOffset(Measure<Velocity<Angle>> rpmOffset) {
     speedOffset = rpmOffset.copy();
   }

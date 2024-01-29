@@ -16,7 +16,7 @@ import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimberConstants;
-import io.github.oblarg.oblog.annotations.Log;
+import monologue.Annotations.Log;
 
 public class Climber extends SubsystemBase {
   /** Creates a new Climber. */
@@ -51,6 +51,7 @@ public class Climber extends SubsystemBase {
     //lock.set(true);
     configStatusFrames();
   }
+  
   @Log
   public double getEncoderPosition() {
     return climberMotor.getSelectedSensorPosition();

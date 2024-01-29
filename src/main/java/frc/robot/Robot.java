@@ -12,8 +12,8 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.lib.NTHelper;
-import io.github.oblarg.oblog.Logger;
-import io.github.oblarg.oblog.annotations.Log;
+import monologue.Monologue;
+import monologue.Annotations.Log;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -41,13 +41,15 @@ public class Robot extends TimedRobot {
     LiveWindow.disableAllTelemetry();
     //addPeriodic(() -> m_robotContainer.superstructure.getBallColors(), 0.5);
     
-    Logger.configureLoggingAndConfig(m_robotContainer, false);
     DataLogManager.logNetworkTables(false);
     frontCamera = CameraServer.startAutomaticCapture();
     frontCamera.setResolution(320, 240);
     setNetworkTablesFlushEnabled(true);
     m_robotContainer.drivetrain.resetSensors();
     addPeriodic(() -> m_robotContainer.vision.periodic(), 0.02);
+    addPeriodic(() -> {
+      Monologue.updateAll();
+    }, kDefaultPeriod);
   }
 
   /**
@@ -63,7 +65,6 @@ public class Robot extends TimedRobot {
     // commands, running already-scheduled commands, removing finished or interrupted commands,
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
-    Logger.updateEntries();
     CommandScheduler.getInstance().run();
   }
 
