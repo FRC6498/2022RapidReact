@@ -17,7 +17,6 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.math.filter.MedianFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
@@ -29,9 +28,6 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Vision;
-import frc.robot.commands.TurretStartup;
-import frc.robot.commands.TurretTrack;
-import frc.robot.lib.NTHelper;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -293,65 +289,12 @@ public class Superstructure extends SubsystemBase implements Loggable {
   // setShooterMode method here
   // subsystems check shooter mode, act accordingly
 
-  public void addVisionUpdate(double timestamp, PhotonTrackedTarget target) {
-    //CCW positive, PV has left positive, so invert
-    //x is positive forward, y is positive left
-    
-    // DO NOT INVERT VISION
-    double yaw = target.getYaw();
-    //SmartDashboard.putNumber("goal_yaw", yaw);
-  
-    distance = vision.getTargetDistance(target);
-    // angle to target = gyro + turret position + observed yaw
-    Rotation2d angle = drivetrain.getGyroAngle().plus(turret.getCurrentPosition()).plus(Rotation2d.fromDegrees(yaw));
-    Translation2d fieldCoordinatesOfGoal=new Translation2d(distance * angle.getCos(), distance * angle.getSin());
-    SmartDashboard.putNumber("Goal_X", fieldCoordinatesOfGoal.getX());
-    SmartDashboard.putNumber("Goal_Y", fieldCoordinatesOfGoal.getY());
-    SmartDashboard.putNumber("Goal_Degrees", angle.getDegrees());
-    // System.out.println("time: "+timestamp+ " x: "+field_to_goal.getX()+" y: "+field_to_goal.getY());
-  }
-
-  public void updateVision() {
-    if (vision.hasTargets()) {
-      /*Pose2d visionPose = PhotonUtils.estimateFieldToRobot(
-        VisionConstants.limelightHeightFromField, 
-        VisionConstants.upperHubTargetHeight, 
-        VisionConstants.limelightPitch, 
-        vision.getBestTarget().getPitch(), 
-        Rotation2d.fromDegrees(vision.getBestTarget().getYaw()), 
-        drivetrain.getGyroAngle(), 
-        VisionConstants.fieldToTargetTransform, 
-        new Transform2d( // camera to robot transform
-          new Translation2d(
-            Units.inchesToMeters(6), 
-            Units.inchesToMeters(-(VisionConstants.limelightHeightFromField-2))
-          ), 
-          turret.getCurrentPosition()
-        )
-      );
-      if (visionPose.getTranslation().getDistance(poseEstimator.getEstimatedPosition().getTranslation()) < 1) {
-        //poseEstimator.addVisionMeasurement(
-        //  visionPose, 
-        //  Timer.getFPGATimestamp()
-        //);
-      }*/
-     
-      addVisionUpdate(Timer.getFPGATimestamp(), vision.getBestTarget());
-    }
-  }
-
   @Override
   public void periodic() {
-    if (mode == ShooterMode.MANUAL_FIRE && turret.getDefaultCommand() instanceof TurretStartup) {
-      turret.setDefaultCommand(new TurretTrack(turret, targetYaw));
-    }
     if (turret.getCurrentPosition().getDegrees() > -10) { // 0, front
       turretAtFront = true;
     } else {
       turretAtFront = false;
-    }
-    if (vision.hasTargets()) {
-      flywheel.setFlywheelDistance(vision.getTargetDistance(vision.getBestTarget()));
     }
   } 
 }
