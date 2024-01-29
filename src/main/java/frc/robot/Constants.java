@@ -53,15 +53,16 @@ public final class Constants {
         public static final double trackWidthMeters = Units.inchesToMeters(28.75);
         public static final double maxSpeedMetersPerSecond = 1.9467;
         public static final double maxAccelerationMetersPerSecondSquared = 2;
-        public static final double ramseteB = 2;
-        public static final double ramseteZeta = 0.7;
         // low gear ratio = 26:1
         // circumference = 0.47877872 meters
         // 2048 ticks * 25 = ticks per 1 wheel rev
         // 53248 ticks/rev => 1 tick = 1/53248 rev
         // 1 tick = 0.000018780048 rev
         // 0.00000899148 meters
-        public static final double driveDistancePerTickMeters = 0.00000899148;
+        // 26 motor rotations = 1 gearbox rotation
+        // 1 gearbox rotation = 1 wheel rotation
+        // 1 wheel rotation = 2*pi*r meters travelled
+        public static final double DriveRotorToDistanceRatio = 26.0 * 2 * Math.PI * Units.inchesToMeters(6);
         
     }
 

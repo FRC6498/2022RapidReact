@@ -6,10 +6,11 @@ package frc.robot.subsystems;
 
 import frc.robot.Constants.DriveConstants;
 
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.StatusFrame;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.StrictFollower;
+import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.math.Matrix;
@@ -19,7 +20,6 @@ import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
-import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelPositions;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.numbers.N1;
@@ -30,30 +30,29 @@ import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.lib.NTHelper;
-import static edu.wpi.first.units.Units.*;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class Drivetrain extends SubsystemBase implements Loggable {
   // motors
-  private final WPI_TalonFX leftLeader, rightLeader;
-  private final WPI_TalonFX leftFollower, rightFollower;
-  private final MotorControllerGroup leftMotors, rightMotors;
+  private final TalonFX leftLeader, rightLeader;
+  private final TalonFX leftFollower, rightFollower;
   private final DifferentialDriveKinematics kinematics;
   private final DifferentialDrive diffDrive;
   //
   private final Solenoid shifter; // gear shifter
   // imu
   private final AHRS gyro;
+
+  private final VoltageOut voltDrive = new VoltageOut(0);
   
   private Pose2d initialPose = new Pose2d(0, 0, Rotation2d.fromDegrees(0));
   public static boolean isHighGear = false;
   private boolean driveInverted;
-  private NeutralMode currentBrakeMode = NeutralMode.Coast;
+  private NeutralModeValue currentBrakeMode = NeutralModeValue.Brake;
   private final SimpleMotorFeedforward drivetrainFeedforward =
     new SimpleMotorFeedforward(
       Constants.DriveConstants.kS,
@@ -68,23 +67,15 @@ public class Drivetrain extends SubsystemBase implements Loggable {
 
   public Drivetrain()
   {
-    leftLeader = new WPI_TalonFX(DriveConstants.leftLeaderCANId);
-    leftFollower = new WPI_TalonFX(DriveConstants.leftFollowerCANId);
-    rightLeader = new WPI_TalonFX(DriveConstants.rightLeaderCANId);
-    rightFollower = new WPI_TalonFX(DriveConstants.rightFollowerCANId);
+    leftLeader = new TalonFX(DriveConstants.leftLeaderCANId);
+    leftFollower = new TalonFX(DriveConstants.leftFollowerCANId);
+    rightLeader = new TalonFX(DriveConstants.rightLeaderCANId);
+    rightFollower = new TalonFX(DriveConstants.rightFollowerCANId);
 
-    leftLeader.configOpenloopRamp(DriveConstants.driveRampRate);
-    leftFollower.configOpenloopRamp(DriveConstants.driveRampRate);
-    rightLeader.configOpenloopRamp(DriveConstants.driveRampRate);
-    rightFollower.configOpenloopRamp(DriveConstants.driveRampRate);
+    leftFollower.setControl(new StrictFollower(leftLeader.getDeviceID()));
+    rightFollower.setControl(new StrictFollower(rightLeader.getDeviceID()));
 
-    leftFollower.follow(leftLeader);
-    rightFollower.follow(rightLeader);
-
-    leftMotors = new MotorControllerGroup(leftLeader, leftFollower);
-    rightMotors = new MotorControllerGroup(rightLeader, rightFollower);
-    leftMotors.setInverted(true);
-    diffDrive = new DifferentialDrive(leftMotors, rightMotors);
+    diffDrive = new DifferentialDrive(leftLeader, rightLeader);
     diffDrive.setSafetyEnabled(false);
 
     gyro = new AHRS(Port.kMXP);
@@ -93,17 +84,11 @@ public class Drivetrain extends SubsystemBase implements Loggable {
 
     shifter = new Solenoid(PneumaticsModuleType.CTREPCM, DriveConstants.shifterChannelId);
 
-    // engage brakes when neutral input
-    setBrakeMode(NeutralMode.Brake);
-
-    // setup encoders
-    leftLeader.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
-    rightLeader.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
-
-    leftFollower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 200);
-    rightFollower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 199);
-    leftFollower.setStatusFramePeriod(StatusFrame.Status_1_General, 201);
-    rightFollower.setStatusFramePeriod(StatusFrame.Status_1_General, 202);
+    // config motors
+    TalonFXConfiguration config = new TalonFXConfiguration();
+    config.OpenLoopRamps.VoltageOpenLoopRampPeriod = DriveConstants.driveRampRate;
+    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    config.Feedback.SensorToMechanismRatio = DriveConstants.DriveRotorToDistanceRatio;
 
     // state variable standard deviations - larger std dev -> increased uncertainty of state variables -> trust state less
     // state variables are        x pos, y pos,       heading,      left dist, right dist
@@ -121,8 +106,8 @@ public class Drivetrain extends SubsystemBase implements Loggable {
 
   public void resetSensors()
   {
-    leftLeader.setSelectedSensorPosition(0);
-    rightLeader.setSelectedSensorPosition(0);
+    leftLeader.setPosition(0);
+    rightLeader.setPosition(0);
   }
 
   
@@ -143,10 +128,8 @@ public class Drivetrain extends SubsystemBase implements Loggable {
     initialPose = getPose();
   }
 
-  public void setBrakeMode(NeutralMode brakeMode)
+  public void setBrakeMode(NeutralModeValue brakeMode)
   {
-    leftLeader.setNeutralMode(brakeMode);
-    rightLeader.setNeutralMode(brakeMode);
     currentBrakeMode = brakeMode;
   }
 
@@ -232,8 +215,8 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   }
 
   public void tankDriveVolts(double leftVolts, double rightVolts) {
-    leftMotors.setVoltage(leftVolts);
-    rightMotors.setVoltage(rightVolts);
+    leftLeader.setControl(voltDrive.withOutput(leftVolts));
+    leftLeader.setControl(voltDrive.withOutput(rightVolts));
   }
 
   public double getMeanEncoderDistance() {
@@ -251,18 +234,18 @@ public class Drivetrain extends SubsystemBase implements Loggable {
   }
 
   private double getLeftDistanceMeters() {
-    return leftLeader.getSelectedSensorPosition() * DriveConstants.driveDistancePerTickMeters;
+    return leftLeader.getPosition().getValue();
   }
 
   private double getRightDistanceMeters() {
-    return rightLeader.getSelectedSensorVelocity() * DriveConstants.driveDistancePerTickMeters;
+    return rightLeader.getPosition().getValue();
   }
 
   private double getLeftSpeedMetersPerSecond() {
-    return leftLeader.getSelectedSensorVelocity() * DriveConstants.driveDistancePerTickMeters * 10;
+    return leftLeader.getVelocity().getValue();
   }
 
   private double getRightSpeedMetersPerSecond() {
-    return rightLeader.getSelectedSensorVelocity() * DriveConstants.driveDistancePerTickMeters * 10;
+    return rightLeader.getVelocity().getValue();
   }
 }
