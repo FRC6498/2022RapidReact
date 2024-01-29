@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -78,6 +79,8 @@ public final class Constants {
         public static final double flywheelDumpRPM = 500;
         public static final double flywheelHighRPM = 4000;
         public static final int hoodRollerCANId = 13;
+        public static final Velocity<Angle> RotationsPerMinute = Rotations.per(Minute);
+
     }
 
     public static final class TurretConstants {
