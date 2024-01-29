@@ -35,8 +35,7 @@ public class FollowTrajectory extends Command {
     this.distance = distanceMeters;
     this.drivetrain = drivetrain;
     addRequirements(drivetrain);
-
-    ramsete = new RamseteController(DriveConstants.ramseteB, DriveConstants.ramseteZeta);
+    
     config = new TrajectoryConfig(
       DriveConstants.maxSpeedMetersPerSecond, 
       DriveConstants.maxAccelerationMetersPerSecondSquared
