@@ -8,7 +8,12 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.MutableMeasure;
@@ -35,14 +40,15 @@ public class Shooter extends SubsystemBase implements Logged {
   // Software
   public final MutableMeasure<Velocity<Angle>> flywheelSpeedSetpoint = RotationsPerMinute.of(-3000.0).mutableCopy();
   private final MutableMeasure<Velocity<Angle>> hoodTargetRPM = RotationsPerSecond.of(0).mutableCopy();
-  private final TalonFXConfiguration hoodConfig;
   private final VelocityVoltage velocityMode = new VelocityVoltage(0);
   private final ShooterSim sim;
-  
+  private final DoubleSubscriber manualSpeedData;
+
   public Shooter() {
     shooter = new TalonFX(ShooterConstants.flywheelCANId);
     hoodRollers = new TalonFX(ShooterConstants.hoodRollerCANId);
-    hoodConfig = new TalonFXConfiguration();
+    TalonFXConfiguration hoodConfig = new TalonFXConfiguration();
+    TalonFXConfiguration flywheelConfig = new TalonFXConfiguration();
     hoodConfig.Slot0.kP = 0.046642;
     hoodConfig.Slot0.kI = 0;
     hoodConfig.Slot0.kD = 0;
@@ -50,13 +56,26 @@ public class Shooter extends SubsystemBase implements Logged {
     hoodConfig.Slot0.kV = 12.3 / 6380.0;
     hoodConfig.Slot0.kA = 0;
     // once we hit 40A for >=100ms, hold at 40A
-    hoodConfig.CurrentLimits.SupplyCurrentLimit = 40;
+    hoodConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
     hoodConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     hoodConfig.CurrentLimits.SupplyTimeThreshold = 0.1;
     hoodConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     hoodRollers.getConfigurator().apply(hoodConfig);
 
+    flywheelConfig.Slot0.kS = ShooterConstants.flywheelkS;
+    flywheelConfig.Slot0.kV = ShooterConstants.flywheelkV;
+    flywheelConfig.Slot0.kA = ShooterConstants.flywheelkA;
+    flywheelConfig.Slot0.kP = ShooterConstants.flywheelkP;
+    flywheelConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+    flywheelConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    flywheelConfig.CurrentLimits.SupplyTimeThreshold = 0.1;
+    flywheelConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    shooter.getConfigurator().apply(flywheelConfig);
+
     sim = new ShooterSim(shooter);
+    manualSpeedData = NetworkTableInstance.getDefault().getDoubleTopic("Robot/flywheelSpeedRpm").subscribe(0, PubSubOption.keepDuplicates(true));
   }
   
   /**
@@ -72,8 +91,9 @@ public class Shooter extends SubsystemBase implements Logged {
     return RotationsPerSecond.of(hoodRollers.getVelocity().getValue());
   }
 
-  //@Log(name = "Flywheel Velocity (RPM)")
+  @Log //(name = "Flywheel Velocity (RPM)")
   public Measure<Velocity<Angle>> getFlywheelSpeed() {
+    log("flywheelRPM", shooter.getVelocity().getValue() * 60.0);
     return RotationsPerSecond.of(shooter.getVelocity().getValue());
   }
 
@@ -100,6 +120,15 @@ public class Shooter extends SubsystemBase implements Logged {
         flywheelSpeedSetpoint.mut_replace(InterpolatingTable.get(hubDistance).shooterSpeed);
       hoodTargetRPM.mut_replace(flywheelSpeedSetpoint.plus(InterpolatingTable.get(hubDistance).hoodSpeedOffset));
       });
+      shooter.setControl(velocityMode.withVelocity(flywheelSpeedSetpoint.in(RotationsPerSecond)));
+      hoodRollers.setControl(velocityMode.withVelocity(hoodTargetRPM.in(RotationsPerSecond)));
+    });
+  }
+
+  public Command manualSpeed() {
+    log("Heartbeat", "Shooter!");
+    return run(() -> {
+      flywheelSpeedSetpoint.mut_replace(manualSpeedData.get(0), RotationsPerMinute);
       shooter.setControl(velocityMode.withVelocity(flywheelSpeedSetpoint.in(RotationsPerSecond)));
       hoodRollers.setControl(velocityMode.withVelocity(hoodTargetRPM.in(RotationsPerSecond)));
     });

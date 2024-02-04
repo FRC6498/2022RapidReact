@@ -10,7 +10,9 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -46,7 +48,7 @@ public class RobotContainer implements Logged {
   Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.backDriverCANId, true);
   Intake frontIntake = new Intake(IntakeConstants.intakeACANId, IntakeConstants.frontIntakeForwardChannel, IntakeConstants.frontIntakeReverseChannel);
   Intake backIntake = new Intake(IntakeConstants.intakeBCANId, IntakeConstants.backIntakeForwardChannel, IntakeConstants.backIntakeReverseChannel);
-  Superstructure superstructure = new Superstructure(shooter, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, drivetrain);
+  Superstructure superstructure = new Superstructure(shooter, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, drivetrain);;
 
   //@Log(tabName = "SmartDashboard", name = "Time Selector")
   SendableChooser<Command> autoSelector = new SendableChooser<>();
@@ -72,6 +74,7 @@ public class RobotContainer implements Logged {
     superstructure.stopFeeder();
     frontConveyor.setName("FrontConveyor");
     backConveyor.setName("BackConveyor");
+    
   }
 
   /**
@@ -127,7 +130,7 @@ public class RobotContainer implements Logged {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return Autos.highGoalOutsideTarmacTimeBased(backIntake, backConveyor, drivetrain, superstructure);
+    return shooter.manualSpeed();
+    //return Autos.highGoalOutsideTarmacTimeBased(backIntake, backConveyor, drivetrain, superstructure);
   }
-  //TODO: use suppliers instead of setFlywheelX
 }

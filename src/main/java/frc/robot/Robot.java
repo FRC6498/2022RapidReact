@@ -35,6 +35,9 @@ public class Robot extends TimedRobot {
 
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
+    addPeriodic(() -> {
+      Monologue.updateAll();
+    }, kDefaultPeriod);
     m_robotContainer = new RobotContainer();
     LiveWindow.disableAllTelemetry();
     //addPeriodic(() -> m_robotContainer.superstructure.getBallColors(), 0.5);
@@ -45,9 +48,6 @@ public class Robot extends TimedRobot {
     setNetworkTablesFlushEnabled(true);
     m_robotContainer.drivetrain.resetSensors();
     addPeriodic(() -> m_robotContainer.vision.periodic(), 0.02);
-    addPeriodic(() -> {
-      Monologue.updateAll();
-    }, kDefaultPeriod);
   }
 
   /**

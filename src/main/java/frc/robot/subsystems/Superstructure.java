@@ -48,7 +48,7 @@ public class Superstructure extends SubsystemBase implements Logged {
   private Trigger flyWheelAtSetpoint;
   @Log //.BooleanBox(name = "Robot Aligned", methodName = "get", tabName = "SmartDashboard")
   private Trigger robotLinedUp;
-  //TODO: Create Driver Dashboard
+  // TODO: Create Driver Dashboard with Elastic
   // active intake 
   // camera
   // turret position DONE
@@ -93,6 +93,7 @@ public class Superstructure extends SubsystemBase implements Logged {
     robotLinedUp = new Trigger(vision::getAligned);
     flyWheelAtSetpoint = new Trigger(flywheel::atSetpoint);
     turretAtFront = new Trigger(() -> turret.getCurrentPosition().getDegrees() > -10);
+    log("superstructure-heartbeat", "superstructure constructor!");
   }
 
   public Command rejectCargo() {
