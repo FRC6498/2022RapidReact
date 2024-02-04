@@ -117,10 +117,8 @@ public class Flywheel extends SubsystemBase implements Logged {
   }
 
   public Command idle() {
-    var idleShooterSpeed = RotationsPerSecond.zero().mutableCopy();
-    var idleHoodSpeed = RotationsPerSecond.zero().mutableCopy();
-    flywheelSpeedSetpoint = idleShooterSpeed;
-    hoodTargetRPM = idleHoodSpeed;
+    flywheelSpeedSetpoint = RotationsPerSecond.zero().mutableCopy();;
+    hoodTargetRPM = RotationsPerSecond.zero().mutableCopy();;
     return runOnce(() -> {
       shooter.setControl(velocityMode.withVelocity(0));
       hoodRollers.setControl(velocityMode.withVelocity(0));
