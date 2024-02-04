@@ -21,7 +21,7 @@ import frc.robot.commands.auto.Autos;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Conveyor;
 import frc.robot.subsystems.Drivetrain;
-import frc.robot.subsystems.Flywheel;
+import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Turret;
@@ -38,7 +38,7 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
  */
 public class RobotContainer implements Logged {
   Drivetrain drivetrain = new Drivetrain();
-  Flywheel flywheel = new Flywheel();
+  Shooter shooter = new Shooter();
   Vision vision = new Vision();
   Turret turret = new Turret(vision::getTargetYaw);
   Climber climber = new Climber();
@@ -46,7 +46,7 @@ public class RobotContainer implements Logged {
   Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.backDriverCANId, true);
   Intake frontIntake = new Intake(IntakeConstants.intakeACANId, IntakeConstants.frontIntakeForwardChannel, IntakeConstants.frontIntakeReverseChannel);
   Intake backIntake = new Intake(IntakeConstants.intakeBCANId, IntakeConstants.backIntakeForwardChannel, IntakeConstants.backIntakeReverseChannel);
-  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, drivetrain);
+  Superstructure superstructure = new Superstructure(shooter, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, drivetrain);
 
   //@Log(tabName = "SmartDashboard", name = "Time Selector")
   SendableChooser<Command> autoSelector = new SendableChooser<>();
@@ -55,7 +55,7 @@ public class RobotContainer implements Logged {
   CommandXboxController operator = new CommandXboxController(1);
 
   Trigger turretLocked = new Trigger(turret::atSetpoint);
-  Trigger flywheelReady = new Trigger(flywheel::atSetpoint);
+  Trigger flywheelReady = new Trigger(shooter::atSetpoint);
   Trigger operatorLeftTrigger = new Trigger(() -> operator.getLeftTriggerAxis() < 0.05);
   Trigger operatorRightTrigger = new Trigger(() -> operator.getRightTriggerAxis() < 0.05);
   Trigger robotLinedUp = new Trigger(vision::getAligned);

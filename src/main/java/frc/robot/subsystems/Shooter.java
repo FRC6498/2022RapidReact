@@ -16,6 +16,9 @@ import edu.wpi.first.units.Velocity;
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.Constants.ShooterConstants.RotationsPerMinute;
 
+import java.util.OptionalDouble;
+import java.util.function.Supplier;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -23,23 +26,20 @@ import monologue.Logged;
 import monologue.Annotations.Log;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.lib.InterpolatingTable;
+import frc.robot.simulation.ShooterSim;
 
-public class Flywheel extends SubsystemBase implements Logged {
+public class Shooter extends SubsystemBase implements Logged {
   // Hardware
   private final TalonFX shooter;
   private final TalonFX hoodRollers;
   // Software
-  public MutableMeasure<Velocity<Angle>> flywheelSpeedSetpoint = RotationsPerMinute.of(-3000.0).mutableCopy();
-  private MutableMeasure<Velocity<Angle>> hoodTargetRPM = RotationsPerSecond.of(0).mutableCopy();
-  private TalonFXConfiguration hoodConfig;
-  private VelocityVoltage velocityMode = new VelocityVoltage(0);
-
-  //private double feedforwardOutput;
-  double lastPosition = 0.0;
-  double distanceToHub = 0.0;
-  //@Log.ToString(name = "Flywheel Mode", tabName = "SmartDashboard")
+  public final MutableMeasure<Velocity<Angle>> flywheelSpeedSetpoint = RotationsPerMinute.of(-3000.0).mutableCopy();
+  private final MutableMeasure<Velocity<Angle>> hoodTargetRPM = RotationsPerSecond.of(0).mutableCopy();
+  private final TalonFXConfiguration hoodConfig;
+  private final VelocityVoltage velocityMode = new VelocityVoltage(0);
+  private final ShooterSim sim;
   
-  public Flywheel() {
+  public Shooter() {
     shooter = new TalonFX(ShooterConstants.flywheelCANId);
     hoodRollers = new TalonFX(ShooterConstants.hoodRollerCANId);
     hoodConfig = new TalonFXConfiguration();
@@ -55,6 +55,8 @@ public class Flywheel extends SubsystemBase implements Logged {
     hoodConfig.CurrentLimits.SupplyTimeThreshold = 0.1;
     hoodConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     hoodRollers.getConfigurator().apply(hoodConfig);
+
+    sim = new ShooterSim(shooter);
   }
   
   /**
@@ -63,11 +65,7 @@ public class Flywheel extends SubsystemBase implements Logged {
    */
   //@Config(name = "Set Flywheel Speed(RPM)")
   public void setFlywheelSpeed(Measure<Velocity<Angle>> velocity) {
-    flywheelSpeedSetpoint = velocity.negate().mutableCopy();
-  }
-
-  public void setFlywheelDistance(double distance) {
-    distanceToHub = distance;
+    flywheelSpeedSetpoint.mut_replace(velocity.negate());
   }
 
   public Measure<Velocity<Angle>> getHoodSpeed() {
@@ -96,10 +94,12 @@ public class Flywheel extends SubsystemBase implements Logged {
     return shooter.getClosedLoopError().getValue() * 60 < ShooterConstants.flywheelSetpointToleranceRPM;
   }
 
-  public Command manualFire() {
+  public Command manualFire(Supplier<OptionalDouble> distance) {
     return run(() -> {
-      flywheelSpeedSetpoint.mut_replace(InterpolatingTable.get(distanceToHub).shooterSpeed);
-      hoodTargetRPM.mut_replace(flywheelSpeedSetpoint.plus(InterpolatingTable.get(distanceToHub).hoodSpeedOffset));
+      distance.get().ifPresent((hubDistance) -> {
+        flywheelSpeedSetpoint.mut_replace(InterpolatingTable.get(hubDistance).shooterSpeed);
+      hoodTargetRPM.mut_replace(flywheelSpeedSetpoint.plus(InterpolatingTable.get(hubDistance).hoodSpeedOffset));
+      });
       shooter.setControl(velocityMode.withVelocity(flywheelSpeedSetpoint.in(RotationsPerSecond)));
       hoodRollers.setControl(velocityMode.withVelocity(hoodTargetRPM.in(RotationsPerSecond)));
     });
@@ -108,8 +108,8 @@ public class Flywheel extends SubsystemBase implements Logged {
   public Command reject() {
     var rejectShooterSpeed = RotationsPerSecond.of(1000).mutableCopy();
     var rejectHoodSpeed = rejectShooterSpeed;
-    flywheelSpeedSetpoint = rejectShooterSpeed;
-    hoodTargetRPM = rejectHoodSpeed;
+    flywheelSpeedSetpoint.mut_replace(rejectShooterSpeed);
+    hoodTargetRPM.mut_replace(rejectHoodSpeed);
     return runOnce(() -> {
       shooter.setControl(velocityMode.withVelocity(rejectShooterSpeed.in(RotationsPerSecond)));
       hoodRollers.setControl(velocityMode.withVelocity(rejectHoodSpeed.in(RotationsPerSecond)));
@@ -117,8 +117,8 @@ public class Flywheel extends SubsystemBase implements Logged {
   }
 
   public Command idle() {
-    flywheelSpeedSetpoint = RotationsPerSecond.zero().mutableCopy();;
-    hoodTargetRPM = RotationsPerSecond.zero().mutableCopy();;
+    flywheelSpeedSetpoint.mut_replace(RotationsPerSecond.zero());
+    hoodTargetRPM.mut_replace(RotationsPerSecond.zero());
     return runOnce(() -> {
       shooter.setControl(velocityMode.withVelocity(0));
       hoodRollers.setControl(velocityMode.withVelocity(0));
@@ -126,6 +126,8 @@ public class Flywheel extends SubsystemBase implements Logged {
   }
 
   @Override
-  public void periodic() {}
+  public void simulationPeriodic() {
+    sim.updateSim();
+  }
 
 }

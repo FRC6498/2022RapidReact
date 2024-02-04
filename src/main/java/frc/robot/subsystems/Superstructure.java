@@ -42,7 +42,7 @@ public class Superstructure extends SubsystemBase implements Logged {
   // Conveyor
   private final Conveyor frontConveyor;
   private final Conveyor backConveyor;
-  private final Flywheel flywheel;
+  private final Shooter flywheel;
   private final Turret turret;
 
   private Trigger flyWheelAtSetpoint;
@@ -72,7 +72,7 @@ public class Superstructure extends SubsystemBase implements Logged {
 
   DutyCycleOut feederPercent = new DutyCycleOut(0);
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Drivetrain drivetrain) {
+  public Superstructure(Shooter flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Drivetrain drivetrain) {
     this.flywheel = flywheel;
     this.turret = turret;
     this.frontConveyor = frontConveyor;
@@ -132,7 +132,7 @@ public class Superstructure extends SubsystemBase implements Logged {
   public Command manualFire() {
     return Commands.parallel(
       startManual(),
-      flywheel.manualFire(),
+      flywheel.manualFire(vision::getTargetDistance),
       turret.track()
     );
   }
