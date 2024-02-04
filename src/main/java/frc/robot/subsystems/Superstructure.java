@@ -44,10 +44,6 @@ public class Superstructure extends SubsystemBase implements Logged {
   private final Conveyor frontConveyor;
   private final Conveyor backConveyor;
   
-  // Flywheel
-  private final Flywheel flywheel;
-  // Turret
-  private final Turret turret;
   // Feeder
   //climber
   public final Climber climber;
@@ -75,23 +71,18 @@ public class Superstructure extends SubsystemBase implements Logged {
   // low/high gear DONE
   // robot lined up rumble DONE
   // flywheel at speed DONE
-  
   @Log //.BooleanBox(tabName = "SmartDashboard", name = "Turret Position", colorWhenTrue = "yellow", colorWhenFalse = "blue")
-  boolean turretAtFront = true;
+  private Trigger turretAtFront;
   ShooterMode mode;
   //@Config
   double flywheelRPM = 0.0;
   public boolean isForward;
-  @monologue.Annotations.Log
   public double feederSpeedRunning = 0.5;
   public double feederSpeedStopped = 0.0; 
   TalonFX frontFeeder;
   TalonFX rearFeeder;
   @Log //(tabName = "SmartDashboard", name = "Distance to Hub")
-  double distance;
-
-  @Log //.BooleanBox(name = "Seesaw Position", colorWhenTrue = "yellow", colorWhenFalse = "blue", tabName = "SmartDashboard")
-  boolean seesawFront = true;
+  double distanceToHub;
 
   Consumer<ShooterMode> shooterModeUpdater;
   BooleanSupplier visionHasTarget;
@@ -100,12 +91,10 @@ public class Superstructure extends SubsystemBase implements Logged {
   DutyCycleOut feederPercent = new DutyCycleOut(0);
 
   public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater, Drivetrain drivetrain) {
-    this.flywheel = flywheel;
     this.frontConveyor = frontConveyor;
     this.backConveyor = backConveyor;
     this.frontIntake = frontIntake;
     this.backIntake = backIntake;
-    this.turret = turret;
     this.vision = vision;
     this.climber = climber;
     this.drivetrain = drivetrain;
@@ -126,6 +115,7 @@ public class Superstructure extends SubsystemBase implements Logged {
     flywheelEnabled = new Trigger(flywheel::getActive);
     turretEnabled = new Trigger(turret::getActive);
     flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
+    turretAtFront = new Trigger(() -> turret.getCurrentPosition().getDegrees() > -10);
   }
 
   public Command rejectCargo() {
@@ -259,11 +249,5 @@ public class Superstructure extends SubsystemBase implements Logged {
   // subsystems check shooter mode, act accordingly
 
   @Override
-  public void periodic() {
-    if (turret.getCurrentPosition().getDegrees() > -10) { // 0, front
-      turretAtFront = true;
-    } else {
-      turretAtFront = false;
-    }
-  } 
+  public void periodic() {} 
 }
