@@ -211,7 +211,7 @@ public class Drivetrain extends SubsystemBase implements Logged {
    */
   public void resetOdometry(Pose2d pose) {
     resetSensors();
-    poseEstimator.resetPosition(getGyroAngle(), new DifferentialDriveWheelPositions(null, null), pose);
+    poseEstimator.resetPosition(getGyroAngle(), new DifferentialDriveWheelPositions(getLeftDistanceMeters(), getRightDistanceMeters()), pose);
   }
 
   public void tankDriveVolts(double leftVolts, double rightVolts) {
@@ -227,7 +227,7 @@ public class Drivetrain extends SubsystemBase implements Logged {
   public void periodic() {
     poseEstimator.update(
       getGyroAngle(), 
-      new DifferentialDriveWheelPositions(null, null)
+      new DifferentialDriveWheelPositions(getLeftDistanceMeters(), getRightDistanceMeters())
     );  
   }
 
