@@ -28,7 +28,6 @@ import java.util.OptionalDouble;
 import java.util.function.Supplier;
 
 import frc.robot.Constants.TurretConstants;
-import frc.robot.lib.NTHelper;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
@@ -83,7 +82,7 @@ public class Turret extends SubsystemBase implements Logged {
     return run(() -> {
       // subtract the yaw of the target if we see one, or else subtract nothing
       Rotation2d angle = getCurrentPosition().minus(Rotation2d.fromDegrees(targetYaw.get().orElse(0)));
-      NTHelper.setDouble("turret_setpoint_calc", angle.getDegrees());
+      log("turret_setpoint_calc", angle.getDegrees());
       setPositionSetpoint(angle);
     });
   }
@@ -95,9 +94,9 @@ public class Turret extends SubsystemBase implements Logged {
   @Override
   public void periodic() {
     getCurrentPosition();
-    NTHelper.setDouble("turret_position_deg", turretCurrentPosition.getDegrees());
-    NTHelper.setDouble("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
-    NTHelper.setBoolean("turret_at_setpoint", atSetpoint());
+    log("turret_position_deg", turretCurrentPosition.getDegrees());
+    log("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
+    log("turret_at_setpoint", atSetpoint());
   }
 
   public Command home() {
@@ -118,20 +117,20 @@ public class Turret extends SubsystemBase implements Logged {
   }
 
   private boolean checkLimits() {
-    NTHelper.setBoolean("homed", homed);
+    log("homed", homed);
     if (getFwdLimit()) {
       reset(TurretConstants.hardForwardAngle);
-      NTHelper.setBoolean("forward_limit", true);
-      NTHelper.setBoolean("reverse_limit", false);
+      log("forward_limit", true);
+      log("reverse_limit", false);
       return true;
     } else if (getRevLimit()) {
       reset(TurretConstants.hardReverseAngle);
-      NTHelper.setBoolean("reverse_limit", true);
-      NTHelper.setBoolean("forward_limit", false);
+      log("reverse_limit", true);
+      log("forward_limit", false);
       return true;
     } else {
-      NTHelper.setBoolean("forward_limit", false);
-      NTHelper.setBoolean("reverse_limit", false);
+      log("forward_limit", false);
+      log("reverse_limit", false);
       return false;
     }
   }

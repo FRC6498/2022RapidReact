@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.lib.NTHelper;
 import monologue.Monologue;
 import monologue.Annotations.Log;
 
@@ -26,7 +25,6 @@ public class Robot extends TimedRobot {
   private RobotContainer m_robotContainer;
   @Log
   UsbCamera frontCamera;
-  NTHelper nth = new NTHelper();
 
   /**
    * This function is run when the robot is first started up and should be used for any

@@ -32,7 +32,6 @@ import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.lib.NTHelper;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
@@ -229,9 +228,7 @@ public class Drivetrain extends SubsystemBase implements Logged {
     poseEstimator.update(
       getGyroAngle(), 
       new DifferentialDriveWheelPositions(null, null)
-    );
-
-    NTHelper.setDouble("yaw_deg", getGyroAngleDegrees());
+    );  
   }
 
   private double getLeftDistanceMeters() {

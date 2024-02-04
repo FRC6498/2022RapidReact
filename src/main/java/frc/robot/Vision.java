@@ -14,9 +14,9 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants.VisionConstants;
-import frc.robot.lib.NTHelper;
+import monologue.Logged;
 
-public class Vision {
+public class Vision implements Logged{
   private PhotonCamera CAM_limelight;
   private PhotonPipelineResult currentResult;
   boolean enabled = true;  
@@ -106,7 +106,7 @@ public class Vision {
       currentResult = CAM_limelight.getLatestResult();
 
       getTargetDistance().ifPresent(
-        (dist) -> NTHelper.setDouble("target_distance", dist)
+        (dist) -> log("target_distance", dist)
       );
     }
   }
