@@ -4,98 +4,80 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
-import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.StatusFrame;
-import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import java.util.function.DoubleSupplier;
+
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.ForwardLimitSourceValue;
+import com.ctre.phoenix6.signals.ForwardLimitTypeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimberConstants;
-import monologue.Annotations.Log;
 
 public class Climber extends SubsystemBase {
   /** Creates a new Climber. */
-  WPI_TalonFX climberMotor;
+  TalonFX climberMotor;
   Solenoid lock;
   boolean enabled;
   TalonFXConfiguration config;
   double input;
+  DutyCycleOut manualControl = new DutyCycleOut(0);
+
   public Climber() {
     enabled = false;
     config = new TalonFXConfiguration();
-    climberMotor = new WPI_TalonFX(ClimberConstants.climberMotorCANId);
-    config.closedloopRamp = 0.5;
-    config.peakOutputForward = 0.75;
-    config.peakOutputReverse = -0.75;
-    climberMotor.setInverted(false);
-    config.forwardLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
-    config.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
-    config.clearPositionOnLimitF = true;
+    climberMotor = new TalonFX(ClimberConstants.climberMotorCANId);
+    config.ClosedLoopRamps.DutyCycleClosedLoopRampPeriod = 0.5;
+    config.MotorOutput.PeakForwardDutyCycle = 0.75;
+    config.MotorOutput.PeakReverseDutyCycle = -0.75;
+    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    config.HardwareLimitSwitch.ForwardLimitSource = ForwardLimitSourceValue.LimitSwitchPin;
+    config.HardwareLimitSwitch.ForwardLimitType = ForwardLimitTypeValue.NormallyOpen;
+    config.HardwareLimitSwitch.ForwardLimitAutosetPositionEnable = true;
 
     lock = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
     //setup encoders
-    config.slot0.kP = ClimberConstants.climber_kP;
-    climberMotor.configAllSettings(config);
+    config.Slot0.kP = ClimberConstants.climber_kP;
     //climberMotor.configForwardSoftLimitThreshold(17860 * 0.5);
     //climberMotor.configForwardSoftLimitThreshold(286300);
     //climberMotor.configReverseSoftLimitThreshold(0);
     //climberMotor.configReverseSoftLimitEnable(false);
     //climberMotor.configForwardSoftLimitEnable(true);
     //climberMotor.setSelectedSensorPosition(0);
-    climberMotor.setNeutralMode(NeutralMode.Brake);
+    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    climberMotor.getConfigurator().apply(config);
     //lock.set(true);
-    configStatusFrames();
   }
-  
-  @Log
+
   public double getEncoderPosition() {
-    return climberMotor.getSelectedSensorPosition();
+    return climberMotor.getPosition().getValue();
   }
 
-  public void setInput(double input) {
-    this.input = input;
-  }
-
-  public void lockClimber() {
+  public void unlockClimber() {
     lock.set(false);
-
   }
 
-  public void toggleClimber() {
-    lock.set(!lock.get());
-    enabled = lock.get();
+  public Command lockClimber() {
+    return runOnce(() -> lock.set(true));
   }
 
-  public void enable() {
-    if (this.enabled == true) {
-      this.enabled = false;
-    } else this.enabled = true;
-  }
-
-  public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
-    climberMotor.setNeutralMode(NeutralMode.Brake);
+  public Command manualDrive(DoubleSupplier manualInput) {
+    return run(() -> {
+      if (!lock.get()) {
+        climberMotor.setControl(manualControl.withOutput(manualInput.getAsDouble()));
+      }
+    }).finallyDo(() -> climberMotor.setControl(manualControl.withOutput(0)));
   }
 
   @Override
   public void periodic() {
-    if (enabled) {
-      climberMotor.set(ControlMode.PercentOutput, input);
-    } else {
-      if (climberMotor.getControlMode() != ControlMode.Disabled) {
-        climberMotor.neutralOutput();
-      }
-    }
     //climberMotor.set(ControlMode.Position, climberMotorSetpoint);
     // This method will be called once per scheduler run
-  }
-
-  private void configStatusFrames() {
-    climberMotor.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 250);
   }
 }

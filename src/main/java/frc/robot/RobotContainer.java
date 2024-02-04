@@ -97,12 +97,11 @@ public class RobotContainer implements Logged {
     driver.b().whileTrue(superstructure.shoot(true));
     driver.x().onTrue(runOnce(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
     driver.rightStick().debounce(0.5).onTrue(
-      runOnce(climber::toggleClimber, climber)
+      runOnce(climber::unlockClimber, climber)
       .andThen(waitSeconds(0.5))
-      .andThen(() -> climber.setEnabled(true))
+      .andThen(climber.manualDrive(driver::getLeftY))
     );
-    driver.start().onTrue(runOnce(climber::enable, climber));
-    climber.setDefaultCommand(new RunCommand(() -> climber.setInput(-driver.getRightY() * 0.75), climber));
+    driver.start().onTrue(climber.manualDrive(driver::getLeftY));
     // operator
     operator.a().onTrue(runOnce(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
     operator.leftBumper().onTrue(new ConditionalCommand(
