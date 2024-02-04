@@ -10,7 +10,6 @@ import frc.robot.subsystems.Conveyor;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
-import frc.robot.subsystems.Superstructure.ShooterMode;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 /** Add your docs here. */
 public class Autos {
@@ -22,7 +21,6 @@ public class Autos {
             runOnce(drivetrain::stop),
             waitSeconds(1),
             runOnce(intake::raiseIntake, intake),
-            runOnce(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE)),
             //new WaitCommand(2),
             superstructure.shoot(false).withTimeout(5),
             run(() -> drivetrain.arcadeDrive(1, 0), drivetrain).withTimeout(0.5)

@@ -5,7 +5,6 @@
 package frc.robot.subsystems;
 
 import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 
 
@@ -43,27 +42,12 @@ public class Superstructure extends SubsystemBase implements Logged {
   // Conveyor
   private final Conveyor frontConveyor;
   private final Conveyor backConveyor;
-  
-  // Feeder
-  //climber
-  public final Climber climber;
-  public final Drivetrain drivetrain;
-  // Triggers
-  // Superstructure
-  public Trigger shooterReady;
-  public Trigger seesawReady;
-  // Conveyors
-  public Trigger frontConveyorFull;
-  public Trigger backConveyorFull;
-  public Trigger flyWheelAtSetpoint;
-  @Log //.BooleanBox(name = "Robot Aligned", methodName = "get", tabName = "SmartDashboard")
-  public Trigger robotLinedUp;
-  // Intakes
-  // Flywheel
-  public Trigger flywheelEnabled;
-  public Trigger turretEnabled;
+  private final Flywheel flywheel;
+  private final Turret turret;
 
-  
+  private Trigger flyWheelAtSetpoint;
+  @Log //.BooleanBox(name = "Robot Aligned", methodName = "get", tabName = "SmartDashboard")
+  private Trigger robotLinedUp;
   //TODO: Create Driver Dashboard
   // active intake 
   // camera
@@ -73,7 +57,6 @@ public class Superstructure extends SubsystemBase implements Logged {
   // flywheel at speed DONE
   @Log //.BooleanBox(tabName = "SmartDashboard", name = "Turret Position", colorWhenTrue = "yellow", colorWhenFalse = "blue")
   private Trigger turretAtFront;
-  ShooterMode mode;
   //@Config
   double flywheelRPM = 0.0;
   public boolean isForward;
@@ -84,22 +67,19 @@ public class Superstructure extends SubsystemBase implements Logged {
   @Log //(tabName = "SmartDashboard", name = "Distance to Hub")
   double distanceToHub;
 
-  Consumer<ShooterMode> shooterModeUpdater;
   BooleanSupplier visionHasTarget;
   DoubleSupplier targetYaw;
 
   DutyCycleOut feederPercent = new DutyCycleOut(0);
 
-  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Consumer<ShooterMode> shooterModeUpdater, Drivetrain drivetrain) {
+  public Superstructure(Flywheel flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Drivetrain drivetrain) {
+    this.flywheel = flywheel;
+    this.turret = turret;
     this.frontConveyor = frontConveyor;
     this.backConveyor = backConveyor;
     this.frontIntake = frontIntake;
     this.backIntake = backIntake;
     this.vision = vision;
-    this.climber = climber;
-    this.drivetrain = drivetrain;
-    this.shooterModeUpdater = shooterModeUpdater;
-    
     frontFeeder = new TalonFX(10);
     frontFeeder.setInverted(true);
     rearFeeder = new TalonFX(11);
@@ -110,19 +90,15 @@ public class Superstructure extends SubsystemBase implements Logged {
     rearFeeder.getConfigurator().apply(config);
     rearFeeder.setControl(new Follower(frontFeeder.getDeviceID(), true));
     
-    shooterReady = new Trigger(this::getShooterReady);
     robotLinedUp = new Trigger(vision::getAligned);
-    flywheelEnabled = new Trigger(flywheel::getActive);
-    turretEnabled = new Trigger(turret::getActive);
-    flyWheelAtSetpoint = new Trigger(()-> {return !flywheel.atSetpoint();});
+    flyWheelAtSetpoint = new Trigger(flywheel::atSetpoint);
     turretAtFront = new Trigger(() -> turret.getCurrentPosition().getDegrees() > -10);
   }
 
   public Command rejectCargo() {
-    return Commands.sequence(
-      runOnce(() -> setShooterMode(ShooterMode.REJECT)),
-      shoot(false),
-      runOnce(() -> setShooterMode(ShooterMode.MANUAL_FIRE))
+    return Commands.parallel(
+      flywheel.reject(),
+      Commands.waitUntil(flyWheelAtSetpoint).andThen(shoot(false))
     );
   }
 
@@ -145,6 +121,34 @@ public class Superstructure extends SubsystemBase implements Logged {
       stopFeeder();
     });
   }
+
+  public Command startManual() {
+    return runOnce(() -> {
+      vision.setLED(VisionLEDMode.kOn);
+      vision.setDriverMode(false);
+    });
+  }
+
+  public Command manualFire() {
+    return Commands.parallel(
+      startManual(),
+      flywheel.manualFire(),
+      turret.track()
+    );
+  }
+
+  public Command safeIdle() {
+    return runOnce(() -> {
+      stopFeeder();
+      frontIntake.raiseIntake();
+      backIntake.raiseIntake();
+      frontConveyor.stop();
+      backConveyor.stop();
+    }).andThen(
+      Commands.idle(this)
+    );
+  }
+
 
   public void runFrontConveyor() {
     frontConveyor.start();
@@ -207,46 +211,10 @@ public class Superstructure extends SubsystemBase implements Logged {
     //frontConveyor.setCargoColor(colorSensor.getColor(frontConveyor.colorSensorId));
   } 
 
-  public void setShooterMode(ShooterMode mode) {
-    this.mode = mode;
-    shooterModeUpdater.accept(mode);
-    switch (mode) {
-      case MANUAL_FIRE:
-        vision.setLED(VisionLEDMode.kOn);
-        vision.setDriverMode(false);
-        break;
-      case DISABLED:
-        stopFeeder();
-        frontIntake.raiseIntake();
-        backIntake.raiseIntake();
-        frontConveyor.stop();
-        backConveyor.stop();
-      default:
-        break;
-    }
-  }
-
-  public ShooterMode getShooterMode() {
-    return mode;
-  }
-
   public boolean getShooterReady() {
     return false;
     //return flywheel.atSetpoint() && turret.atSetpoint();
   }
-  
-
-  public enum ShooterMode {
-    MANUAL_FIRE, // turret and flywheel track the goal, ball is fired on operator command if present
-    REJECT, // Turret locks to dead ahead but flywheel is set to minimum
-    //DUMP_HIGH,
-    //SEARCHING, 
-    HOMING, //
-    TUNING, // Turret Disabled, flywheel speed settable
-    DISABLED // turret and flywheel do not move, shooting is impossible
-  }
-  // setShooterMode method here
-  // subsystems check shooter mode, act accordingly
 
   @Override
   public void periodic() {} 

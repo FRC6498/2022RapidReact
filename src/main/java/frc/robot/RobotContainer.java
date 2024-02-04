@@ -13,9 +13,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.IntakeConstants;
@@ -27,13 +25,10 @@ import frc.robot.subsystems.Flywheel;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Turret;
-import frc.robot.subsystems.Superstructure.ShooterMode;
 import monologue.Logged;
 import monologue.Monologue;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
-
-import java.util.function.Consumer;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -51,11 +46,7 @@ public class RobotContainer implements Logged {
   Conveyor backConveyor = new Conveyor(Constants.ConveyorConstants.backDriverCANId, true);
   Intake frontIntake = new Intake(IntakeConstants.intakeACANId, IntakeConstants.frontIntakeForwardChannel, IntakeConstants.frontIntakeReverseChannel);
   Intake backIntake = new Intake(IntakeConstants.intakeBCANId, IntakeConstants.backIntakeForwardChannel, IntakeConstants.backIntakeReverseChannel);
-  Consumer<ShooterMode> shooterModeUpdater = (ShooterMode mode) -> {
-    flywheel.setShooterMode(mode);
-    turret.setShooterMode(mode);
-  };
-  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, shooterModeUpdater, drivetrain);
+  Superstructure superstructure = new Superstructure(flywheel, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, drivetrain);
 
   //@Log(tabName = "SmartDashboard", name = "Time Selector")
   SendableChooser<Command> autoSelector = new SendableChooser<>();
@@ -68,18 +59,16 @@ public class RobotContainer implements Logged {
   Trigger operatorLeftTrigger = new Trigger(() -> operator.getLeftTriggerAxis() < 0.05);
   Trigger operatorRightTrigger = new Trigger(() -> operator.getRightTriggerAxis() < 0.05);
   Trigger robotLinedUp = new Trigger(vision::getAligned);
-  Trigger defenseMode = new Trigger(() -> superstructure.getShooterMode() == ShooterMode.DISABLED);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     Monologue.setupMonologue(this, "RobotContainer", false, false);
-    drivetrain.setDefaultCommand(new RunCommand(() -> drivetrain.arcadeDrive(driver.getRightTriggerAxis() + -driver.getLeftTriggerAxis(), -driver.getLeftX()), drivetrain));
+    drivetrain.setDefaultCommand(run(() -> drivetrain.arcadeDrive(driver.getRightTriggerAxis() + -driver.getLeftTriggerAxis(), -driver.getLeftX()), drivetrain));
     drivetrain.setInverted(true);
     turret.setDefaultCommand(turret.home().andThen(turret.track()));//new RunCommand(turret::stop, turret));
     // Configure the button bindings
     configureButtonBindings();
     autoSelector.addOption("Normal", Autos.highGoalOutsideTarmacTimeBased(backIntake, backConveyor, drivetrain, superstructure));
-    superstructure.setShooterMode(ShooterMode.DISABLED);
     superstructure.stopFeeder();
     frontConveyor.setName("FrontConveyor");
     backConveyor.setName("BackConveyor");
@@ -95,7 +84,7 @@ public class RobotContainer implements Logged {
     // driver
     driver.rightBumper().onTrue(runOnce(drivetrain::toggleGear, drivetrain));
     driver.b().whileTrue(superstructure.shoot(true));
-    driver.x().onTrue(runOnce(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
+    driver.x().onTrue(superstructure.manualFire());
     driver.rightStick().debounce(0.5).onTrue(
       runOnce(climber::unlockClimber, climber)
       .andThen(waitSeconds(0.5))
@@ -103,23 +92,23 @@ public class RobotContainer implements Logged {
     );
     driver.start().onTrue(climber.manualDrive(driver::getLeftY));
     // operator
-    operator.a().onTrue(runOnce(() -> superstructure.setShooterMode(ShooterMode.MANUAL_FIRE), superstructure));
-    operator.leftBumper().onTrue(new ConditionalCommand(
+    operator.a().onTrue(superstructure.manualFire());
+    operator.leftBumper().onTrue(Commands.either(
       runOnce(frontIntake::raiseIntake, frontIntake).andThen(runOnce(frontConveyor::stop)), // intake down, so raise it
       runOnce(frontIntake::lowerIntake, frontIntake).andThen(runOnce(frontConveyor::start)), // intake up, so lower it
       frontIntake::isExtended)
     );
-    operator.rightBumper().onTrue(new ConditionalCommand(
+    operator.rightBumper().onTrue(Commands.either(
       runOnce(backIntake::raiseIntake, backIntake).andThen(runOnce(backConveyor::stop)), // intake down, so raise it
       runOnce(backIntake::lowerIntake, backIntake).andThen(runOnce(backConveyor::start)), // intake up, so lower it
       backIntake::isExtended)
     );
-    operator.x().onTrue(runOnce(() -> superstructure.setShooterMode(ShooterMode.DISABLED)));
+    operator.x().onTrue(runOnce(() -> superstructure.safeIdle()));
     operator.b().whileTrue(superstructure.rejectCargo());
 
     // triggers
     robotLinedUp.and(flywheelReady).whileTrue(
-      new StartEndCommand(
+      runEnd(
         () -> { 
           driver.getHID().setRumble(RumbleType.kLeftRumble, 0.5);
           driver.getHID().setRumble(RumbleType.kRightRumble, 0.5); 

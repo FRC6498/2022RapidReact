@@ -29,14 +29,12 @@ import java.util.function.Supplier;
 
 import frc.robot.Constants.TurretConstants;
 import frc.robot.lib.NTHelper;
-import frc.robot.subsystems.Superstructure.ShooterMode;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
 // turret clockwise = forward 
 public class Turret extends SubsystemBase implements Logged {
   private boolean homed;
-  private ShooterMode mode;
   private Rotation2d turretPositionSetpoint;
   private Rotation2d turretCurrentPosition;
   private Supplier<OptionalDouble> targetYaw;
@@ -94,15 +92,9 @@ public class Turret extends SubsystemBase implements Logged {
     return bearing.getClosedLoopError().getValue() < TurretConstants.turretPositionToleranceDegrees.in(Rotations);
   }
 
-  public boolean getActive() {
-    // return mode < 2
-    return mode == ShooterMode.MANUAL_FIRE;
-  }
-
   @Override
   public void periodic() {
     getCurrentPosition();
-    NTHelper.setString("turret_shooter_mode", mode.toString());
     NTHelper.setDouble("turret_position_deg", turretCurrentPosition.getDegrees());
     NTHelper.setDouble("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
     NTHelper.setBoolean("turret_at_setpoint", atSetpoint());
@@ -110,24 +102,22 @@ public class Turret extends SubsystemBase implements Logged {
 
   public Command home() {
     return Commands.sequence(
-      runOnce(() -> setShooterMode(ShooterMode.HOMING)),
       runOnce(() -> bearing.setControl(percentOut.withOutput(0.15))),
       Commands.waitUntil(this::checkLimits),
       runOnce(() -> bearing.setControl(percentOut.withOutput(0))),
-      runOnce(() -> setPositionSetpoint(TurretConstants.frontDumpAngle)),
-      runOnce(() -> setShooterMode(ShooterMode.MANUAL_FIRE))
+      runOnce(() -> setPositionSetpoint(TurretConstants.frontDumpAngle))
     );
   }
 
-  public boolean getFwdLimit() {
+  private boolean getFwdLimit() {
     return bearing.getForwardLimit().getValue() == ForwardLimitValue.ClosedToGround;
   }
 
-  public boolean getRevLimit() {
+  private boolean getRevLimit() {
     return bearing.getReverseLimit().getValue() == ReverseLimitValue.ClosedToGround;
   }
 
-  public boolean checkLimits() {
+  private boolean checkLimits() {
     NTHelper.setBoolean("homed", homed);
     if (getFwdLimit()) {
       reset(TurretConstants.hardForwardAngle);
@@ -151,10 +141,6 @@ public class Turret extends SubsystemBase implements Logged {
     turretCurrentPosition = angle;
   }
 
-  public void setShooterMode(ShooterMode mode) {
-    this.mode = mode;
-  }
-
   public void setInverted() {
     bearing.setInverted(true);
   }
@@ -169,7 +155,7 @@ public class Turret extends SubsystemBase implements Logged {
     setPositionSetpoint(pose);
   }
 
-  public void setPositionSetpoint(Rotation2d setpoint) {
+  private void setPositionSetpoint(Rotation2d setpoint) {
     //System.out.println(setpoint.getDegrees());
     turretPositionSetpoint = setpoint;
     bearing.setControl(position.withPosition(setpoint.getRotations()));

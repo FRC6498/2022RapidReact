@@ -9,14 +9,16 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.MutableMeasure;
 import edu.wpi.first.units.Velocity;
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.Constants.ShooterConstants.RotationsPerMinute;
+
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.Superstructure.ShooterMode;
 import monologue.Logged;
 import monologue.Annotations.Log;
 import frc.robot.Constants.ShooterConstants;
@@ -27,11 +29,8 @@ public class Flywheel extends SubsystemBase implements Logged {
   private final TalonFX shooter;
   private final TalonFX hoodRollers;
   // Software
-  private final SimpleMotorFeedforward hoodFeedforward;
-  private boolean flywheelActive;
-  public Measure<Velocity<Angle>> flywheelSpeedSetpoint = RotationsPerMinute.of(-3000.0);
-  private Measure<Velocity<Angle>> speedOffset = RotationsPerMinute.of(0.0);
-  private Measure<Velocity<Angle>> hoodTargetRPM = RotationsPerSecond.of(0);
+  public MutableMeasure<Velocity<Angle>> flywheelSpeedSetpoint = RotationsPerMinute.of(-3000.0).mutableCopy();
+  private MutableMeasure<Velocity<Angle>> hoodTargetRPM = RotationsPerSecond.of(0).mutableCopy();
   private TalonFXConfiguration hoodConfig;
   private VelocityVoltage velocityMode = new VelocityVoltage(0);
 
@@ -39,21 +38,17 @@ public class Flywheel extends SubsystemBase implements Logged {
   double lastPosition = 0.0;
   double distanceToHub = 0.0;
   //@Log.ToString(name = "Flywheel Mode", tabName = "SmartDashboard")
-  private ShooterMode mode;
   
   public Flywheel() {
-    mode = ShooterMode.DISABLED;
     shooter = new TalonFX(ShooterConstants.flywheelCANId);
-    hoodFeedforward = new SimpleMotorFeedforward(
-      0.55,
-      12.3 / 6380.0, 
-      0
-    );
     hoodRollers = new TalonFX(ShooterConstants.hoodRollerCANId);
     hoodConfig = new TalonFXConfiguration();
     hoodConfig.Slot0.kP = 0.046642;
     hoodConfig.Slot0.kI = 0;
     hoodConfig.Slot0.kD = 0;
+    hoodConfig.Slot0.kS = 0.55;
+    hoodConfig.Slot0.kV = 12.3 / 6380.0;
+    hoodConfig.Slot0.kA = 0;
     // once we hit 40A for >=100ms, hold at 40A
     hoodConfig.CurrentLimits.SupplyCurrentLimit = 40;
     hoodConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -68,16 +63,11 @@ public class Flywheel extends SubsystemBase implements Logged {
    */
   //@Config(name = "Set Flywheel Speed(RPM)")
   public void setFlywheelSpeed(Measure<Velocity<Angle>> velocity) {
-    flywheelSpeedSetpoint = velocity.negate();
+    flywheelSpeedSetpoint = velocity.negate().mutableCopy();
   }
 
   public void setFlywheelDistance(double distance) {
     distanceToHub = distance;
-  }
-
-  //@Config
-  public void setHoodRollerOffset(Measure<Velocity<Angle>> rpmOffset) {
-    speedOffset = rpmOffset.copy();
   }
 
   public Measure<Velocity<Angle>> getHoodSpeed() {
@@ -99,57 +89,45 @@ public class Flywheel extends SubsystemBase implements Logged {
   }
 
   public boolean getActive() {
-    return mode != ShooterMode.HOMING;
+    return shooter.getClosedLoopReference().getValue() > 1;
   }
 
   public boolean atSetpoint() {
-    return Math.abs(getFlywheelSpeed().minus(flywheelSpeedSetpoint).in(RotationsPerMinute)) < ShooterConstants.flywheelSetpointToleranceRPM;
+    return shooter.getClosedLoopError().getValue() * 60 < ShooterConstants.flywheelSetpointToleranceRPM;
   }
 
-  public void setShooterMode(ShooterMode mode) {
-    this.mode = mode;
-    switch (mode) {
-      case MANUAL_FIRE:
-      case REJECT:
-        flywheelActive = true;
-        break;
-      case DISABLED:
-      case HOMING:
-        flywheelActive = false;
-        break;
-      default:
-      flywheelActive = false;
-        break;
-    }
+  public Command manualFire() {
+    return run(() -> {
+      flywheelSpeedSetpoint.mut_replace(InterpolatingTable.get(distanceToHub).shooterSpeed);
+      hoodTargetRPM.mut_replace(flywheelSpeedSetpoint.plus(InterpolatingTable.get(distanceToHub).hoodSpeedOffset));
+      shooter.setControl(velocityMode.withVelocity(flywheelSpeedSetpoint.in(RotationsPerSecond)));
+      hoodRollers.setControl(velocityMode.withVelocity(hoodTargetRPM.in(RotationsPerSecond)));
+    });
+  }
+
+  public Command reject() {
+    var rejectShooterSpeed = RotationsPerSecond.of(1000).mutableCopy();
+    var rejectHoodSpeed = rejectShooterSpeed;
+    flywheelSpeedSetpoint = rejectShooterSpeed;
+    hoodTargetRPM = rejectHoodSpeed;
+    return runOnce(() -> {
+      shooter.setControl(velocityMode.withVelocity(rejectShooterSpeed.in(RotationsPerSecond)));
+      hoodRollers.setControl(velocityMode.withVelocity(rejectHoodSpeed.in(RotationsPerSecond)));
+    }).andThen(Commands.idle(this));
+  }
+
+  public Command idle() {
+    var idleShooterSpeed = RotationsPerSecond.zero().mutableCopy();
+    var idleHoodSpeed = RotationsPerSecond.zero().mutableCopy();
+    flywheelSpeedSetpoint = idleShooterSpeed;
+    hoodTargetRPM = idleHoodSpeed;
+    return runOnce(() -> {
+      shooter.setControl(velocityMode.withVelocity(0));
+      hoodRollers.setControl(velocityMode.withVelocity(0));
+    }).andThen(Commands.idle(this));
   }
 
   @Override
-  public void periodic() {
-    switch (mode) {
-      case MANUAL_FIRE:
-        setFlywheelSpeed(InterpolatingTable.get(distanceToHub).shooterSpeed);
-        setHoodRollerOffset(InterpolatingTable.get(distanceToHub).hoodSpeedOffset);
-        break;
-      case REJECT:
-        setFlywheelSpeed(RotationsPerMinute.of(1000));
-        setHoodRollerOffset(RotationsPerMinute.of(0));
-      default:
-        break;
-    }
-      
-    /*} else if (mode == ShooterMode.DUMP_LOW) {
-      setFlywheelSpeed(1750); // dump = 1750
-    } else if (mode == ShooterMode.DUMP_HIGH) {
-      setFlywheelSpeed(3500);*/
-    //flywheelSpeedSetpoint = MathUtil.clamp(flywheelSpeedSetpoint, -6500, -1000);
-    if (flywheelActive) {
-      hoodTargetRPM = flywheelSpeedSetpoint.plus(speedOffset);
-      double feedforwardOutput = hoodFeedforward.calculate(hoodTargetRPM.in(RotationsPerMinute)) * 0.97;
-      //pid.setReference(flywheelSpeedSetpoint, ControlType.kVelocity);
-      hoodRollers.setControl(velocityMode.withVelocity(hoodTargetRPM.in(RotationsPerSecond)).withFeedForward(feedforwardOutput));
-    } else {
-      setFlywheelIdle();
-    }
-  }
+  public void periodic() {}
 
 }
