@@ -42,11 +42,11 @@ public class Superstructure extends SubsystemBase implements Logged {
   // Conveyor
   private final Conveyor frontConveyor;
   private final Conveyor backConveyor;
-  private final Shooter flywheel;
+  private final Shooter shooter;
   private final Turret turret;
 
   private Trigger flyWheelAtSetpoint;
-  @Log //.BooleanBox(name = "Robot Aligned", methodName = "get", tabName = "SmartDashboard")
+  @Log.NT //.BooleanBox(name = "Robot Aligned", methodName = "get", tabName = "SmartDashboard")
   private Trigger robotLinedUp;
   // TODO: Create Driver Dashboard with Elastic
   // active intake 
@@ -55,7 +55,7 @@ public class Superstructure extends SubsystemBase implements Logged {
   // low/high gear DONE
   // robot lined up rumble DONE
   // flywheel at speed DONE
-  @Log //.BooleanBox(tabName = "SmartDashboard", name = "Turret Position", colorWhenTrue = "yellow", colorWhenFalse = "blue")
+  @Log.NT //.BooleanBox(tabName = "SmartDashboard", name = "Turret Position", colorWhenTrue = "yellow", colorWhenFalse = "blue")
   private Trigger turretAtFront;
   //@Config
   double flywheelRPM = 0.0;
@@ -64,7 +64,7 @@ public class Superstructure extends SubsystemBase implements Logged {
   public double feederSpeedStopped = 0.0; 
   TalonFX frontFeeder;
   TalonFX rearFeeder;
-  @Log //(tabName = "SmartDashboard", name = "Distance to Hub")
+  @Log.NT //(tabName = "SmartDashboard", name = "Distance to Hub")
   double distanceToHub;
 
   BooleanSupplier visionHasTarget;
@@ -72,8 +72,8 @@ public class Superstructure extends SubsystemBase implements Logged {
 
   DutyCycleOut feederPercent = new DutyCycleOut(0);
 
-  public Superstructure(Shooter flywheel, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Drivetrain drivetrain) {
-    this.flywheel = flywheel;
+  public Superstructure(Shooter shooter, Conveyor frontConveyor, Conveyor backConveyor, Intake frontIntake,  Intake backIntake, Vision vision, Turret turret, Climber climber, Drivetrain drivetrain) {
+    this.shooter = shooter;
     this.turret = turret;
     this.frontConveyor = frontConveyor;
     this.backConveyor = backConveyor;
@@ -91,14 +91,14 @@ public class Superstructure extends SubsystemBase implements Logged {
     rearFeeder.setControl(new Follower(frontFeeder.getDeviceID(), true));
     
     robotLinedUp = new Trigger(vision::getAligned);
-    flyWheelAtSetpoint = new Trigger(flywheel::atSetpoint);
+    flyWheelAtSetpoint = new Trigger(shooter::atSetpoint);
     turretAtFront = new Trigger(() -> turret.getCurrentPosition().getDegrees() > -10);
     log("superstructure-heartbeat", "superstructure constructor!");
   }
 
   public Command rejectCargo() {
     return Commands.parallel(
-      flywheel.reject(),
+      shooter.reject(),
       Commands.waitUntil(flyWheelAtSetpoint).andThen(shoot(false))
     );
   }
@@ -133,7 +133,7 @@ public class Superstructure extends SubsystemBase implements Logged {
   public Command manualFire() {
     return Commands.parallel(
       startManual(),
-      flywheel.manualFire(vision::getTargetDistance),
+      shooter.manualFire(vision::getTargetDistance),
       turret.track()
     );
   }

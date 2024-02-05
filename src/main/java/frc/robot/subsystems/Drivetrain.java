@@ -115,7 +115,7 @@ public class Drivetrain extends SubsystemBase implements Logged {
     return gyro.getRotation2d();
   }
 
-  @Log // (name = "Gyro Angle (deg.)")
+  @Log.NT // (name = "Gyro Angle (deg.)")
   public double getGyroAngleDegrees() {
     return getGyroAngle().getDegrees();
   }
@@ -164,7 +164,7 @@ public class Drivetrain extends SubsystemBase implements Logged {
     }
   }
 
-  //@Log(name="Gear", tabName = "SmartDashboard")
+  //@Log.NT(name="Gear", tabName = "SmartDashboard")
   public String getGear()
   {
     if (isHighGear) {
@@ -179,7 +179,7 @@ public class Drivetrain extends SubsystemBase implements Logged {
     arcadeDrive(0, 0);
   }
 
-  //@Log
+  //@Log.NT
   public String getBrakeMode() {
     return currentBrakeMode.toString();
   }

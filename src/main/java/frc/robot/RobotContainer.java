@@ -50,7 +50,7 @@ public class RobotContainer implements Logged {
   Intake backIntake = new Intake(IntakeConstants.intakeBCANId, IntakeConstants.backIntakeForwardChannel, IntakeConstants.backIntakeReverseChannel);
   Superstructure superstructure = new Superstructure(shooter, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, drivetrain);;
 
-  //@Log(tabName = "SmartDashboard", name = "Time Selector")
+  //@Log.NT(tabName = "SmartDashboard", name = "Time Selector")
   SendableChooser<Command> autoSelector = new SendableChooser<>();
   
   CommandXboxController driver = new CommandXboxController(0);

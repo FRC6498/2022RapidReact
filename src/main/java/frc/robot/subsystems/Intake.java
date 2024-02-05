@@ -16,7 +16,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends SubsystemBase {
   WPI_TalonSRX motor;
-  //@Log
+  //@Log.NT
   Double motorSetpoint = 0.0;
   DoubleSolenoid piston;
   boolean extended = false;
@@ -61,7 +61,7 @@ public class Intake extends SubsystemBase {
     motorSetpoint = percent;
   }
 
-  //@Log.BooleanBox(name = "Intake Lowered")
+  //@Log.NT.BooleanBox(name = "Intake Lowered")
   public boolean isExtended() {
     // reverse = raised
     return extended;

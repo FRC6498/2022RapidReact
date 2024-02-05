@@ -166,7 +166,7 @@ public class Turret extends SubsystemBase implements Logged {
     return turretCurrentPosition;
   }
   
-  @Log //(name = "Turret Position (deg.)")
+  @Log.NT //(name = "Turret Position (deg.)")
   public double getCurrentPositionDegrees() {
     return getCurrentPosition().getDegrees();
   }
