@@ -22,7 +22,7 @@ import frc.robot.Constants.ShooterConstants;
 
 /** Add your docs here. */
 public class ShooterSim {
-    private final FlywheelSim shooterPhsyicsSim;
+    private final FlywheelSim shooterPhysicsSim;
     private final FlywheelSim hoodPhysicsSim;
     private final TalonFX shooter;
     private final TalonFX hood;
@@ -32,7 +32,7 @@ public class ShooterSim {
     private final MutableMeasure<Velocity<Angle>> shooterSpeed = RotationsPerSecond.zero().mutableCopy();
 
     public ShooterSim(TalonFX shooter, TalonFX hood) {
-        shooterPhsyicsSim = new FlywheelSim(LinearSystemId.identifyVelocitySystem(
+        shooterPhysicsSim = new FlywheelSim(LinearSystemId.identifyVelocitySystem(
             ShooterConstants.flywheelkV, 
             ShooterConstants.flywheelkA
             ), DCMotor.getFalcon500(1), 1
@@ -49,24 +49,24 @@ public class ShooterSim {
     }
 
     public double getShooterSimVelRPM() {
-        return shooterSpeed.mut_replace(shooterPhsyicsSim.getAngularVelocityRadPerSec(), RadiansPerSecond).in(RotationsPerMinute);
+        return shooterSpeed.mut_replace(shooterPhysicsSim.getAngularVelocityRadPerSec(), RadiansPerSecond).in(RotationsPerMinute);
     }
 
     public void updateSim() {
         // set input voltage so that it will account for voltage sag
         shooterSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-        hoodSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+        //hoodSim.setSupplyVoltage(RobotController.getBatteryVoltage());
 
         // update the wpilib physics model
-        shooterPhsyicsSim.setInputVoltage(shooterSim.getMotorVoltage());
-        hoodPhysicsSim.setInputVoltage(hoodSim.getMotorVoltage());
+        shooterPhysicsSim.setInputVoltage(shooterSim.getMotorVoltage());
+        //hoodPhysicsSim.setInputVoltage(hoodSim.getMotorVoltage());
 
         // step time
-        shooterPhsyicsSim.update(0.020);
-        hoodPhysicsSim.update(0.020);
+        shooterPhysicsSim.update(0.020);
+        //hoodPhysicsSim.update(0.020);
 
         // update motor sensors, compensate for units
-        shooterSpeed.mut_replace(shooterPhsyicsSim.getAngularVelocityRadPerSec(), RadiansPerSecond);
+        shooterSpeed.mut_replace(shooterPhysicsSim.getAngularVelocityRadPerSec(), RadiansPerSecond);
         shooterSim.setRotorVelocity(shooterSpeed.in(RotationsPerSecond));
         //hoodSim.setRotorVelocity(Units.radiansToRotations(hoodPhysicsSim.getAngularVelocityRadPerSec()));
     }
