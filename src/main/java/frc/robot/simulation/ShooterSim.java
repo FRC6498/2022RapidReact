@@ -11,7 +11,6 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.MutableMeasure;
 import edu.wpi.first.units.Velocity;
@@ -38,9 +37,9 @@ public class ShooterSim {
             ShooterConstants.flywheelMOI
         );
         hoodPhysicsSim = new FlywheelSim(
-            LinearSystemId.identifyVelocitySystem((12.0 / 6380.0) / (2 * Math.PI), 0.001 / (2 * Math.PI)),
             DCMotor.getFalcon500(1), 
-            1
+            1.0, 
+            ShooterConstants.hoodMOI
         );
         this.shooter = shooter;
         shooterSim = this.shooter.getSimState();
@@ -52,7 +51,7 @@ public class ShooterSim {
         return shooterSpeed.in(RotationsPerSecond);
     }
 
-    public double getHoodSpeedVel() {
+    public double getHoodSimVel() {
         return hoodSpeed.in(RotationsPerSecond);
     }
 

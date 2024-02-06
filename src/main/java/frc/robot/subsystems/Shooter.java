@@ -54,12 +54,10 @@ public class Shooter extends SubsystemBase implements Logged {
     hoodRollers = new TalonFX(ShooterConstants.hoodRollerCANId);
     TalonFXConfiguration hoodConfig = new TalonFXConfiguration();
     TalonFXConfiguration flywheelConfig = new TalonFXConfiguration();
-    hoodConfig.Slot0.kP = 0.046642;
-    hoodConfig.Slot0.kI = 0;
-    hoodConfig.Slot0.kD = 0;
-    hoodConfig.Slot0.kS = 0.55;
-    hoodConfig.Slot0.kV = 12.3 / 6380.0;
-    hoodConfig.Slot0.kA = 0;
+    hoodConfig.Slot0.kP = ShooterConstants.hoodkP; //0.046642;
+    hoodConfig.Slot0.kS = ShooterConstants.hoodkS; //0.55;
+    hoodConfig.Slot0.kV = ShooterConstants.hoodkV;//12.3 / 6380.0;
+    hoodConfig.Slot0.kA = ShooterConstants.hoodkA;
     // once we hit 40A for >=100ms, hold at 40A
     hoodConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
     hoodConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -80,9 +78,9 @@ public class Shooter extends SubsystemBase implements Logged {
     shooter.getConfigurator().apply(flywheelConfig);
 
     sim = new ShooterSim(shooter, hoodRollers);
-    manualSpeedData = NetworkTableInstance.getDefault().getDoubleTopic("RobotContainer/superstructure/shooter/shooterSpeedInput").subscribe(0, PubSubOption.keepDuplicates(true), PubSubOption.sendAll(true));
+    manualSpeedData = NetworkTableInstance.getDefault().getDoubleTopic("RobotContainer/superstructure/shooter/shooterSpeedInput").subscribe(100, PubSubOption.keepDuplicates(true), PubSubOption.sendAll(true));
     var pub = manualSpeedData.getTopic().publish(PubSubOption.sendAll(true));
-    pub.set(0);
+    pub.set(100);
     //DataLogManager.start();
     setDefaultCommand(manualSpeed());
   }
@@ -103,11 +101,6 @@ public class Shooter extends SubsystemBase implements Logged {
   @Log.NT //(name = "Flywheel Velocity (RPM)")
   public Measure<Velocity<Angle>> getFlywheelSpeed() {
     return RotationsPerSecond.of(shooter.getVelocity().getValue());
-  }
-
-  @Log.NT
-  public Measure<Velocity<Angle>> getHoodError() {
-    return getHoodSpeed().minus(hoodSpeedSetpoint);
   }
 
   public void setFlywheelIdle() {
@@ -138,7 +131,7 @@ public class Shooter extends SubsystemBase implements Logged {
       flywheelSpeedSetpoint.mut_replace(manualSpeedData.get(0), RotationsPerMinute);
       hoodSpeedSetpoint.mut_replace(manualSpeedData.get(0), RotationsPerMinute);
       shooter.setControl(velocityMode.withVelocity(flywheelSpeedSetpoint.in(RotationsPerSecond)).withSlot(0));
-      hoodRollers.setControl(velocityMode.withVelocity(hoodSpeedSetpoint.in(RotationsPerSecond)));
+      hoodRollers.setControl(velocityMode.withVelocity(hoodSpeedSetpoint.in(RotationsPerSecond)).withSlot(0));
     });
   }
 
@@ -184,12 +177,37 @@ public class Shooter extends SubsystemBase implements Logged {
   }
 
   @Log.NT
-  private double getSimVelocity() {
+  private double getShooterSimVelocity() {
     return sim.getShooterSimVel();
   }
 
   @Log.NT
-  private double getMotorVelocity() {
+  private double getShooterMotorVelocity() {
     return shooterRealSpeed.mut_replace(shooter.getVelocity().getValue(), RotationsPerSecond).in(RotationsPerMinute);
+  }
+
+  @Log.NT
+  private double getHoodSetpoint() {
+    return hoodMotorSetpoint.mut_replace(hoodRollers.getClosedLoopReference().getValue(), RotationsPerSecond).in(RotationsPerMinute);
+  }
+
+  @Log.NT
+  private double getHoodError() {
+    return hoodRollers.getClosedLoopError().getValue();
+  }
+
+  @Log.NT
+  private double getHoodOutput() {
+    return hoodRollers.getClosedLoopOutput().getValue();
+  }
+
+  @Log.NT
+  private double getHoodSimVelocity() {
+    return sim.getHoodSimVel();
+  }
+
+  @Log.NT
+  private double getHoodMotorVelocity() {
+    return hoodRealSpeed.mut_replace(hoodRollers.getVelocity().getValue(), RotationsPerSecond).in(RotationsPerMinute);
   }
 }

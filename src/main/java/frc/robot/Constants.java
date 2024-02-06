@@ -70,6 +70,12 @@ public final class Constants {
         public static final int flywheelCANId = 14;
         public static final int feederACANId = 10;
         public static final int feederBCANId = 11;     
+        public static final double hoodkP = 0.15;
+        public static final double hoodkD = 0;
+        public static final double hoodkS = 0;
+        public static final double hoodkV = 0.71 / (2.0 * Math.PI);
+        public static final double hoodkA = 0.001 / (2.0 * Math.PI);
+        public static final double hoodMOI = 0.001;
         public static final double flywheelkP = 0.1;//4.5;//.5;
         public static final double flywheelkD = 0;
         public static final double flywheelkS = 0;//.55;
