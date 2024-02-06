@@ -134,7 +134,8 @@ public class Superstructure extends SubsystemBase implements Logged {
     return Commands.parallel(
       startManual(),
       shooter.manualFire(vision::getTargetDistance),
-      turret.track()
+      turret.track(),
+      shoot(true)
     );
   }
 

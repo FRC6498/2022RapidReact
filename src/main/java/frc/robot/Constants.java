@@ -70,18 +70,17 @@ public final class Constants {
         public static final int flywheelCANId = 14;
         public static final int feederACANId = 10;
         public static final int feederBCANId = 11;     
-        public static final double flywheelkP = 0.1782;
+        public static final double flywheelkP = 0.5;
         public static final double flywheelkD = 0;
-        public static final double flywheelkS = 5.5;
-        public static final double flywheelkV = 0.12027;
-        public static final double flywheelkA = 0.018595;
+        public static final double flywheelkS = 0.55;
+        public static final double flywheelkV = 0.35 / (2 * Math.PI);
+        public static final double flywheelkA = 0.69 / (2 * Math.PI);
         public static final double flywheelVelocityRampRateSeconds = 0.5;
         public static final double flywheelSetpointToleranceRPM = 10;
         public static final double flywheelDumpRPM = 500;
         public static final double flywheelHighRPM = 4000;
         public static final int hoodRollerCANId = 13;
         public static final Velocity<Angle> RotationsPerMinute = Rotations.per(Minute);
-
     }
 
     public static final class TurretConstants {

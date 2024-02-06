@@ -17,6 +17,8 @@ import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.MutableMeasure;
 import edu.wpi.first.units.Velocity;
+import edu.wpi.first.wpilibj.DataLogManager;
+
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.Constants.ShooterConstants.RotationsPerMinute;
 
@@ -37,7 +39,10 @@ public class Shooter extends SubsystemBase implements Logged {
   private final TalonFX shooter;
   private final TalonFX hoodRollers;
   // Software
-  public final MutableMeasure<Velocity<Angle>> flywheelSpeedSetpoint = RotationsPerMinute.of(-3000.0).mutableCopy();
+  public final MutableMeasure<Velocity<Angle>> flywheelSpeedSetpoint = RotationsPerMinute.zero().mutableCopy();
+  public final MutableMeasure<Velocity<Angle>> flywheelMotorSetpoint = RotationsPerMinute.zero().mutableCopy();
+  public final MutableMeasure<Velocity<Angle>> shooterRealSpeed = RotationsPerMinute.zero().mutableCopy();
+
   private final MutableMeasure<Velocity<Angle>> hoodTargetRPM = RotationsPerSecond.of(0).mutableCopy();
   private final VelocityVoltage velocityMode = new VelocityVoltage(0, 0, false, 0, 0, false, false, false);
   private final ShooterSim sim;
@@ -77,6 +82,8 @@ public class Shooter extends SubsystemBase implements Logged {
     manualSpeedData = NetworkTableInstance.getDefault().getDoubleTopic("RobotContainer/superstructure/shooter/shooterSpeedRpm").subscribe(0, PubSubOption.keepDuplicates(true), PubSubOption.sendAll(true));
     var pub = manualSpeedData.getTopic().publish(PubSubOption.sendAll(true));
     pub.set(0);
+    //DataLogManager.start();
+    setDefaultCommand(manualSpeed());
   }
   
   /**
@@ -94,7 +101,6 @@ public class Shooter extends SubsystemBase implements Logged {
 
   @Log.NT //(name = "Flywheel Velocity (RPM)")
   public Measure<Velocity<Angle>> getFlywheelSpeed() {
-    //log("flywheelRPM", shooter.getVelocity().getValue() * 60.0);
     return RotationsPerSecond.of(shooter.getVelocity().getValue());
   }
 
@@ -160,12 +166,12 @@ public class Shooter extends SubsystemBase implements Logged {
   }
 
   @Log.NT
-  private double getShooterSetpointRPS() {
-    return shooter.getClosedLoopReference().getValue();
+  private double getShooterSetpointRPM() {
+    return flywheelMotorSetpoint.mut_replace(shooter.getClosedLoopReference().getValue(), RotationsPerSecond).in(RotationsPerMinute);
   }
 
   @Log.NT
-  private double getShooterErrorRPS() {
+  private double getShooterErrorRPMD() {
     return shooter.getClosedLoopError().getValue();
   }
 
@@ -177,6 +183,11 @@ public class Shooter extends SubsystemBase implements Logged {
 
   @Log.NT
   private double getSimVelocity() {
-    return sim.getShooterSimVel();
+    return sim.getShooterSimVelRPM();
+  }
+
+  @Log.NT
+  private double getMotorVelocity() {
+    return shooterRealSpeed.mut_replace(shooter.getVelocity().getValue(), RotationsPerSecond).in(RotationsPerMinute);
   }
 }

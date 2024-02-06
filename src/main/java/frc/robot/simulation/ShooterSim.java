@@ -4,11 +4,18 @@
 
 package frc.robot.simulation;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static frc.robot.Constants.ShooterConstants.RotationsPerMinute;
+
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.MutableMeasure;
+import edu.wpi.first.units.Velocity;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc.robot.Constants.ShooterConstants;
@@ -22,6 +29,8 @@ public class ShooterSim {
     private final TalonFXSimState shooterSim;
     private final TalonFXSimState hoodSim;
 
+    private final MutableMeasure<Velocity<Angle>> shooterSpeed = RotationsPerSecond.zero().mutableCopy();
+
     public ShooterSim(TalonFX shooter, TalonFX hood) {
         shooterPhsyicsSim = new FlywheelSim(LinearSystemId.identifyVelocitySystem(
             ShooterConstants.flywheelkV, 
@@ -29,7 +38,7 @@ public class ShooterSim {
             ), DCMotor.getFalcon500(1), 1
         );
         hoodPhysicsSim = new FlywheelSim(
-            LinearSystemId.identifyVelocitySystem(12.0 / 6380.0, 0.001),
+            LinearSystemId.identifyVelocitySystem(12.0 / 6380.0 / (2 * Math.PI), 0.001 / 6.28),
             DCMotor.getFalcon500(1), 
             1
         );
@@ -39,8 +48,8 @@ public class ShooterSim {
         hoodSim = this.hood.getSimState();
     }
 
-    public double getShooterSimVel() {
-        return shooterPhsyicsSim.getAngularVelocityRPM() * 60.0;
+    public double getShooterSimVelRPM() {
+        return shooterSpeed.mut_replace(shooterPhsyicsSim.getAngularVelocityRadPerSec(), RadiansPerSecond).in(RotationsPerMinute);
     }
 
     public void updateSim() {
@@ -57,7 +66,8 @@ public class ShooterSim {
         hoodPhysicsSim.update(0.020);
 
         // update motor sensors, compensate for units
-        shooterSim.setRotorVelocity(shooterPhsyicsSim.getAngularVelocityRPM() * 60.0);
-        hoodSim.setRotorVelocity(hoodPhysicsSim.getAngularVelocityRPM() * 60.0);
+        shooterSpeed.mut_replace(shooterPhsyicsSim.getAngularVelocityRadPerSec(), RadiansPerSecond);
+        shooterSim.setRotorVelocity(shooterSpeed.in(RotationsPerSecond));
+        //hoodSim.setRotorVelocity(Units.radiansToRotations(hoodPhysicsSim.getAngularVelocityRadPerSec()));
     }
 }
