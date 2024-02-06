@@ -70,11 +70,12 @@ public final class Constants {
         public static final int flywheelCANId = 14;
         public static final int feederACANId = 10;
         public static final int feederBCANId = 11;     
-        public static final double flywheelkP = 0.5;
+        public static final double flywheelkP = 0.1;//4.5;//.5;
         public static final double flywheelkD = 0;
-        public static final double flywheelkS = 0.55;
-        public static final double flywheelkV = 0.35 / (2 * Math.PI);
-        public static final double flywheelkA = 0.69 / (2 * Math.PI);
+        public static final double flywheelkS = 0;//.55;
+        public static final double flywheelkV = 0.71 / (2 * Math.PI); // 0.35
+        public static final double flywheelkA = 0.01 / (2 * Math.PI); // 0.69
+        public static final double flywheelMOI = 0.002;
         public static final double flywheelVelocityRampRateSeconds = 0.5;
         public static final double flywheelSetpointToleranceRPM = 10;
         public static final double flywheelDumpRPM = 500;

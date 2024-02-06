@@ -17,7 +17,6 @@ import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.MutableMeasure;
 import edu.wpi.first.units.Velocity;
-import edu.wpi.first.wpilibj.DataLogManager;
 
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.Constants.ShooterConstants.RotationsPerMinute;
@@ -39,11 +38,13 @@ public class Shooter extends SubsystemBase implements Logged {
   private final TalonFX shooter;
   private final TalonFX hoodRollers;
   // Software
-  public final MutableMeasure<Velocity<Angle>> flywheelSpeedSetpoint = RotationsPerMinute.zero().mutableCopy();
-  public final MutableMeasure<Velocity<Angle>> flywheelMotorSetpoint = RotationsPerMinute.zero().mutableCopy();
-  public final MutableMeasure<Velocity<Angle>> shooterRealSpeed = RotationsPerMinute.zero().mutableCopy();
+  private final MutableMeasure<Velocity<Angle>> flywheelSpeedSetpoint = RotationsPerMinute.zero().mutableCopy();
+  private final MutableMeasure<Velocity<Angle>> flywheelMotorSetpoint = RotationsPerMinute.zero().mutableCopy();
+  private final MutableMeasure<Velocity<Angle>> shooterRealSpeed = RotationsPerMinute.zero().mutableCopy();
 
-  private final MutableMeasure<Velocity<Angle>> hoodTargetRPM = RotationsPerSecond.of(0).mutableCopy();
+  private final MutableMeasure<Velocity<Angle>> hoodSpeedSetpoint = RotationsPerSecond.of(0).mutableCopy();
+  private final MutableMeasure<Velocity<Angle>> hoodMotorSetpoint = RotationsPerMinute.zero().mutableCopy();
+  private final MutableMeasure<Velocity<Angle>> hoodRealSpeed = RotationsPerMinute.zero().mutableCopy();
   private final VelocityVoltage velocityMode = new VelocityVoltage(0, 0, false, 0, 0, false, false, false);
   private final ShooterSim sim;
   private final DoubleSubscriber manualSpeedData;
@@ -79,7 +80,7 @@ public class Shooter extends SubsystemBase implements Logged {
     shooter.getConfigurator().apply(flywheelConfig);
 
     sim = new ShooterSim(shooter, hoodRollers);
-    manualSpeedData = NetworkTableInstance.getDefault().getDoubleTopic("RobotContainer/superstructure/shooter/shooterSpeedRpm").subscribe(0, PubSubOption.keepDuplicates(true), PubSubOption.sendAll(true));
+    manualSpeedData = NetworkTableInstance.getDefault().getDoubleTopic("RobotContainer/superstructure/shooter/shooterSpeedInput").subscribe(0, PubSubOption.keepDuplicates(true), PubSubOption.sendAll(true));
     var pub = manualSpeedData.getTopic().publish(PubSubOption.sendAll(true));
     pub.set(0);
     //DataLogManager.start();
@@ -106,7 +107,7 @@ public class Shooter extends SubsystemBase implements Logged {
 
   @Log.NT
   public Measure<Velocity<Angle>> getHoodError() {
-    return getHoodSpeed().minus(hoodTargetRPM);
+    return getHoodSpeed().minus(hoodSpeedSetpoint);
   }
 
   public void setFlywheelIdle() {
@@ -125,18 +126,19 @@ public class Shooter extends SubsystemBase implements Logged {
     return run(() -> {
       distance.get().ifPresent((hubDistance) -> {
         flywheelSpeedSetpoint.mut_replace(InterpolatingTable.get(hubDistance).shooterSpeed);
-      hoodTargetRPM.mut_replace(flywheelSpeedSetpoint.plus(InterpolatingTable.get(hubDistance).hoodSpeedOffset));
+      hoodSpeedSetpoint.mut_replace(flywheelSpeedSetpoint.plus(InterpolatingTable.get(hubDistance).hoodSpeedOffset));
       });
       shooter.setControl(velocityMode.withVelocity(flywheelSpeedSetpoint.in(RotationsPerSecond)));
-      hoodRollers.setControl(velocityMode.withVelocity(hoodTargetRPM.in(RotationsPerSecond)));
+      hoodRollers.setControl(velocityMode.withVelocity(hoodSpeedSetpoint.in(RotationsPerSecond)));
     });
   }
 
   public Command manualSpeed() {
     return run(() -> {
-      flywheelSpeedSetpoint.mut_replace(manualSpeedData.get(0), RotationsPerSecond);
+      flywheelSpeedSetpoint.mut_replace(manualSpeedData.get(0), RotationsPerMinute);
+      hoodSpeedSetpoint.mut_replace(manualSpeedData.get(0), RotationsPerMinute);
       shooter.setControl(velocityMode.withVelocity(flywheelSpeedSetpoint.in(RotationsPerSecond)).withSlot(0));
-      hoodRollers.setControl(velocityMode.withVelocity(hoodTargetRPM.in(RotationsPerSecond)));
+      hoodRollers.setControl(velocityMode.withVelocity(hoodSpeedSetpoint.in(RotationsPerSecond)));
     });
   }
 
@@ -144,7 +146,7 @@ public class Shooter extends SubsystemBase implements Logged {
     var rejectShooterSpeed = RotationsPerSecond.of(1000).mutableCopy();
     var rejectHoodSpeed = rejectShooterSpeed;
     flywheelSpeedSetpoint.mut_replace(rejectShooterSpeed);
-    hoodTargetRPM.mut_replace(rejectHoodSpeed);
+    hoodSpeedSetpoint.mut_replace(rejectHoodSpeed);
     return runOnce(() -> {
       shooter.setControl(velocityMode.withVelocity(rejectShooterSpeed.in(RotationsPerSecond)));
       hoodRollers.setControl(velocityMode.withVelocity(rejectHoodSpeed.in(RotationsPerSecond)));
@@ -153,7 +155,7 @@ public class Shooter extends SubsystemBase implements Logged {
 
   public Command idle() {
     flywheelSpeedSetpoint.mut_replace(RotationsPerSecond.zero());
-    hoodTargetRPM.mut_replace(RotationsPerSecond.zero());
+    hoodSpeedSetpoint.mut_replace(RotationsPerSecond.zero());
     return runOnce(() -> {
       shooter.setControl(velocityMode.withVelocity(0));
       hoodRollers.setControl(velocityMode.withVelocity(0));
@@ -166,12 +168,12 @@ public class Shooter extends SubsystemBase implements Logged {
   }
 
   @Log.NT
-  private double getShooterSetpointRPM() {
+  private double getShooterSetpoint() {
     return flywheelMotorSetpoint.mut_replace(shooter.getClosedLoopReference().getValue(), RotationsPerSecond).in(RotationsPerMinute);
   }
 
   @Log.NT
-  private double getShooterErrorRPMD() {
+  private double getShooterError() {
     return shooter.getClosedLoopError().getValue();
   }
 
@@ -183,7 +185,7 @@ public class Shooter extends SubsystemBase implements Logged {
 
   @Log.NT
   private double getSimVelocity() {
-    return sim.getShooterSimVelRPM();
+    return sim.getShooterSimVel();
   }
 
   @Log.NT

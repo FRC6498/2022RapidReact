@@ -6,7 +6,6 @@ package frc.robot.simulation;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static frc.robot.Constants.ShooterConstants.RotationsPerMinute;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.TalonFXSimState;
@@ -26,19 +25,20 @@ public class ShooterSim {
     private final FlywheelSim hoodPhysicsSim;
     private final TalonFX shooter;
     private final TalonFX hood;
-    private final TalonFXSimState shooterSim;
-    private final TalonFXSimState hoodSim;
+    private TalonFXSimState shooterSim;
+    private TalonFXSimState hoodSim;
 
     private final MutableMeasure<Velocity<Angle>> shooterSpeed = RotationsPerSecond.zero().mutableCopy();
+    private final MutableMeasure<Velocity<Angle>> hoodSpeed = RotationsPerSecond.zero().mutableCopy();
 
     public ShooterSim(TalonFX shooter, TalonFX hood) {
-        shooterPhysicsSim = new FlywheelSim(LinearSystemId.identifyVelocitySystem(
-            ShooterConstants.flywheelkV, 
-            ShooterConstants.flywheelkA
-            ), DCMotor.getFalcon500(1), 1
+        shooterPhysicsSim = new FlywheelSim(
+            DCMotor.getFalcon500(1), 
+            1.0, 
+            ShooterConstants.flywheelMOI
         );
         hoodPhysicsSim = new FlywheelSim(
-            LinearSystemId.identifyVelocitySystem(12.0 / 6380.0 / (2 * Math.PI), 0.001 / 6.28),
+            LinearSystemId.identifyVelocitySystem((12.0 / 6380.0) / (2 * Math.PI), 0.001 / (2 * Math.PI)),
             DCMotor.getFalcon500(1), 
             1
         );
@@ -48,26 +48,34 @@ public class ShooterSim {
         hoodSim = this.hood.getSimState();
     }
 
-    public double getShooterSimVelRPM() {
-        return shooterSpeed.mut_replace(shooterPhysicsSim.getAngularVelocityRadPerSec(), RadiansPerSecond).in(RotationsPerMinute);
+    public double getShooterSimVel() {
+        return shooterSpeed.in(RotationsPerSecond);
+    }
+
+    public double getHoodSpeedVel() {
+        return hoodSpeed.in(RotationsPerSecond);
     }
 
     public void updateSim() {
+        shooterSim = this.shooter.getSimState();
+        hoodSim = this.hood.getSimState();
+
         // set input voltage so that it will account for voltage sag
         shooterSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-        //hoodSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+        hoodSim.setSupplyVoltage(RobotController.getBatteryVoltage());
 
         // update the wpilib physics model
         shooterPhysicsSim.setInputVoltage(shooterSim.getMotorVoltage());
-        //hoodPhysicsSim.setInputVoltage(hoodSim.getMotorVoltage());
+        hoodPhysicsSim.setInputVoltage(hoodSim.getMotorVoltage());
 
         // step time
         shooterPhysicsSim.update(0.020);
-        //hoodPhysicsSim.update(0.020);
+        hoodPhysicsSim.update(0.020);
 
         // update motor sensors, compensate for units
         shooterSpeed.mut_replace(shooterPhysicsSim.getAngularVelocityRadPerSec(), RadiansPerSecond);
+        hoodSpeed.mut_replace(hoodPhysicsSim.getAngularVelocityRadPerSec(), RadiansPerSecond);
         shooterSim.setRotorVelocity(shooterSpeed.in(RotationsPerSecond));
-        //hoodSim.setRotorVelocity(Units.radiansToRotations(hoodPhysicsSim.getAngularVelocityRadPerSec()));
+        hoodSim.setRotorVelocity(hoodSpeed.in(RotationsPerSecond));
     }
 }
