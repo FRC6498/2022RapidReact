@@ -15,7 +15,9 @@
   },
   "NTProvider": {
     "types": {
-      "/FMSInfo": "FMSInfo"
+      "/FMSInfo": "FMSInfo",
+      "/RobotContainer/superstructure/turret/turret2d": "Mechanism2d",
+      "/RobotContainer/turret/turret2d": "Mechanism2d"
     }
   },
   "NetworkTables": {
@@ -28,10 +30,12 @@
     "RobotContainer": {
       "open": true,
       "superstructure": {
-        "open": true,
         "shooter": {
           "open": true
         }
+      },
+      "turret": {
+        "open": true
       }
     },
     "combined": true,
@@ -53,15 +57,6 @@
     }
   },
   "NetworkTables Info": {
-    "Clients": {
-      "open": true
-    },
-    "Server": {
-      "Subscribers": {
-        "open": true
-      },
-      "open": true
-    },
     "visible": true
   },
   "Plot": {

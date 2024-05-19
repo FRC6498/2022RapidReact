@@ -18,10 +18,16 @@ import com.ctre.phoenix6.signals.ReverseLimitTypeValue;
 import com.ctre.phoenix6.signals.ReverseLimitValue;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+
 import static edu.wpi.first.units.Units.*;
 
 import java.util.OptionalDouble;
@@ -41,7 +47,8 @@ public class Turret extends SubsystemBase implements Logged {
   private TalonFXConfiguration bearingConfig;
   private DutyCycleOut percentOut = new DutyCycleOut(0);
   private PositionVoltage position = new PositionVoltage(0);
-
+  @Log.NT
+  private Mechanism2d turret2d = new Mechanism2d(3, 3, new Color8Bit(Color.kAqua));
   public Trigger fwdLimit, revLimit;
 
   public Turret(Supplier<OptionalDouble> targetYaw) {
@@ -50,8 +57,10 @@ public class Turret extends SubsystemBase implements Logged {
     bearingConfig.MotorOutput.PeakForwardDutyCycle = 0.3;
     bearingConfig.MotorOutput.PeakReverseDutyCycle = -0.3;
     bearingConfig.Slot0.kP = TurretConstants.kP;
-    bearingConfig.Slot0.kI = TurretConstants.kI;
     bearingConfig.Slot0.kD = TurretConstants.kD;
+    bearingConfig.Slot0.kS = TurretConstants.kS;
+    bearingConfig.Slot0.kV = TurretConstants.kV;
+    bearingConfig.Slot0.kA = TurretConstants.kA;
     bearingConfig.HardwareLimitSwitch.ForwardLimitType = ForwardLimitTypeValue.NormallyOpen;
     bearingConfig.HardwareLimitSwitch.ForwardLimitSource = ForwardLimitSourceValue.LimitSwitchPin;
     bearingConfig.HardwareLimitSwitch.ReverseLimitType = ReverseLimitTypeValue.NormallyOpen;
@@ -71,6 +80,9 @@ public class Turret extends SubsystemBase implements Logged {
     revLimit = new Trigger(this::getRevLimit);
     this.targetYaw = targetYaw;
     setDefaultCommand(Commands.idle(this));
+
+    MechanismRoot2d root = turret2d.getRoot("turret_root", 0.5, 0);
+    root.append(new MechanismLigament2d("turret_heading", 0.5, 90, 6, new Color8Bit(Color.kBlack)));
   }
 
   public Command stop() {
@@ -160,7 +172,7 @@ public class Turret extends SubsystemBase implements Logged {
     bearing.setControl(position.withPosition(setpoint.getRotations()));
   }
 
-  
+  @Log.NT
   public Rotation2d getCurrentPosition() {
     turretCurrentPosition = Rotation2d.fromRotations(bearing.getPosition().getValue());
     return turretCurrentPosition;
