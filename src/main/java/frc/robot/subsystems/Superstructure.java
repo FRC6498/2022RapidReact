@@ -46,7 +46,7 @@ public class Superstructure extends SubsystemBase implements Logged {
   private final Turret turret;
 
   private Trigger flyWheelAtSetpoint;
-  @Log.NT //.BooleanBox(name = "Robot Aligned", methodName = "get", tabName = "SmartDashboard")
+  @Log //.BooleanBox(name = "Robot Aligned", methodName = "get", tabName = "SmartDashboard")
   private Trigger robotLinedUp;
   // TODO: Create Driver Dashboard with Elastic
   // active intake 
@@ -55,7 +55,7 @@ public class Superstructure extends SubsystemBase implements Logged {
   // low/high gear DONE
   // robot lined up rumble DONE
   // flywheel at speed DONE
-  @Log.NT //.BooleanBox(tabName = "SmartDashboard", name = "Turret Position", colorWhenTrue = "yellow", colorWhenFalse = "blue")
+  @Log //.BooleanBox(tabName = "SmartDashboard", name = "Turret Position", colorWhenTrue = "yellow", colorWhenFalse = "blue")
   private Trigger turretAtFront;
   //@Config
   double flywheelRPM = 0.0;
@@ -64,7 +64,7 @@ public class Superstructure extends SubsystemBase implements Logged {
   public double feederSpeedStopped = 0.0; 
   TalonFX frontFeeder;
   TalonFX rearFeeder;
-  @Log.NT //(tabName = "SmartDashboard", name = "Distance to Hub")
+  @Log //(tabName = "SmartDashboard", name = "Distance to Hub")
   double distanceToHub;
 
   BooleanSupplier visionHasTarget;

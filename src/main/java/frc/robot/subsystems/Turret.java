@@ -173,13 +173,13 @@ public class Turret extends SubsystemBase implements Logged {
     bearing.setControl(position.withPosition(setpoint.getRotations()));
   }
 
-  @Log.NT
+  @Log
   public Rotation2d getCurrentPosition() {
     turretCurrentPosition = Rotation2d.fromRotations(bearing.getPosition().getValue());
     return turretCurrentPosition;
   }
   
-  @Log.NT //(name = "Turret Position (deg.)")
+  @Log //(name = "Turret Position (deg.)")
   public double getCurrentPositionDegrees() {
     return getCurrentPosition().getDegrees();
   }

@@ -98,7 +98,7 @@ public class Shooter extends SubsystemBase implements Logged {
     return RotationsPerSecond.of(hoodRollers.getVelocity().getValue());
   }
 
-  @Log.NT //(name = "Flywheel Velocity (RPM)")
+  @Log //(name = "Flywheel Velocity (RPM)")
   public Measure<Velocity<Angle>> getFlywheelSpeed() {
     return RotationsPerSecond.of(shooter.getVelocity().getValue());
   }
@@ -160,53 +160,53 @@ public class Shooter extends SubsystemBase implements Logged {
     sim.updateSim();
   }
 
-  @Log.NT
+  @Log
   private double getShooterSetpoint() {
     return flywheelMotorSetpoint.mut_replace(shooter.getClosedLoopReference().getValue(), RotationsPerSecond).in(RotationsPerMinute);
   }
 
-  @Log.NT
+  @Log
   private double getShooterError() {
     return shooter.getClosedLoopError().getValue();
   }
 
-  @Log.NT
+  @Log
   private double getShooterOutput() {
     log("Closed Loop Output Type", shooter.getClosedLoopOutput().getUnits());
     return shooter.getClosedLoopOutput().getValue();
   }
 
-  @Log.NT
+  @Log
   private double getShooterSimVelocity() {
     return sim.getShooterSimVel();
   }
 
-  @Log.NT
+  @Log
   private double getShooterMotorVelocity() {
     return shooterRealSpeed.mut_replace(shooter.getVelocity().getValue(), RotationsPerSecond).in(RotationsPerMinute);
   }
 
-  @Log.NT
+  @Log
   private double getHoodSetpoint() {
     return hoodMotorSetpoint.mut_replace(hoodRollers.getClosedLoopReference().getValue(), RotationsPerSecond).in(RotationsPerMinute);
   }
 
-  @Log.NT
+  @Log
   private double getHoodError() {
     return hoodRollers.getClosedLoopError().getValue();
   }
 
-  @Log.NT
+  @Log
   private double getHoodOutput() {
     return hoodRollers.getClosedLoopOutput().getValue();
   }
 
-  @Log.NT
+  @Log
   private double getHoodSimVelocity() {
     return sim.getHoodSimVel();
   }
 
-  @Log.NT
+  @Log
   private double getHoodMotorVelocity() {
     return hoodRealSpeed.mut_replace(hoodRollers.getVelocity().getValue(), RotationsPerSecond).in(RotationsPerMinute);
   }
