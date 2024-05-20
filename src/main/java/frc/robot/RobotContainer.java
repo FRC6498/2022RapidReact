@@ -10,6 +10,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
@@ -84,6 +85,7 @@ public class RobotContainer implements Logged {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    DriverStation.silenceJoystickConnectionWarning(true);
     // driver
     driver.rightBumper().onTrue(runOnce(drivetrain::toggleGear, drivetrain));
     driver.b().whileTrue(superstructure.shoot(true));

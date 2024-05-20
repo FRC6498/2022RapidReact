@@ -18,6 +18,13 @@
       "/FMSInfo": "FMSInfo",
       "/RobotContainer/superstructure/turret/turret2d": "Mechanism2d",
       "/RobotContainer/turret/turret2d": "Mechanism2d"
+    },
+    "windows": {
+      "/RobotContainer/turret/turret2d": {
+        "window": {
+          "visible": true
+        }
+      }
     }
   },
   "NetworkTables": {
@@ -35,7 +42,10 @@
         }
       },
       "turret": {
-        "open": true
+        "open": true,
+        "turret2d": {
+          "open": true
+        }
       }
     },
     "combined": true,
