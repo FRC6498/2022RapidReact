@@ -7,6 +7,12 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
+
+import static edu.wpi.first.units.Units.*;
+
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -47,15 +53,16 @@ public final class Constants {
         public static final double trackWidthMeters = Units.inchesToMeters(28.75);
         public static final double maxSpeedMetersPerSecond = 1.9467;
         public static final double maxAccelerationMetersPerSecondSquared = 2;
-        public static final double ramseteB = 2;
-        public static final double ramseteZeta = 0.7;
         // low gear ratio = 26:1
         // circumference = 0.47877872 meters
         // 2048 ticks * 25 = ticks per 1 wheel rev
         // 53248 ticks/rev => 1 tick = 1/53248 rev
         // 1 tick = 0.000018780048 rev
         // 0.00000899148 meters
-        public static final double driveDistancePerTickMeters = 0.00000899148;
+        // 26 motor rotations = 1 gearbox rotation
+        // 1 gearbox rotation = 1 wheel rotation
+        // 1 wheel rotation = 2*pi*r meters travelled
+        public static final double DriveRotorToDistanceRatio = 26.0 * 2 * Math.PI * Units.inchesToMeters(6);
         
     }
 
@@ -73,26 +80,28 @@ public final class Constants {
         public static final double flywheelDumpRPM = 500;
         public static final double flywheelHighRPM = 4000;
         public static final int hoodRollerCANId = 13;
+        public static final Velocity<Angle> RotationsPerMinute = Rotations.per(Minute);
+
     }
 
     public static final class TurretConstants {
         public static final int yawMotorCANId = 12;
-        public static final double turretPositionToleranceDegrees = 0.1;
+        public static final Measure<Angle> turretPositionToleranceDegrees = Degrees.of(0.1);
         public static final double kP = 0.03;
         public static final double kI = 0.0000;
         public static final double kD = 0;
-        public static final double turretTicksPerRotation = 2048*(40/10)*(40/20)*(314.0/40.0);
+        public static final double turretRotorToMechanismRatio = (40/10)*(40/20)*(314.0/40.0);
         public static final double turretSoftLimitOffset = 20;
         public static final double turretHomingVelocityStopThreshold = 0.1;
         public static final double kS = 0.89326;
         public static final double kV =  0.020207;
         public static final double kA =  0.00072803;
-        public static final double turretTicksPerDegree = turretTicksPerRotation / 360;//254.7;
-        public static final double center = 203.31;
-        public static final double hardForwardAngle = 231.236-center;
-        public static final double hardReverseAngle = 0-center;
-        public static final double frontDumpAngle = -5;
-        public static final double rearDumpAngle = -178;
+        public static final double turretTicksPerDegree = turretRotorToMechanismRatio / 360;//254.7;
+        public static final Rotation2d center = Rotation2d.fromDegrees(203.31);
+        public static final Rotation2d hardForwardAngle = Rotation2d.fromDegrees(231.236-center.getDegrees());
+        public static final Rotation2d hardReverseAngle = Rotation2d.fromDegrees(0-center.getDegrees());
+        public static final Rotation2d frontDumpAngle = Rotation2d.fromDegrees(-5);
+        public static final Rotation2d rearDumpAngle = Rotation2d.fromDegrees(-178);
     }
 
     public static final class ConveyorConstants {

@@ -4,6 +4,8 @@
 
 package frc.robot.lib;
 
+import static frc.robot.Constants.ShooterConstants.RotationsPerMinute;
+
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Map.Entry;
@@ -17,11 +19,11 @@ public class InterpolatingTable {
     private static final TreeMap<Double, ShotParameter> map = new TreeMap<>(
         Map.ofEntries(
             // distance = 1.97, 2750 rpm
-            Map.entry(2.13, new ShotParameter(2100, 0.0)),
-            Map.entry(2.54, new ShotParameter(2250, 0.0)),
-            Map.entry(3.81, new ShotParameter(2475, 0.0)),
-            Map.entry(4.5, new ShotParameter(2550, 200)),
-            Map.entry(4.7, new ShotParameter(2675, 200))
+            Map.entry(2.13, new ShotParameter(RotationsPerMinute.of(2100), RotationsPerMinute.of(0.0))),
+            Map.entry(2.54, new ShotParameter(RotationsPerMinute.of(2250), RotationsPerMinute.of(0.0))),
+            Map.entry(3.81, new ShotParameter(RotationsPerMinute.of(2475), RotationsPerMinute.of(0.0))),
+            Map.entry(4.5, new ShotParameter(RotationsPerMinute.of(2550), RotationsPerMinute.of(200))),
+            Map.entry(4.7, new ShotParameter(RotationsPerMinute.of(2675), RotationsPerMinute.of(200)))
         )
     );
 

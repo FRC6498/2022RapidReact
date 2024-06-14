@@ -4,40 +4,46 @@
 
 package frc.robot.lib;
 
+import static frc.robot.Constants.ShooterConstants.RotationsPerMinute;
+
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
+
 /** Add your docs here. */
 public class ShotParameter {
 
     // Variables
-    public final double rpm;
-    public final double hoodSpeedOffset;
+    public final Measure<Velocity<Angle>> shooterSpeed;
+    public final Measure<Velocity<Angle>> hoodSpeedOffset;
 
     // Constructor
-    public ShotParameter(double rpm, double offset) {
-        this.rpm = rpm;
+    public ShotParameter(Measure<Velocity<Angle>> shooterSpeed, Measure<Velocity<Angle>> offset) {
+        this.shooterSpeed = shooterSpeed;
         this.hoodSpeedOffset = offset;
     }   
 
-    public ShotParameter(double rpm) {
-        this(rpm, 0.0);
+    public ShotParameter(Measure<Velocity<Angle>> shooterSpeed) {
+        this(shooterSpeed, RotationsPerMinute.of(0));
     }   
 
     // Method equals
     public boolean equals(ShotParameter other) {
-        return Math.abs(this.rpm - other.rpm) < 0.1 &&
-        Math.abs(this.hoodSpeedOffset - other.hoodSpeedOffset) < 0.1;
+        return Math.abs(this.shooterSpeed.minus(other.shooterSpeed).in(RotationsPerMinute)) < 0.1 &&
+        Math.abs(this.hoodSpeedOffset.minus(other.hoodSpeedOffset).in(RotationsPerMinute)) < 0.1;
     }
 
     // Method to interpolate
     public ShotParameter interpolate(ShotParameter end, double t) {
         return new ShotParameter(
-            lerp(rpm, end.rpm, t), 
+            lerp(shooterSpeed, end.shooterSpeed, t), 
             lerp(hoodSpeedOffset, end.hoodSpeedOffset, t)
         );
     }
 
     // Method lerp
-    private double lerp(double y2, double y1, double t) {
-        return y1 + (t * (y2 - y1));
+    private Measure<Velocity<Angle>> lerp(Measure<Velocity<Angle>> y2, Measure<Velocity<Angle>> y1, double t) {
+        return y1.plus((y2.minus(y1)).times(t));
     }
  
 }
