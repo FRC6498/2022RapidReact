@@ -49,7 +49,7 @@ public class Turret extends SubsystemBase implements Logged {
   private DutyCycleOut percentOut = new DutyCycleOut(0);
   private PositionVoltage position = new PositionVoltage(0);
   @Log
-  private Mechanism2d turret2d = new Mechanism2d(3, 3, new Color8Bit(Color.kAqua));
+  private Mechanism2d turret2d = new Mechanism2d(3, 3, new Color8Bit(Color.kBlack));
   public Trigger fwdLimit, revLimit;
 
   public Turret(Supplier<OptionalDouble> targetYaw) {
