@@ -21,7 +21,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -35,11 +34,9 @@ import java.util.OptionalDouble;
 import java.util.function.Supplier;
 
 import frc.robot.Constants.TurretConstants;
-import monologue.Logged;
-import monologue.Annotations.Log;
 
 // turret clockwise = forward 
-public class Turret extends SubsystemBase implements Logged {
+public class Turret extends SubsystemBase {
   private boolean homed;
   private Rotation2d turretPositionSetpoint;
   private Rotation2d turretCurrentPosition;
@@ -48,7 +45,7 @@ public class Turret extends SubsystemBase implements Logged {
   private TalonFXConfiguration bearingConfig;
   private DutyCycleOut percentOut = new DutyCycleOut(0);
   private PositionVoltage position = new PositionVoltage(0);
-  @Log
+  //@Log
   private Mechanism2d turret2d = new Mechanism2d(3, 3, new Color8Bit(Color.kBlack));
   public Trigger fwdLimit, revLimit;
 
@@ -95,7 +92,7 @@ public class Turret extends SubsystemBase implements Logged {
     return run(() -> {
       // subtract the yaw of the target if we see one, or else subtract nothing
       Rotation2d angle = getCurrentPosition().minus(Rotation2d.fromDegrees(targetYaw.get().orElse(0)));
-      log("turret_setpoint_calc", angle.getDegrees());
+      //log("turret_setpoint_calc", angle.getDegrees());
       setPositionSetpoint(angle);
     });
   }
@@ -107,9 +104,9 @@ public class Turret extends SubsystemBase implements Logged {
   @Override
   public void periodic() {
     getCurrentPosition();
-    log("turret_position_deg", turretCurrentPosition.getDegrees());
-    log("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
-    log("turret_at_setpoint", atSetpoint());
+    //log("turret_position_deg", turretCurrentPosition.getDegrees());
+    //log("turret_setpoint_deg", turretPositionSetpoint.getDegrees());
+    //log("turret_at_setpoint", atSetpoint());
   }
 
   public Command home() {
@@ -130,20 +127,20 @@ public class Turret extends SubsystemBase implements Logged {
   }
 
   private boolean checkLimits() {
-    log("homed", homed);
+    //log("homed", homed);
     if (getFwdLimit()) {
       reset(TurretConstants.hardForwardAngle);
-      log("forward_limit", true);
-      log("reverse_limit", false);
+      //log("forward_limit", true);
+      //log("reverse_limit", false);
       return true;
     } else if (getRevLimit()) {
       reset(TurretConstants.hardReverseAngle);
-      log("reverse_limit", true);
-      log("forward_limit", false);
+      //log("reverse_limit", true);
+      //log("forward_limit", false);
       return true;
     } else {
-      log("forward_limit", false);
-      log("reverse_limit", false);
+      //log("forward_limit", false);
+      //log("reverse_limit", false);
       return false;
     }
   }
@@ -173,13 +170,13 @@ public class Turret extends SubsystemBase implements Logged {
     bearing.setControl(position.withPosition(setpoint.getRotations()));
   }
 
-  @Log
+  //@Log
   public Rotation2d getCurrentPosition() {
-    turretCurrentPosition = Rotation2d.fromRotations(bearing.getPosition().getValue());
+    turretCurrentPosition = Rotation2d.fromRotations(bearing.getPosition().getValue().in(Rotations));
     return turretCurrentPosition;
   }
   
-  @Log //(name = "Turret Position (deg.)")
+  //@Log //(name = "Turret Position (deg.)")
   public double getCurrentPositionDegrees() {
     return getCurrentPosition().getDegrees();
   }

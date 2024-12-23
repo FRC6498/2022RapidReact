@@ -6,24 +6,22 @@ package frc.robot.lib;
 
 import static frc.robot.Constants.ShooterConstants.RotationsPerMinute;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.AngularVelocity;
 
 /** Add your docs here. */
 public class ShotParameter {
 
     // Variables
-    public final Measure<Velocity<Angle>> shooterSpeed;
-    public final Measure<Velocity<Angle>> hoodSpeedOffset;
+    public final AngularVelocity shooterSpeed;
+    public final AngularVelocity hoodSpeedOffset;
 
     // Constructor
-    public ShotParameter(Measure<Velocity<Angle>> shooterSpeed, Measure<Velocity<Angle>> offset) {
+    public ShotParameter(AngularVelocity shooterSpeed, AngularVelocity offset) {
         this.shooterSpeed = shooterSpeed;
         this.hoodSpeedOffset = offset;
     }   
 
-    public ShotParameter(Measure<Velocity<Angle>> shooterSpeed) {
+    public ShotParameter(AngularVelocity shooterSpeed) {
         this(shooterSpeed, RotationsPerMinute.of(0));
     }   
 
@@ -42,7 +40,7 @@ public class ShotParameter {
     }
 
     // Method lerp
-    private Measure<Velocity<Angle>> lerp(Measure<Velocity<Angle>> y2, Measure<Velocity<Angle>> y1, double t) {
+    private AngularVelocity lerp(AngularVelocity y2, AngularVelocity y1, double t) {
         return y1.plus((y2.minus(y1)).times(t));
     }
  

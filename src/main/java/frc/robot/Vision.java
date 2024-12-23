@@ -14,9 +14,8 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants.VisionConstants;
-import monologue.Logged;
 
-public class Vision implements Logged{
+public class Vision {
   private PhotonCamera CAM_limelight;
   private PhotonPipelineResult currentResult;
   boolean enabled = true;  
@@ -105,9 +104,9 @@ public class Vision implements Logged{
     if (enabled) {
       currentResult = CAM_limelight.getLatestResult();
 
-      getTargetDistance().ifPresent(
+      /*getTargetDistance().ifPresent(
         (dist) -> log("target_distance", dist)
-      );
+      );*/
     }
   }
 }

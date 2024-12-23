@@ -11,8 +11,6 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import monologue.Monologue;
-import monologue.Annotations.Log;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -23,7 +21,7 @@ import monologue.Annotations.Log;
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
   private RobotContainer m_robotContainer;
-  @Log
+  //@Log
   UsbCamera frontCamera;
 
   /**
@@ -32,14 +30,14 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-
+    DataLogManager.start();
+    //Epilogue.bind(this);
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
     LiveWindow.disableAllTelemetry();
     //addPeriodic(() -> m_robotContainer.superstructure.getBallColors(), 0.5);
     
-    DataLogManager.logNetworkTables(false);
     frontCamera = CameraServer.startAutomaticCapture();
     frontCamera.setResolution(320, 240);
     setNetworkTablesFlushEnabled(true);
@@ -60,7 +58,6 @@ public class Robot extends TimedRobot {
     // commands, running already-scheduled commands, removing finished or interrupted commands,
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
-    Monologue.updateAll();
     CommandScheduler.getInstance().run();
   }
 

@@ -4,15 +4,15 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degree;
+import static edu.wpi.first.units.Units.Minute;
+import static edu.wpi.first.units.Units.Rotations;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
-
-import static edu.wpi.first.units.Units.*;
-
+import edu.wpi.first.units.AngularVelocityUnit;
+import edu.wpi.first.units.measure.Angle;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -63,6 +63,8 @@ public final class Constants {
         // 1 gearbox rotation = 1 wheel rotation
         // 1 wheel rotation = 2*pi*r meters travelled
         public static final double DriveRotorToDistanceRatio = 26.0 * 2 * Math.PI * Units.inchesToMeters(6);
+        public static final double DriveRotorToWheelRatio = 26.0;
+        public static final double WheelToDistanceRatio = 2 * Math.PI * Units.inchesToMeters(6);
         
     }
 
@@ -87,12 +89,14 @@ public final class Constants {
         public static final double flywheelDumpRPM = 500;
         public static final double flywheelHighRPM = 4000;
         public static final int hoodRollerCANId = 13;
-        public static final Velocity<Angle> RotationsPerMinute = Rotations.per(Minute);
+        public static final AngularVelocityUnit RotationsPerMinute = Rotations.per(Minute);
+        public static double flywheelGearing = 1.0;
+        public static double hoodGearing = 1.0;
     }
 
     public static final class TurretConstants {
         public static final int yawMotorCANId = 12;
-        public static final Measure<Angle> turretPositionToleranceDegrees = Degrees.of(0.1);
+        public static final Angle turretPositionToleranceDegrees = Degree.of(0.1);
         public static final double kP = 0.03;
         public static final double kI = 0.0000;
         public static final double kD = 0;

@@ -11,7 +11,8 @@ import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.kauailabs.navx.frc.AHRS;
+import com.studica.frc.AHRS;
+import com.studica.frc.AHRS.NavXComType;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
@@ -28,15 +29,13 @@ import edu.wpi.first.math.numbers.N5;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
-import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import monologue.Logged;
-import monologue.Annotations.Log;
 
+import static edu.wpi.first.units.Units.*;
 
-public class Drivetrain extends SubsystemBase implements Logged {
+public class Drivetrain extends SubsystemBase {
   // motors
   private final TalonFX leftLeader, rightLeader;
   private final TalonFX leftFollower, rightFollower;
@@ -75,10 +74,10 @@ public class Drivetrain extends SubsystemBase implements Logged {
     leftFollower.setControl(new StrictFollower(leftLeader.getDeviceID()));
     rightFollower.setControl(new StrictFollower(rightLeader.getDeviceID()));
 
-    diffDrive = new DifferentialDrive(leftLeader, rightLeader);
+    diffDrive = new DifferentialDrive(leftLeader::set, rightLeader::set);
     diffDrive.setSafetyEnabled(false);
 
-    gyro = new AHRS(Port.kMXP);
+    gyro = new AHRS(NavXComType.kMXP_SPI);
     gyro.reset();
     kinematics = new DifferentialDriveKinematics(Constants.DriveConstants.trackWidthMeters);
 
@@ -88,7 +87,7 @@ public class Drivetrain extends SubsystemBase implements Logged {
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.OpenLoopRamps.VoltageOpenLoopRampPeriod = DriveConstants.driveRampRate;
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.Feedback.SensorToMechanismRatio = DriveConstants.DriveRotorToDistanceRatio;
+    config.Feedback.SensorToMechanismRatio = DriveConstants.DriveRotorToWheelRatio;
 
     // state variable standard deviations - larger std dev -> increased uncertainty of state variables -> trust state less
     // state variables are        x pos, y pos,       heading,      left dist, right dist
@@ -115,7 +114,7 @@ public class Drivetrain extends SubsystemBase implements Logged {
     return gyro.getRotation2d();
   }
 
-  @Log // (name = "Gyro Angle (deg.)")
+  //@Log // (name = "Gyro Angle (deg.)")
   public double getGyroAngleDegrees() {
     return getGyroAngle().getDegrees();
   }
@@ -232,18 +231,18 @@ public class Drivetrain extends SubsystemBase implements Logged {
   }
 
   private double getLeftDistanceMeters() {
-    return leftLeader.getPosition().getValue();
+    return leftLeader.getPosition().getValue().in(Radian) * DriveConstants.WheelToDistanceRatio;
   }
 
   private double getRightDistanceMeters() {
-    return rightLeader.getPosition().getValue();
+    return rightLeader.getPosition().getValue().in(Radian) * DriveConstants.WheelToDistanceRatio;
   }
 
   private double getLeftSpeedMetersPerSecond() {
-    return leftLeader.getVelocity().getValue();
+    return leftLeader.getVelocity().getValue().in(RadiansPerSecond) * DriveConstants.WheelToDistanceRatio;
   }
 
   private double getRightSpeedMetersPerSecond() {
-    return rightLeader.getVelocity().getValue();
+    return rightLeader.getVelocity().getValue().in(RadiansPerSecond) * DriveConstants.WheelToDistanceRatio;
   }
 }

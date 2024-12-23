@@ -14,6 +14,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj.DriverStation;
@@ -24,8 +25,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Vision;
-import monologue.Logged;
-import monologue.Annotations.Log;
 
 /**
  * Coordinates all subsystems involving cargo<p>
@@ -33,7 +32,7 @@ import monologue.Annotations.Log;
  * It makes sure two subsystems are ready for handoff before initiating it<p>
  * Reports Statuses back to the dashboard
  */
-public class Superstructure extends SubsystemBase implements Logged {
+public class Superstructure extends SubsystemBase {
   // Intake
   private final Intake frontIntake;
   private final Intake backIntake;
@@ -46,7 +45,7 @@ public class Superstructure extends SubsystemBase implements Logged {
   private final Turret turret;
 
   private Trigger flyWheelAtSetpoint;
-  @Log //.BooleanBox(name = "Robot Aligned", methodName = "get", tabName = "SmartDashboard")
+  //@Log //.BooleanBox(name = "Robot Aligned", methodName = "get", tabName = "SmartDashboard")
   private Trigger robotLinedUp;
   // TODO: Create Driver Dashboard with Elastic
   // active intake 
@@ -55,8 +54,8 @@ public class Superstructure extends SubsystemBase implements Logged {
   // low/high gear DONE
   // robot lined up rumble DONE
   // flywheel at speed DONE
-  @Log //.BooleanBox(tabName = "SmartDashboard", name = "Turret Position", colorWhenTrue = "yellow", colorWhenFalse = "blue")
-  private Trigger turretAtFront;
+  //@Log //.BooleanBox(tabName = "SmartDashboard", name = "Turret Position", colorWhenTrue = "yellow", colorWhenFalse = "blue")
+  //private Trigger turretAtFront;
   //@Config
   double flywheelRPM = 0.0;
   public boolean isForward;
@@ -64,7 +63,7 @@ public class Superstructure extends SubsystemBase implements Logged {
   public double feederSpeedStopped = 0.0; 
   TalonFX frontFeeder;
   TalonFX rearFeeder;
-  @Log //(tabName = "SmartDashboard", name = "Distance to Hub")
+  //@Log //(tabName = "SmartDashboard", name = "Distance to Hub")
   double distanceToHub;
 
   BooleanSupplier visionHasTarget;
@@ -81,19 +80,19 @@ public class Superstructure extends SubsystemBase implements Logged {
     this.backIntake = backIntake;
     this.vision = vision;
     frontFeeder = new TalonFX(10);
-    frontFeeder.setInverted(true);
     rearFeeder = new TalonFX(11);
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.1;
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     frontFeeder.getConfigurator().apply(config);
     rearFeeder.getConfigurator().apply(config);
     rearFeeder.setControl(new Follower(frontFeeder.getDeviceID(), true));
     
     robotLinedUp = new Trigger(vision::getAligned);
     flyWheelAtSetpoint = new Trigger(shooter::atSetpoint);
-    turretAtFront = new Trigger(() -> turret.getCurrentPosition().getDegrees() > -10);
-    log("superstructure-heartbeat", "superstructure constructor!");
+    //turretAtFront = new Trigger(() -> turret.getCurrentPosition().getDegrees() > -10);
+    //log("superstructure-heartbeat", "superstructure constructor!");
   }
 
   public Command rejectCargo() {

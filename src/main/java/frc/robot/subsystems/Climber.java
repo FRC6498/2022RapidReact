@@ -14,6 +14,7 @@ import com.ctre.phoenix6.signals.ForwardLimitTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -55,7 +56,7 @@ public class Climber extends SubsystemBase {
     //lock.set(true);
   }
 
-  public double getEncoderPosition() {
+  public Angle getEncoderPosition() {
     return climberMotor.getPosition().getValue();
   }
 

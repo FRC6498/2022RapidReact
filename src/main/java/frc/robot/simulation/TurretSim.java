@@ -13,9 +13,8 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.MutableMeasure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.MutAngle;
+import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.Constants.TurretConstants;
@@ -26,8 +25,8 @@ public class TurretSim {
     private final TalonFX motor;
     private TalonFXSimState motorSim;
 
-    private final MutableMeasure<Angle> turretAngle = Rotations.zero().mutableCopy();
-    private final MutableMeasure<Velocity<Angle>> turretSpeed = RotationsPerSecond.zero().mutableCopy();
+    private final MutAngle turretAngle = Rotations.zero().mutableCopy();
+    private final MutAngularVelocity turretSpeed = RotationsPerSecond.zero().mutableCopy();
 
     public TurretSim(TalonFX turretMotor) {
         motor = turretMotor;

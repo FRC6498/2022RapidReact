@@ -11,9 +11,8 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.MutableMeasure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc.robot.Constants.ShooterConstants;
@@ -27,20 +26,39 @@ public class ShooterSim {
     private TalonFXSimState shooterSim;
     private TalonFXSimState hoodSim;
 
-    private final MutableMeasure<Velocity<Angle>> shooterSpeed = RotationsPerSecond.zero().mutableCopy();
-    private final MutableMeasure<Velocity<Angle>> hoodSpeed = RotationsPerSecond.zero().mutableCopy();
+    private final MutAngularVelocity shooterSpeed = RotationsPerSecond.zero().mutableCopy();
+    private final MutAngularVelocity hoodSpeed = RotationsPerSecond.zero().mutableCopy();
 
     public ShooterSim(TalonFX shooter, TalonFX hood) {
+
         shooterPhysicsSim = new FlywheelSim(
+            LinearSystemId.createFlywheelSystem(
+                DCMotor.getFalcon500(1), 
+                ShooterConstants.flywheelMOI, 
+                ShooterConstants.flywheelGearing
+            ), 
             DCMotor.getFalcon500(1), 
-            1.0, 
-            ShooterConstants.flywheelMOI
+            null
         );
         hoodPhysicsSim = new FlywheelSim(
+            LinearSystemId.createFlywheelSystem(
+                DCMotor.getFalcon500(1), 
+                ShooterConstants.hoodMOI, 
+                ShooterConstants.hoodGearing
+            ), 
             DCMotor.getFalcon500(1), 
-            1.0, 
-            ShooterConstants.hoodMOI
+            null
         );
+        // shooterPhysicsSim = new FlywheelSim(
+            // DCMotor.getFalcon500(1), 
+            // 1.0, 
+            // ShooterConstants.flywheelMOI
+        // );
+        // hoodPhysicsSim = new FlywheelSim(
+            // DCMotor.getFalcon500(1), 
+            // 1.0, 
+            // ShooterConstants.hoodMOI
+        // );
         this.shooter = shooter;
         shooterSim = this.shooter.getSimState();
         this.hood = hood;

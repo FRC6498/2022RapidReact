@@ -13,10 +13,10 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.MutableMeasure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.units.measure.Velocity;
 
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.Constants.ShooterConstants.RotationsPerMinute;
@@ -27,25 +27,23 @@ import java.util.function.Supplier;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import monologue.Logged;
-import monologue.Annotations.Log;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.lib.InterpolatingTable;
 import frc.robot.simulation.ShooterSim;
 
-public class Shooter extends SubsystemBase implements Logged {
+public class Shooter extends SubsystemBase {
   // Hardware
   private final TalonFX shooter;
   private final TalonFX hoodRollers;
   // Software
-  private final MutableMeasure<Velocity<Angle>> flywheelSpeedSetpoint = RotationsPerMinute.zero().mutableCopy();
-  private final MutableMeasure<Velocity<Angle>> flywheelMotorSetpoint = RotationsPerMinute.zero().mutableCopy();
-  private final MutableMeasure<Velocity<Angle>> shooterRealSpeed = RotationsPerMinute.zero().mutableCopy();
+  private final MutAngularVelocity flywheelSpeedSetpoint = RotationsPerMinute.zero().mutableCopy();
+  private final MutAngularVelocity flywheelMotorSetpoint = RotationsPerMinute.zero().mutableCopy();
+  private final MutAngularVelocity shooterRealSpeed = RotationsPerMinute.zero().mutableCopy();
 
-  private final MutableMeasure<Velocity<Angle>> hoodSpeedSetpoint = RotationsPerSecond.of(0).mutableCopy();
-  private final MutableMeasure<Velocity<Angle>> hoodMotorSetpoint = RotationsPerMinute.zero().mutableCopy();
-  private final MutableMeasure<Velocity<Angle>> hoodRealSpeed = RotationsPerMinute.zero().mutableCopy();
-  private final VelocityVoltage velocityMode = new VelocityVoltage(0, 0, false, 0, 0, false, false, false);
+  private final MutAngularVelocity hoodSpeedSetpoint = RotationsPerSecond.of(0).mutableCopy();
+  private final MutAngularVelocity hoodMotorSetpoint = RotationsPerMinute.zero().mutableCopy();
+  private final MutAngularVelocity hoodRealSpeed = RotationsPerMinute.zero().mutableCopy();
+  private final VelocityVoltage velocityMode = new VelocityVoltage(0);
   private final ShooterSim sim;
   private final DoubleSubscriber manualSpeedData;
 
@@ -59,9 +57,11 @@ public class Shooter extends SubsystemBase implements Logged {
     hoodConfig.Slot0.kV = ShooterConstants.hoodkV;//12.3 / 6380.0;
     hoodConfig.Slot0.kA = ShooterConstants.hoodkA;
     // once we hit 40A for >=100ms, hold at 40A
-    hoodConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+    hoodConfig.CurrentLimits.SupplyCurrentLimit = 80.0;
     hoodConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    hoodConfig.CurrentLimits.SupplyTimeThreshold = 0.1;
+    hoodConfig.CurrentLimits.SupplyCurrentLowerLimit = 40.0;
+    hoodConfig.CurrentLimits.SupplyCurrentLowerTime = 0.1;
+    //hoodConfig.CurrentLimits.SupplyTimeThreshold = 0.1;
     hoodConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     hoodRollers.getConfigurator().apply(hoodConfig);
@@ -70,9 +70,10 @@ public class Shooter extends SubsystemBase implements Logged {
     flywheelConfig.Slot0.kV = ShooterConstants.flywheelkV;
     flywheelConfig.Slot0.kA = ShooterConstants.flywheelkA;
     flywheelConfig.Slot0.kP = ShooterConstants.flywheelkP;
-    flywheelConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+    flywheelConfig.CurrentLimits.SupplyCurrentLimit = 80.0;
     flywheelConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    flywheelConfig.CurrentLimits.SupplyTimeThreshold = 0.1;
+    flywheelConfig.CurrentLimits.SupplyCurrentLowerLimit = 40.0;
+    flywheelConfig.CurrentLimits.SupplyCurrentLowerTime = 0.1;
     flywheelConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     shooter.getConfigurator().apply(flywheelConfig);
@@ -90,17 +91,17 @@ public class Shooter extends SubsystemBase implements Logged {
    * @param velocity Desired velocity in rpm
    */
   //@Config(name = "Set Flywheel Speed(RPM)")
-  public void setFlywheelSpeed(Measure<Velocity<Angle>> velocity) {
+  public void setFlywheelSpeed(AngularVelocity velocity) {
     flywheelSpeedSetpoint.mut_replace(velocity.negate());
   }
 
-  public Measure<Velocity<Angle>> getHoodSpeed() {
-    return RotationsPerSecond.of(hoodRollers.getVelocity().getValue());
+  public AngularVelocity getHoodSpeed() {
+    return hoodRollers.getVelocity().getValue();
   }
 
-  @Log //(name = "Flywheel Velocity (RPM)")
-  public Measure<Velocity<Angle>> getFlywheelSpeed() {
-    return RotationsPerSecond.of(shooter.getVelocity().getValue());
+  //@Log //(name = "Flywheel Velocity (RPM)")
+  public AngularVelocity getFlywheelSpeed() {
+    return shooter.getVelocity().getValue();
   }
 
   public void setFlywheelIdle() {
@@ -160,54 +161,54 @@ public class Shooter extends SubsystemBase implements Logged {
     sim.updateSim();
   }
 
-  @Log
+  //@Log
   private double getShooterSetpoint() {
     return flywheelMotorSetpoint.mut_replace(shooter.getClosedLoopReference().getValue(), RotationsPerSecond).in(RotationsPerMinute);
   }
 
-  @Log
+  //@Log
   private double getShooterError() {
     return shooter.getClosedLoopError().getValue();
   }
 
-  @Log
+  //@Log
   private double getShooterOutput() {
-    log("Closed Loop Output Type", shooter.getClosedLoopOutput().getUnits());
+    //log("Closed Loop Output Type", shooter.getClosedLoopOutput().getUnits());
     return shooter.getClosedLoopOutput().getValue();
   }
 
-  @Log
+  //@Log
   private double getShooterSimVelocity() {
     return sim.getShooterSimVel();
   }
 
-  @Log
+  //@Log
   private double getShooterMotorVelocity() {
-    return shooterRealSpeed.mut_replace(shooter.getVelocity().getValue(), RotationsPerSecond).in(RotationsPerMinute);
+    return shooterRealSpeed.mut_replace(shooter.getVelocity().getValue().in(RotationsPerSecond), RotationsPerSecond).in(RotationsPerMinute);
   }
 
-  @Log
+  //@Log
   private double getHoodSetpoint() {
     return hoodMotorSetpoint.mut_replace(hoodRollers.getClosedLoopReference().getValue(), RotationsPerSecond).in(RotationsPerMinute);
   }
 
-  @Log
+  //@Log
   private double getHoodError() {
     return hoodRollers.getClosedLoopError().getValue();
   }
 
-  @Log
+  //@Log
   private double getHoodOutput() {
     return hoodRollers.getClosedLoopOutput().getValue();
   }
 
-  @Log
+  //@Log
   private double getHoodSimVelocity() {
     return sim.getHoodSimVel();
   }
 
-  @Log
+  //@Log
   private double getHoodMotorVelocity() {
-    return hoodRealSpeed.mut_replace(hoodRollers.getVelocity().getValue(), RotationsPerSecond).in(RotationsPerMinute);
+    return hoodRealSpeed.mut_replace(hoodRollers.getVelocity().getValue().in(RotationsPerSecond), RotationsPerSecond).in(RotationsPerMinute);
   }
 }

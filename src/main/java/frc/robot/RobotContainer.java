@@ -28,8 +28,6 @@ import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Turret;
-import monologue.Logged;
-import monologue.Monologue;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
@@ -39,7 +37,7 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
-public class RobotContainer implements Logged {
+public class RobotContainer {
   Drivetrain drivetrain = new Drivetrain();
   Shooter shooter = new Shooter();
   Vision vision = new Vision();
@@ -65,7 +63,6 @@ public class RobotContainer implements Logged {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    Monologue.setupMonologue(this, "RobotContainer", false, false);
     drivetrain.setDefaultCommand(run(() -> drivetrain.arcadeDrive(driver.getRightTriggerAxis() + -driver.getLeftTriggerAxis(), -driver.getLeftX()), drivetrain));
     drivetrain.setInverted(true);
     turret.setDefaultCommand(turret.home().andThen(turret.track()));//new RunCommand(turret::stop, turret));
