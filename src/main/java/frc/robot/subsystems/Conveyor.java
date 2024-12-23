@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -35,16 +36,14 @@ public class Conveyor extends SubsystemBase {
     driverConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.5;
     driverConfig.MotorOutput.PeakForwardDutyCycle = 1.0;
     driverConfig.MotorOutput.PeakReverseDutyCycle = -1.0;
+    if (rear) {
+      driverConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+      speed = 0.5;
+    }
     driver.getConfigurator().apply(driverConfig);
 
     running = false;
     speed = ConveyorConstants.conveyorNominalSpeed;
-
-    if (rear) {
-      driver.setInverted(true);
-      speed = 0.5;
-    }
-
     if (getName() == "FrontConveyor") {
       ballSensor = new DigitalInput(1);
     } else if (getName() == "BackConveyor") {

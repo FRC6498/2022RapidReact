@@ -10,14 +10,12 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngularVelocity;
-import edu.wpi.first.units.measure.Velocity;
-
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.Constants.ShooterConstants.RotationsPerMinute;
 
@@ -31,6 +29,7 @@ import frc.robot.Constants.ShooterConstants;
 import frc.robot.lib.InterpolatingTable;
 import frc.robot.simulation.ShooterSim;
 
+@Logged
 public class Shooter extends SubsystemBase {
   // Hardware
   private final TalonFX shooter;
@@ -82,6 +81,7 @@ public class Shooter extends SubsystemBase {
     manualSpeedData = NetworkTableInstance.getDefault().getDoubleTopic("RobotContainer/superstructure/shooter/shooterSpeedInput").subscribe(100, PubSubOption.keepDuplicates(true), PubSubOption.sendAll(true));
     var pub = manualSpeedData.getTopic().publish(PubSubOption.sendAll(true));
     pub.set(100);
+
     //DataLogManager.start();
     setDefaultCommand(manualSpeed());
   }
@@ -92,7 +92,7 @@ public class Shooter extends SubsystemBase {
    */
   //@Config(name = "Set Flywheel Speed(RPM)")
   public void setFlywheelSpeed(AngularVelocity velocity) {
-    flywheelSpeedSetpoint.mut_replace(velocity.negate());
+    flywheelSpeedSetpoint.mut_replace(velocity.unaryMinus());
   }
 
   public AngularVelocity getHoodSpeed() {
@@ -162,52 +162,62 @@ public class Shooter extends SubsystemBase {
   }
 
   //@Log
+  @SuppressWarnings("unused")
   private double getShooterSetpoint() {
     return flywheelMotorSetpoint.mut_replace(shooter.getClosedLoopReference().getValue(), RotationsPerSecond).in(RotationsPerMinute);
   }
 
   //@Log
+  @SuppressWarnings("unused")
   private double getShooterError() {
     return shooter.getClosedLoopError().getValue();
   }
 
   //@Log
+  @SuppressWarnings("unused")
   private double getShooterOutput() {
     //log("Closed Loop Output Type", shooter.getClosedLoopOutput().getUnits());
     return shooter.getClosedLoopOutput().getValue();
   }
 
   //@Log
+  @SuppressWarnings("unused")
   private double getShooterSimVelocity() {
     return sim.getShooterSimVel();
   }
 
   //@Log
+  @SuppressWarnings("unused")
   private double getShooterMotorVelocity() {
     return shooterRealSpeed.mut_replace(shooter.getVelocity().getValue().in(RotationsPerSecond), RotationsPerSecond).in(RotationsPerMinute);
   }
 
   //@Log
+  @SuppressWarnings("unused")
   private double getHoodSetpoint() {
     return hoodMotorSetpoint.mut_replace(hoodRollers.getClosedLoopReference().getValue(), RotationsPerSecond).in(RotationsPerMinute);
   }
 
   //@Log
+  @SuppressWarnings("unused")
   private double getHoodError() {
     return hoodRollers.getClosedLoopError().getValue();
   }
 
   //@Log
+  @SuppressWarnings("unused")
   private double getHoodOutput() {
     return hoodRollers.getClosedLoopOutput().getValue();
   }
 
   //@Log
+  @SuppressWarnings("unused")
   private double getHoodSimVelocity() {
     return sim.getHoodSimVel();
   }
 
   //@Log
+  @SuppressWarnings("unused")
   private double getHoodMotorVelocity() {
     return hoodRealSpeed.mut_replace(hoodRollers.getVelocity().getValue().in(RotationsPerSecond), RotationsPerSecond).in(RotationsPerMinute);
   }

@@ -12,9 +12,11 @@ import org.photonvision.common.hardware.VisionLEDMode;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants.VisionConstants;
 
+@Logged
 public class Vision {
   private PhotonCamera CAM_limelight;
   private PhotonPipelineResult currentResult;
@@ -102,7 +104,7 @@ public class Vision {
 
   public void periodic() {
     if (enabled) {
-      currentResult = CAM_limelight.getLatestResult();
+      currentResult = CAM_limelight.getAllUnreadResults().get(0);
 
       /*getTargetDistance().ifPresent(
         (dist) -> log("target_distance", dist)
