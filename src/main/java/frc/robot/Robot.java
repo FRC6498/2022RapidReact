@@ -8,6 +8,10 @@ import edu.wpi. first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.logging.EpilogueBackend;
+import edu.wpi.first.epilogue.logging.FileBackend;
+import edu.wpi.first.epilogue.logging.NTEpilogueBackend;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -52,7 +56,6 @@ public class Robot extends TimedRobot {
   Intake backIntake = new Intake(IntakeConstants.intakeBCANId, IntakeConstants.backIntakeForwardChannel, IntakeConstants.backIntakeReverseChannel);
   Superstructure superstructure = new Superstructure(shooter, frontConveyor, backConveyor, frontIntake, backIntake, vision, turret, climber, drivetrain);;
 
-  //@Log(tabName = "SmartDashboard", name = "Time Selector")
   SendableChooser<Command> autoSelector = new SendableChooser<>();
   
   CommandXboxController driver = new CommandXboxController(0);
@@ -71,12 +74,12 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-    DataLogManager.start();
+    //DataLogManager.start();
+    Epilogue.configure((config) -> {
+      config.backend = EpilogueBackend.multi(new FileBackend(DataLogManager.getLog()), new NTEpilogueBackend(NetworkTableInstance.getDefault()));
+    });
     Epilogue.bind(this);
-    // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
-    // autonomous chooser on the dashboard.
     LiveWindow.disableAllTelemetry();
-    //addPeriodic(() -> m_robotContainer.superstructure.getBallColors(), 0.5);
     
     frontCamera = CameraServer.startAutomaticCapture();
     frontCamera.setResolution(320, 240);
@@ -85,7 +88,7 @@ public class Robot extends TimedRobot {
 
     drivetrain.setDefaultCommand(Commands.run(() -> drivetrain.arcadeDrive(driver.getRightTriggerAxis() + -driver.getLeftTriggerAxis(), -driver.getLeftX()), drivetrain));
     drivetrain.setInverted(true);
-    turret.setDefaultCommand(turret.home().andThen(turret.track()));//new RunCommand(turret::stop, turret));
+    turret.setDefaultCommand(turret.home().andThen(turret.track()));
     // Configure the button bindings
     configureButtonBindings();
     autoSelector.addOption("Normal", Autos.highGoalOutsideTarmacTimeBased(backIntake, backConveyor, drivetrain, superstructure));
@@ -112,7 +115,7 @@ public class Robot extends TimedRobot {
       .andThen(climber.manualDrive(driver::getLeftY))
     );
     driver.start().onTrue(climber.manualDrive(driver::getLeftY));
-    
+
     // operator
     operator.a().onTrue(superstructure.manualFire());
     operator.leftBumper().onTrue(Commands.either(
@@ -171,10 +174,6 @@ public class Robot extends TimedRobot {
     drivetrain.resetSensors();
   }
 
-  /** This function is called periodically during autonomous. */
-  @Override
-  public void autonomousPeriodic() {}
-
   @Override
   public void teleopInit() {
     // This makes sure that the autonomous stops running when
@@ -187,20 +186,12 @@ public class Robot extends TimedRobot {
     drivetrain.resetSensors();
   }
 
-  /** This function is called periodically during operator control. */
-  @Override
-  public void teleopPeriodic() {}
-
   @Override
   public void testInit() {
     // Cancels all running commands at the start of test mode.
     CommandScheduler.getInstance().cancelAll();
   }
-
-  /** This function is called periodically during test mode. */
-  @Override
-  public void testPeriodic() {}
-
+  
    /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
