@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import edu.wpi. first.cameraserver.CameraServer;
-import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.logging.EpilogueBackend;
@@ -44,7 +42,7 @@ import frc.robot.subsystems.Turret;
 @Logged
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
-  UsbCamera frontCamera;
+  //UsbCamera frontCamera;
   Drivetrain drivetrain = new Drivetrain();
   Shooter shooter = new Shooter();
   Vision vision = new Vision();
@@ -81,8 +79,8 @@ public class Robot extends TimedRobot {
     Epilogue.bind(this);
     LiveWindow.disableAllTelemetry();
     
-    frontCamera = CameraServer.startAutomaticCapture();
-    frontCamera.setResolution(320, 240);
+    //frontCamera = CameraServer.startAutomaticCapture();
+    //frontCamera.setResolution(320, 240);
     drivetrain.resetSensors();
     addPeriodic(() -> vision.periodic(), 0.02);
 

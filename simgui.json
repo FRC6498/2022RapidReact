@@ -17,7 +17,11 @@
     "types": {
       "/FMSInfo": "FMSInfo",
       "/RobotContainer/superstructure/turret/turret2d": "Mechanism2d",
-      "/RobotContainer/turret/turret2d": "Mechanism2d"
+      "/RobotContainer/turret/turret2d": "Mechanism2d",
+      "Robot/autoSelector": "String Chooser",
+      "Robot/shooter/hoodRollers": "Motor Controller",
+      "Robot/shooter/shooter": "Motor Controller",
+      "Robot/turret/bearing": "Motor Controller"
     },
     "windows": {
       "/RobotContainer/turret/turret2d": {
@@ -28,6 +32,11 @@
     }
   },
   "NetworkTables": {
+    "Epilogue": {
+      "Stats": {
+        "open": true
+      }
+    },
     "Retained Values": {
       "open": false
     },
@@ -49,6 +58,12 @@
       }
     },
     "combined": true,
+    "photonvision": {
+      "limelight": {
+        "open": true
+      },
+      "open": true
+    },
     "transitory": {
       "Robot": {
         "open": true
@@ -79,7 +94,7 @@
             0.0,
             0.8500000238418579
           ],
-          "height": 367,
+          "height": 221,
           "series": [
             {
               "color": [
@@ -110,7 +125,10 @@
             }
           ]
         }
-      ]
+      ],
+      "window": {
+        "visible": false
+      }
     },
     "Plot <1>": {
       "plots": [
@@ -121,7 +139,7 @@
             0.0,
             0.8500000238418579
           ],
-          "height": 366,
+          "height": 307,
           "series": [
             {
               "color": [

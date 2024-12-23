@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.OptionalDouble;
 
 import org.photonvision.PhotonCamera;
@@ -19,19 +21,22 @@ import frc.robot.Constants.VisionConstants;
 @Logged
 public class Vision {
   private PhotonCamera CAM_limelight;
-  private PhotonPipelineResult currentResult;
+  private Optional<PhotonPipelineResult> currentResult = Optional.empty();
+  private List<PhotonPipelineResult> allResults;
   boolean enabled = true;  
   /** Creates a new VisionSystem. */
   public Vision() {
     CAM_limelight = new PhotonCamera(VisionConstants.limelightCameraName);
-    PhotonCamera.setVersionCheckEnabled(false);
+    //PhotonCamera.setVersionCheckEnabled(false);
     CAM_limelight.setDriverMode(false);
     CAM_limelight.setPipelineIndex(VisionConstants.upperHubPipelineID);
   }
 
-  public PhotonTrackedTarget getBestTarget()
+  public Optional<PhotonTrackedTarget> getBestTarget()
   {
-    return currentResult.getBestTarget();
+    if (currentResult.isPresent() && currentResult.get().hasTargets()) {
+      return Optional.of(currentResult.get().getBestTarget());
+    } else return Optional.empty();
   }
 
   public void setLED(VisionLEDMode ledMode)
@@ -41,8 +46,8 @@ public class Vision {
   }
 
   public boolean hasTargets() {
-    if (currentResult != null) {
-      return currentResult.hasTargets();
+    if (currentResult.isPresent()) {
+      return currentResult.get().hasTargets();
     } else { return false; }
   }
 
@@ -66,13 +71,13 @@ public class Vision {
 
   public OptionalDouble getTargetDistance() {
     if (hasTargets()) {
-      return OptionalDouble.of(getTargetDistance(currentResult.getBestTarget()));
+      return OptionalDouble.of(getTargetDistance(currentResult.get().getBestTarget()));
     } else return OptionalDouble.empty();
   }
 
   public OptionalDouble getTargetYaw() {
     if (hasTargets()) {
-      return OptionalDouble.of(currentResult.getBestTarget().getYaw());
+      return OptionalDouble.of(currentResult.get().getBestTarget().getYaw());
     } else {
       return OptionalDouble.empty();
     }
@@ -93,8 +98,8 @@ public class Vision {
   }
 
   public boolean getAligned() {
-    if (currentResult != null && currentResult.hasTargets() && enabled) {
-      return getBestTarget().getYaw() < 3;
+    if (hasTargets() && enabled) {
+      return getBestTarget().get().getYaw() < 3;
     } else return false;
   }
 
@@ -104,7 +109,10 @@ public class Vision {
 
   public void periodic() {
     if (enabled) {
-      currentResult = CAM_limelight.getAllUnreadResults().get(0);
+      allResults = CAM_limelight.getAllUnreadResults();
+      if (!allResults.isEmpty()) {
+        currentResult = Optional.of(allResults.get(0));
+      }
 
       /*getTargetDistance().ifPresent(
         (dist) -> log("target_distance", dist)

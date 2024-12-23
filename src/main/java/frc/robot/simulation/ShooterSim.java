@@ -37,8 +37,7 @@ public class ShooterSim {
                 ShooterConstants.flywheelMOI, 
                 ShooterConstants.flywheelGearing
             ), 
-            DCMotor.getFalcon500(1), 
-            null
+            DCMotor.getFalcon500(1)
         );
         hoodPhysicsSim = new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
@@ -46,19 +45,8 @@ public class ShooterSim {
                 ShooterConstants.hoodMOI, 
                 ShooterConstants.hoodGearing
             ), 
-            DCMotor.getFalcon500(1), 
-            null
+            DCMotor.getFalcon500(1) 
         );
-        // shooterPhysicsSim = new FlywheelSim(
-            // DCMotor.getFalcon500(1), 
-            // 1.0, 
-            // ShooterConstants.flywheelMOI
-        // );
-        // hoodPhysicsSim = new FlywheelSim(
-            // DCMotor.getFalcon500(1), 
-            // 1.0, 
-            // ShooterConstants.hoodMOI
-        // );
         this.shooter = shooter;
         shooterSim = this.shooter.getSimState();
         this.hood = hood;
