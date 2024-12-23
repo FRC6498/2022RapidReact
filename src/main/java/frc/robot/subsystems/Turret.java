@@ -17,6 +17,7 @@ import com.ctre.phoenix6.signals.ReverseLimitSourceValue;
 import com.ctre.phoenix6.signals.ReverseLimitTypeValue;
 import com.ctre.phoenix6.signals.ReverseLimitValue;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
@@ -35,9 +36,10 @@ import java.util.function.Supplier;
 
 import frc.robot.Constants.TurretConstants;
 
-// turret clockwise = forward 
+// turret clockwise = forward
+@Logged
 public class Turret extends SubsystemBase {
-  private boolean homed;
+  //private boolean homed;
   private Rotation2d turretPositionSetpoint;
   private Rotation2d turretCurrentPosition;
   private Supplier<OptionalDouble> targetYaw;
@@ -148,14 +150,6 @@ public class Turret extends SubsystemBase {
   private void reset(Rotation2d angle) {
     bearing.setPosition(angle.getRotations());
     turretCurrentPosition = angle;
-  }
-
-  public void setInverted() {
-    bearing.setInverted(true);
-  }
-
-  public void setForward() {
-    bearing.setInverted(false);
   }
 
   public void setAngleRelative(double degrees) {
